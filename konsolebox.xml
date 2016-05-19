@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<repositories version="1.0">
+	<repo quality="experimental" status="unofficial">
+		<name>konsolebox</name>
+		<description>konsolebox's overlay</description>
+		<homepage>https://github.com/konsolebox/overlay</homepage>
+		<owner>
+			<email>konsolebox@gmail.com</email>
+			<name>konsolebox</name>
+		</owner>
+		<source type="git">https://github.com/konsolebox/overlay.git</source>
+		<feed>http://github.com/konsolebox/overlay/commits/master.atom</feed>
+	</repo>
+</repositories>

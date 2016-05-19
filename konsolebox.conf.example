@@ -1,0 +1,5 @@
+[konsolebox]
+location = /var/local/overlays/konsolebox
+sync-type = git
+sync-uri = git://github.com/konsolebox/overlay.git
+auto-sync = yes
