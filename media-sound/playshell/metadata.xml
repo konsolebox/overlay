@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+		<description>Author of PlayShell</description>
+	</maintainer>
+	<longdescription>
+		A simple console-based application for playing media files 
+		using known media players like SoX, VLC, MPlayer and FFplay as 
+		backend
+	</longdescription>
+	<upstream>
+		<remote-id type="sourceforge">playshell</remote-id>
+		<bugs-to>https://sourceforge.net/p/playshell/bugs/</bugs-to>
+	</upstream>
+</pkgmetadata>
