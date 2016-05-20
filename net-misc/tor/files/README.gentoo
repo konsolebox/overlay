@@ -1,0 +1,11 @@
+We created a configuration file for Tor, /etc/tor/torrc, but you can
+change it according to your needs.  Use the torrc.sample that is in
+that directory as a guide.  Also, to have privoxy work with Tor
+just add the following line
+
+forward-socks4a / localhost:9050 .
+
+to /etc/privoxy/config.  Notice the . at the end!
+
+If you plan to run Tor in chroot, please install sys-apps/rcopy and see
+/etc/conf.d/tor for details.
