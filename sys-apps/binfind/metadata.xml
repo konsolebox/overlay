@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+		<description>Author of binfind</description>
+	</maintainer>
+	<longdescription>
+		Searches files based on the value of $PATH
+	</longdescription>
+	<upstream>
+		<remote-id type="github">konsolebox/scripts</remote-id>
+		<bugs-to>https://github.com/konsolebox/scripts/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
