@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+		<description>Author of rcopy</description>
+	</maintainer>
+	<longdescription>
+		A command-line tool that copies files along with their
+		dependencies to a virtual root directory.  The resulting file's
+		path is reproduced based on its source.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">konsolebox/scripts</remote-id>
+		<bugs-to>https://github.com/konsolebox/scripts/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
