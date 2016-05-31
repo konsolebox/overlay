@@ -3,8 +3,9 @@ Description=The Onion Router
 
 [Service]
 ExecStartPre=/usr/bin/tor --verify-config -f /etc/tor/torrc
-ExecStart=/usr/bin/tor --RunAsDaemon 0 -f /etc/tor/torrc
+ExecStart=/usr/bin/tor -f /etc/tor/torrc --DataDirectory /var/lib/tor/data --User tor
 ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/run/tor.pid
 KillSignal=SIGINT
 TimeoutStopSec=32
 LimitNOFILE=30000

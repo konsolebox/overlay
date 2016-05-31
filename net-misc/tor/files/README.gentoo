@@ -7,5 +7,5 @@ forward-socks4a / localhost:9050 .
 
 to /etc/privoxy/config.  Notice the . at the end!
 
-If you plan to run Tor in chroot, please install sys-apps/rcopy and see
-/etc/conf.d/tor for details.
+If you plan to run Tor in chroot mode, please install net-misc/tor with chroot
+flag enabled, configure /etc/conf.d/tor-chroot, and run '/etc/init.d/tor setup'.

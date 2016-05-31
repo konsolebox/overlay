@@ -1,0 +1,44 @@
+# Specifies Tor's data directory.
+#
+# This is like specifying Tor's 'DataDirectory' option.
+#
+TOR_DATA_DIR=/var/lib/tor/data
+
+# Specifies Tor's home directory.
+#
+TOR_HOME_DIR=/var/lib/tor
+
+# Specify the user that would own the directories and files, and what the
+# instances of Tor would run as.
+#
+# This is like specifying Tor's 'User' option.
+#
+# Default is 'tor'.
+#
+TOR_USER=tor
+
+# Set this option to true to enable graceful stopping by default.
+# The behavior is the same when you call '/etc/init.d/tor gracefulstop'.
+#
+# The default value is 'false'.
+#
+GRACEFUL_STOP=false
+
+# The amount of time in seconds to wait for Tor to stop when GRACEFUL_STOP is
+# enabled or when gracefulstop is called.
+#
+# The default value for this is 60.
+#
+GRACEFUL_STOP_TIMEOUT=60
+
+# Change this to specify a different file for storing PID of Tor.
+# This is equivalent of 'PIDFile' in /etc/tor/torrc.
+#
+# The default file is '/run/tor.pid'.
+#
+PID_FILE=/run/tor.pid
+
+# This is an OpenRC option for setting file or resource limits.
+# See 'help ulimit' or ulimit(1p).
+#
+rc_ulimit='-n 30000'

@@ -1,0 +1,203 @@
+# Specifies the chroot directory.
+#
+# You can prepare this directory by running '/etc/init.d/tor-chroot setup'.
+#
+# If the directory already exists, the command would delay for 10 seconds
+# before overriding the contents of it.
+#
+# Default value is '/chroot/tor'.
+#
+CHROOT_DIR=/chroot/tor
+
+# Set this to 'false' if you have set up your own chroot environment and you
+# don't want/need the chroot consistency check.
+#
+# Default value is 'true'.
+#
+CHROOT_DIR_CHECK=true
+
+# Specifies the location of chroot.
+#
+# This is not needed if CHROOT_JCHROOT is set to 'true'.
+#
+# Default is '/bin/chroot'.
+#
+CHROOT_EXEC=/bin/chroot
+
+# Set this option to 'true' if you want to use jchroot for chrooting instead of
+# /bin/chroot.  You'll need to install sys-apps/jchroot for this.
+#
+# Default value is 'false'.
+#
+CHROOT_JCHROOT=true
+
+# Set the location of jchroot.
+#
+# Default is '/usr/bin/jchroot'.
+#
+CHROOT_JCHROOT_EXEC=/usr/bin/jchroot
+
+# Set this option to 'true' if you want to create a new user namespace when
+# creating a chroot environment with jchroot.
+#
+# It requires a recent kernel (3.8+) with CONFIG_USER_NS enabled.
+#
+# Default value is 'false'.
+#
+CHROOT_JCHROOT_NEW_USER_NS=true
+
+# Check if CONFIG_USER_NS is set in /proc/config.gz, if file exists.
+# It gives a warning if CONFIG_USER_NS isn't set.
+#
+# Default value is 'true'.
+#
+CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL=true
+
+# This specifies the amount of time in seconds to wait for processes'
+# file handles in the chroot directory to close or expire.
+#
+# The default value for this is 20.
+#
+CHROOT_MOUNT_CHECK_TIMEOUT=20
+
+# Set this option to 'false' if you don't want to
+# re-copy runtime binaries to chroot directory everytime Tor starts.
+#
+# Default value is 'true'.
+#
+CHROOT_REFRESH_BINARIES=true
+
+# Specifies the relative location of Tor's data directory in CHROOT_DIR.
+#
+# This is like specifying Tor's 'DataDirectory' option.
+#
+# Default value is '/var/lib/tor/data'.
+#
+CHROOT_TOR_DATA_DIR=/var/lib/tor/data
+
+# Set this option to 'true' if you want to mount (bind) TOR_DATA_DIR to
+# CHROOT_DIR/CHROOT_TOR_DATA_DIR.
+#
+# You might not need this if TOR_DATA_DIR and CHROOT_TOR_DATA_DIR are relatively
+# equivalent, if TOR_DATA_DIR is inside TOR_HOME_DIR, and if
+# CHROOT_TOR_HOME_DIR_BIND is set to true.
+#
+# Default value is 'false'.
+#
+CHROOT_TOR_DATA_DIR_BIND=false
+
+# Specifies the relative location of Tor's home directory in CHROOT_DIR.
+#
+# The default value is '/var/lib/tor'.
+#
+CHROOT_TOR_HOME_DIR=/var/lib/tor
+
+# Set this option to 'true' if you want to mount (bind) TOR_HOME_DIR to
+# CHROOT_DIR/CHROOT_TOR_HOME_DIR.
+#
+# Default value is 'true'.
+#
+CHROOT_TOR_HOME_DIR_BIND=true
+
+# Specifies the relative location of Tor's configuration file in CHROOT_DIR.
+#
+# Default value is '/etc/tor/torrc'.
+#
+CHROOT_TOR_RC=/etc/tor/torrc
+
+# Set this option to 'false' if you don't want CHROOT_DIR/CHROOT_TOR_RC to be
+# updated with the file specified with TOR_RC.
+#
+# Default value is 'true'.
+#
+CHROOT_TOR_RC_UPDATE=true
+
+# Set this option to 'false' if you don't want to update files in
+# 'CHROOT_DIR/etc' which are necessary for runtime like 'hosts', 'host.conf',
+# 'localtime', 'nsswitch.conf', 'resolv.conf', 'passwd' and 'group'.
+#
+# This doesn't include CHROOT_TOR_RC.  You have to configure it with
+# CHROOT_TOR_RC_UPDATE separately.
+#
+# Default value is 'true'.
+#
+CHROOT_UPDATE_ETC_FILES=true
+
+# Set this option to true to enable graceful stopping by default.
+# The behavior is the same when you call '/etc/init.d/tor-chroot gracefulstop'.
+#
+# The default value is 'false'.
+#
+GRACEFUL_STOP=false
+
+# The amount of time in seconds to wait for Tor to stop when GRACEFUL_STOP is
+# enabled or when gracefulstop is called.
+#
+# The default value for this is 60.
+#
+GRACEFUL_STOP_TIMEOUT=60
+
+# Change this to specify a different file for storing PID of Tor.
+# This is equivalent of 'PIDFile' in /etc/tor/torrc.
+#
+# The default file is '/run/tor-chroot.pid'.
+#
+PID_FILE=/run/tor-chroot.pid
+
+# Specifies Tor's data directory.
+#
+# If CHROOT_TOR_DATA_DIR_BIND is enabled, this directory will be mounted to
+# CHROOT_DIR/CHROOT_TOR_DATA_DIR.
+#
+# The default value is '/var/lib/tor/data'.
+#
+TOR_DATA_DIR=/var/lib/tor/data
+
+# Specify the group that would own the directories and files, and what the
+# instances of Tor would run as.
+#
+# Default is 'tor'.
+#
+TOR_GROUP=tor
+
+# Specifies Tor's home directory.
+#
+# If CHROOT_TOR_HOME_DIR_BIND is enabled, this directory will be mounted to
+# CHROOT_DIR/CHROOT_TOR_HOME_DIR.
+#
+# The default value is '/var/lib/tor'.
+#
+TOR_HOME_DIR=/var/lib/tor
+
+# Specifies the configuration file for Tor.
+#
+# The default file is '/etc/tor/torrc'.
+#
+TOR_RC=/etc/tor/torrc
+
+# Specify the user that would own the directories and files, and what the
+# instances of Tor would run as.
+#
+# This is like specifying Tor's 'User' option.
+#
+# Default is 'tor'.
+#
+TOR_USER=tor
+
+# Set this option to 'true' to add verbosity.
+#
+# The default value is 'false'.
+#
+VERBOSE=false
+
+# Set this option to 'true' to run start-stop-daemon verbosely.
+#
+# The default value is 'false', and it doesn't get set to
+# 'true' by default even when VERBOSE is set to 'true'.
+#
+VERBOSE_START_STOP_DAEMON=false
+
+# This is an OpenRC option for setting file or resource limits.
+# See 'help ulimit' or ulimit(1p).
+#
+rc_ulimit='-n 30000'

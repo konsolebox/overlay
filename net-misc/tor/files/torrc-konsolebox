@@ -1,8 +1,0 @@
-Log notice syslog
-DataDirectory /var/lib/tor/data
-
-# This line is no longer needed in chroot mode since tor would already be
-# running as 'tor' by default.  If CHROOT is set, and CHROOT_UPDATE_TORRC is
-# set to 'true', it would be excluded when the file is copied to the chroot
-# directory.
-User tor

@@ -6,6 +6,7 @@
 		<name>konsolebox</name>
 	</maintainer>
 	<use>
+		<flag name="chroot">Add chroot support with /etc/conf.d/tor-chroot and /etc/init.d/tor-chroot</flag>
 		<flag name="bufferevents">Use libevent's buffered IO implementation (unstable, buggy)</flag>
 		<flag name="stats">Enable tracking of how much of each kind of resource we download</flag>
 		<flag name="scrypt">Use <pkg>app-crypt/libscrypt</pkg> for the scrypt algorithm</flag>

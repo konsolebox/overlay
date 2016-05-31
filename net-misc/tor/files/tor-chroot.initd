@@ -1,0 +1,501 @@
+#!/sbin/openrc-run
+# Copyright 1999-2016 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+CHROOT_DIR=${CHROOT_DIR:-/chroot/tor}
+CHROOT_DIR_CHECK=${CHROOT_DIR_CHECK:-true}
+CHROOT_EXEC=${CHROOT_EXEC:-/bin/chroot}
+CHROOT_JCHROOT=${CHROOT_JCHROOT:-false}
+CHROOT_JCHROOT_EXEC=${CHROOT_JCHROOT_EXEC:-/usr/bin/jchroot}
+CHROOT_JCHROOT_NEW_USER_NS=${CHROOT_JCHROOT_NEW_USER_NS:-false}
+CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL=${CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL:-true}
+CHROOT_MOUNT_CHECK_TIMEOUT=${CHROOT_MOUNT_CHECK_TIMEOUT:-20}
+CHROOT_REFRESH_BINARIES=${CHROOT_REFRESH_BINARIES:-true}
+CHROOT_TOR_DATA_DIR=${CHROOT_TOR_DATA_DIR:-/var/lib/tor/data}
+CHROOT_TOR_DATA_DIR_BIND=${CHROOT_TOR_DATA_DIR_BIND:-false}
+CHROOT_TOR_HOME_DIR=${CHROOT_TOR_HOME_DIR:-/var/lib/tor}
+CHROOT_TOR_HOME_DIR_BIND=${CHROOT_TOR_HOME_DIR_BIND:-true}
+CHROOT_TOR_RC=${CHROOT_TOR_RC:-/etc/tor/torrc}
+CHROOT_TOR_RC_UPDATE=${CHROOT_TOR_RC_UPDATE:-true}
+CHROOT_UPDATE_ETC_FILES=${CHROOT_UPDATE_ETC_FILES:-true}
+GRACEFUL_STOP=${GRACEFUL_STOP:-false}
+GRACEFUL_STOP_TIMEOUT=${GRACEFUL_STOP_TIMEOUT:-60}
+PID_FILE=${PID_FILE:-/run/tor-chroot.pid}
+TOR_DATA_DIR=${TOR_DATA_DIR:-/var/lib/tor/data}
+TOR_GROUP=${TOR_GROUP:-tor}
+TOR_HOME_DIR=${TOR_HOME_DIR:-/var/lib/tor}
+TOR_RC=${TOR_RC:-"${CONFIG_FILE:-/etc/tor/torrc}"}
+TOR_USER=${TOR_USER:-tor}
+VERBOSE=${VERBOSE:-false}
+VERBOSE_START_STOP_DAEMON=${VERBOSE_START_STOP_DAEMON:-false}
+
+if [ "${VERBOSE}" = true ]; then
+	EINFO_VERBOSE=true
+	export EINFO_VERBOSE
+else
+	unset EINFO_VERBOSE
+fi
+
+extra_commands="checkconfig setup"
+extra_started_commands="graceful gracefulrestart gracefulstop reload"
+description="Anonymizing overlay network for TCP"
+description_checkconfig="Check if ${TOR_RC} is valid"
+description_reload="Reload the configuration"
+description_graceful="Gracefully restart"
+description_gracefulrestart="Gracefully restart"
+description_gracefulstop="Gracefully stop"
+description_setup="Set up chroot directory"
+
+depend() {
+	need net
+}
+
+_check_chroot_dir_value() {
+	if [ -z "${CHROOT_DIR}" ]; then
+		eerror "Please set a value for 'CHROOT_DIR' in '/etc/conf.d/tor-chroot'."
+		return 1
+	elif [ "${CHROOT_DIR}" = / ]; then
+		eerror "Root directory can't be set as chroot directory."
+		return 1
+	fi
+
+	return 0
+}
+
+_die() {
+	eerror "$1"
+	exit 1
+}
+
+_call() {
+	"$@" || _die "Command failed: $*"
+}
+
+_mknod() {
+	local target mode
+	target=$1 mode=$2
+	shift 2
+
+	if [ -e "${target}" ]; then
+		if [ -c "${target}" ]; then
+			ewarn "Skipping creation of ${target} as it already exists."
+			return 0
+		else
+			eerror "${target} exists but is not a device node."
+			return 1
+		fi
+	else
+		_call mknod -m "${mode}" "${target}" "$@"
+	fi
+}
+
+setup() {
+	_check_chroot_dir_value || return 1
+
+	if [ -d "${CHROOT_DIR}" ]; then
+		ewarn "${CHROOT_DIR} already exists and some things might be overridden."
+		ewarn "Press CTRL+C within 10 seconds if you don't want to continue."
+		sleep 10
+		echo
+	fi
+
+	ebegin "Setting up the chroot directory"
+
+	local __
+
+	for __ in '' /dev "/etc/tor" "${CHROOT_TOR_HOME_DIR}" "${CHROOT_TOR_DATA_DIR}" /var/tmp /tmp; do
+		_call /bin/mkdir -p "${CHROOT_DIR}$__"
+	done
+
+	_call /bin/chown "${TOR_USER}:${TOR_GROUP}" "${CHROOT_DIR}/etc/tor" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}"
+	_call /bin/chmod 0750 "${CHROOT_DIR}/etc/tor" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}"
+	_call /bin/chmod 0777 "${CHROOT_DIR}/var/tmp" "${CHROOT_DIR}/tmp"
+
+	local libdir
+	libdir=$(ldd /usr/bin/tor | /usr/bin/awk -F/ '$1 ~ /=>/ && $2 ~ /^lib/ && NF > 2 { print $2; exit }')
+	_call /usr/bin/rcopy -t "${CHROOT_DIR}" -- /usr/bin/tor "/${libdir}/libnss_compat.so."*
+
+	/bin/grep --color=never "${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}"/etc/passwd || _die "Failed to create or update ${CHROOT_DIR}/etc/passwd."
+	/bin/grep --color=never "${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}"/etc/group || _die "Failed to create or update ${CHROOT_DIR}/etc/group."
+
+	_mknod "${CHROOT_DIR}"/dev/random 644 c 1 8 || return 1
+	_mknod "${CHROOT_DIR}"/dev/urandom 644 c 1 9 || return 1
+	_mknod "${CHROOT_DIR}"/dev/null 666 c 1 3 || return 1
+
+	einfo "Done."
+	echo
+	einfo "If you use syslog, you may need to manually configure ${CHROOT_DIR}/dev/log."
+	einfo "See /etc/tor/torrc.notes."
+}
+
+_check_tor_rc() {
+	local file="$1" home_dir="$2" data_dir="$3" quiet_mode="$4"
+
+	ebegin "Checking if configuration file '${file}' is valid"
+
+	if [ ! -f "${file}" ]; then
+		eend 1
+		eerror "Tor configuration file '${file}' does not exist."
+		eerror "You need to setup the file first."
+		eerror "Example is in /etc/tor/torrc.sample."
+		return 1
+	fi
+
+	(
+		[ "${quiet_mode}" = true ] && exec >/dev/null 2>&1
+		export HOME="${home_dir}"
+		exec /usr/bin/tor --verify-config -f "${file}" --User "${TOR_USER}" --DataDirectory "${data_dir}"
+	) || {
+		eend 1
+		eerror "File failed with 'tor --verify-config' test."
+		eerror "Complete command: HOME='${home_dir}' /usr/bin/tor --verify-config -f '${file}' --User '${TOR_USER}' --DataDirectory '${data_dir}'"
+		return 1
+	}
+
+	eend 0
+}
+
+checkconfig() {
+	if [ "${CHROOT_TOR_RC_UPDATE}" = true ]; then
+		_check_tor_rc "${TOR_RC}" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" false || return 1
+	else
+		_check_tor_rc "${CHROOT_DIR}${CHROOT_TOR_RC}" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" false || return 1
+	fi
+}
+
+_check_node() {
+	local node="$1" type="$2" minor="$3" major="$4"
+
+	if [ ! -"${type}" "${node}" ] || [ ! "$(stat -c '%t %T' "${node}")" = "${minor} ${major}" ]; then
+		eerror "Device node ${node} does not exist or is not valid."
+		return 1
+	fi
+
+	return 0
+}
+
+_check_chroot() {
+	local __
+
+	for __ in '' /dev /usr/bin /var/lib; do
+		checkpath -d -m 0755 -o 0:0 "${CHROOT_DIR}$__" || return 1
+	done
+
+	for __ in /etc/tor "${CHROOT_TOR_HOME_DIR}" "${CHROOT_TOR_DATA_DIR}"; do
+		checkpath -d -m 0750 -o "${TOR_USER}:${TOR_GROUP}" "${CHROOT_DIR}$__" || return 1
+	done
+
+	if [ -f "${CHROOT_DIR}/etc/tor/torrc" ]; then
+		checkpath -f -m 0750 -o "${TOR_USER}:${TOR_GROUP}" "${CHROOT_DIR}/etc/tor/torrc" || return 1
+	fi
+
+	for __ in /var/tmp /tmp; do
+		checkpath -d -m 0777 -o 0:0 "${CHROOT_DIR}$__" || return 1
+	done
+
+	_check_node "${CHROOT_DIR}"/dev/null c 1 3 || return 1
+	_check_node "${CHROOT_DIR}"/dev/random c 1 8 || return 1
+	_check_node "${CHROOT_DIR}"/dev/urandom c 1 9 || return 1
+
+	return 0
+}
+
+_mountpoint() {
+	/usr/bin/awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$1" r=1 /proc/mounts
+}
+
+_mount() {
+	if [ "$#" -lt 3 ]; then
+		eerror "_mount(): Too few arguments."
+		return 1
+	fi
+
+	local from="$1" to="$2"
+	shift 2
+
+	_mountpoint "${to}" && return 0
+
+	ebegin "Mounting ${from} to ${to}"
+	/bin/mount "${from}" "${to}" "$@"
+	eend "$?"
+}
+
+_update_torrc() {
+	ebegin "Updating ${CHROOT_DIR}${CHROOT_TOR_RC} based on ${TOR_RC}"
+	/usr/bin/awk '$1 != "User"' "${TOR_RC}" > "${CHROOT_DIR}${CHROOT_TOR_RC}"
+	eend "$?"
+}
+
+_start_stop_daemon() {
+	(
+		if [ "${VERBOSE_START_STOP_DAEMON}" = true ]; then
+			EINFO_VERBOSE=true
+			exec start-stop-daemon --verbose "$@"
+		else
+			unset EINFO_VERBOSE
+			exec start-stop-daemon "$@"
+		fi
+	)
+}
+
+start() {
+	_check_chroot_dir_value || return 1
+
+	local abs
+	abs=$(readlink -m "${CHROOT_DIR}")
+
+	if [ -z "${abs}" ]; then
+		eerror "Failed to get absolute value of CHROOT."
+		return 1
+	elif [ "${abs}" = / ]; then
+		eerror "You can't have the root directory set as chroot."
+		return 1
+	fi
+
+	if [ -e "${CHROOT_DIR}" ] && fuser -s "${CHROOT_DIR}"; then
+		eerror "Some processes are still accessing ${CHROOT_DIR}."
+		return 1
+	fi
+
+	if [ "${CHROOT_DIR_CHECK}" = true ]; then
+		_check_chroot || {
+			eerror "Your chroot directory '${CHROOT_DIR}' is inconsistent."
+			eerror "Please run '/etc/init.d/tor-chroot setup' first."
+			return 1
+		}
+	fi
+
+	if [ "${CHROOT_TOR_RC_UPDATE}" = true ]; then
+		_check_tor_rc "${TOR_RC}" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" \
+				"${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" true || return 1
+	else
+		_check_tor_rc "${CHROOT_DIR}${CHROOT_TOR_RC}" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" \
+				"${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" true || return 1
+	fi
+
+	if [ "${CHROOT_REFRESH_BINARIES}" = true ]; then
+		ebegin "Re-copying binaries to ${CHROOT_DIR}"
+
+		local libdir="$(ldd /usr/bin/tor | awk -F/ '$1 ~ /=>/ && $2 ~ /^lib/ && NF > 2 { print $2; exit }')"
+
+		if [ ! -f /usr/bin/rcopy ]; then
+			eend 1
+			eerror "/usr/bin/rcopy does not exist.  Please install sys-apps/rcopy."
+			return 1
+		fi
+
+		[ "${VERBOSE}" = true ] && QOPT= || QOPT='-q'
+
+		/usr/bin/rcopy ${QOPT} -t "${CHROOT_DIR}" -- /usr/bin/tor "${libdir}"/libnss_compat.so.* || {
+			eend 1
+			eerror "Rcopy failed."
+			return 1
+		}
+
+		eend 0
+	fi
+
+	if [ "${CHROOT_UPDATE_ETC_FILES}" = true ]; then
+		ebegin "Updating /etc files in ${CHROOT_DIR}"
+
+		for __ in hosts host.conf localtime nsswitch.conf resolv.conf; do
+			vebegin "Copying /etc/$__ to ${CHROOT_DIR}/etc/"
+
+			if cp -- "/etc/$__" "${CHROOT_DIR}/etc/"; then
+				veend 0
+			else
+				eend 1
+				[ "${VERBOSE}" = false ] && error "Failed to copy /etc/$__ to ${CHROOT_DIR}/etc/."
+				return 1
+			fi
+		done
+
+		if [ "${CHROOT_JCHROOT}" = false ] || [ "${CHROOT_JCHROOT_NEW_USER_NS}" = false ]; then
+			vebegin "Updating ${CHROOT_DIR}/etc/passwd with '/bin/grep --color=never ${TOR_USER}: /etc/passwd'"
+
+			if /bin/grep --color=never "${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}/etc/passwd"; then
+				veend 0
+			else
+				eend 1
+				[ "${VERBOSE}" = false ] && eerror "Failed to update ${CHROOT_DIR}/etc/passwd using '/bin/grep --color=never ${TOR_USER}: /etc/passwd'."
+				return 1
+			fi
+
+			vebegin "Updating ${CHROOT_DIR}/etc/group with '/bin/grep --color=never ${TOR_GROUP}: /etc/group'"
+
+			if /bin/grep --color=never "${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}/etc/group"; then
+				veend 0
+			else
+				eend 1
+				[ "${VERBOSE}" = false ] && eerror "Failed to update ${CHROOT_DIR}/etc/group using '/bin/grep --color=never ${TOR_GROUP}: /etc/group'."
+				return 1
+			fi
+		fi
+
+		[ "${VERBOSE}" = false ] && eend 0
+	fi
+
+	if [ "${CHROOT_TOR_RC_UPDATE}" = true ]; then
+		_update_torrc || return 1
+	fi
+
+	if [ "${CHROOT_TOR_HOME_DIR_BIND}" = true ]; then
+		_mount "${TOR_HOME_DIR}" "${CHROOT_TOR_HOME_DIR}" -o bind || return 1
+	fi
+
+	if [ "${CHROOT_TOR_DATA_DIR_BIND}" = true ]; then
+		_mount "${TOR_DATA_DIR}" "${CHROOT_TOR_DATA_DIR}" -o bind || return 1
+	fi
+
+	if [ "${CHROOT_JCHROOT}" = true ]; then
+		if [ "${CHROOT_JCHROOT_NEW_USER_NS}" = true ]; then
+			if [ "${CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL}" = true ] && [ -r /proc/config.gz ]; then
+				zcat /proc/config.gz | /bin/grep -q '^CONFIG_USER_NS=[yY]' &>/dev/null || \
+					ewarn "Warning: Kernel doesn't seem configured with CONFIG_USER_NS."
+			fi
+
+			ebegin "Starting chrooted Tor in new user namespace using ${CHROOT_JCHROOT_EXEC}"
+
+			: > "${PID_FILE}" && chown "${TOR_USER}:${TOR_GROUP}" "${PID_FILE}" && \
+				_start_stop_daemon --start --background --env HOME="${CHROOT_TOR_HOME_DIR}" \
+						--user="${TOR_USER}" --group="${TOR_GROUP}" -- \
+						"${CHROOT_JCHROOT_EXEC}" --new-user-ns --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
+						/usr/bin/tor -f "${CHROOT_TOR_RC}" --DataDirectory "${CHROOT_TOR_DATA_DIR}"
+		else
+			ebegin "Starting chrooted Tor using ${CHROOT_JCHROOT_EXEC}"
+
+			_start_stop_daemon --start --background -- \
+					"${CHROOT_JCHROOT_EXEC}" --user="${TOR_USER}" --group="${TOR_GROUP}" \
+					--env HOME="${CHROOT_TOR_HOME_DIR}" --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
+					/usr/bin/tor -f "${CHROOT_TOR_RC}" --DataDirectory "${CHROOT_TOR_DATA_DIR}"
+		fi
+	else
+		ebegin "Starting chrooted Tor using ${CHROOT_EXEC}"
+
+		_start_stop_daemon --start --background --make-pidfile --pidfile "${PID_FILE}" \
+				--env HOME="${CHROOT_TOR_HOME_DIR}" -- \
+				"${CHROOT_EXEC}" --userspec="${TOR_USER}:${TOR_GROUP}" "${CHROOT_DIR}" \
+				/usr/bin/tor -f "${CHROOT_TOR_RC}" --DataDirectory "${CHROOT_TOR_DATA_DIR}"
+	fi
+
+	eend "$?"
+}
+
+_umount() {
+	local dir="$1"
+	_mountpoint "${dir}" || return 0
+	ebegin "Unmounting ${dir}"
+	/bin/umount "${dir}"
+	eend "$?"
+}
+
+_wait_no_use_dir() {
+	local dir="$1"
+
+	if fuser -s "${dir}" 2>/dev/null; then
+		ebegin "Waiting until all processes stops using ${dir} (max. ${CHROOT_MOUNT_CHECK_TIMEOUT} seconds)"
+		local waited=0
+
+		while
+			sleep 1
+			waited=$(( waited + 1 ))
+			fuser -s "${dir}" 2>/dev/null
+		do
+			if [ "${waited}" -eq "${CHROOT_MOUNT_CHECK_TIMEOUT}" ]; then
+				eend 1
+				return 1
+			fi
+		done
+
+		eend 0
+	fi
+
+	return 0
+}
+
+_cleanup_chroot() {
+	local something_failed=false
+
+	if [ "${CHROOT_TOR_HOME_DIR_BIND}" = true ]; then
+		_wait_no_use_dir "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" && \
+			_umount "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" || \
+				something_failed=true
+	fi
+
+	if [ "${CHROOT_TOR_DATA_DIR_BIND}" = true ]; then
+		_wait_no_use_dir "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" && \
+			_umount "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" || \
+				something_failed=true
+	fi
+
+	[ "${something_failed}" = false ]
+}
+
+_cleanup_pid_file() {
+	if [ -e "${PID_FILE}" ] && ! fuser -s "${PID_FILE}"; then
+		vebegin "Removing ${PID_FILE}"
+		rm -f -- "${PID_FILE}"
+		veend "$?" || return 1
+	fi
+
+	return 0
+}
+
+stop() {
+	if [ "${GRACEFUL_STOP}" = true ]; then
+		_graceful_stop
+		return
+	fi
+
+	ebegin "Stopping Tor"
+	_start_stop_daemon --stop --pidfile "${PID_FILE}"
+	eend "$?" || return 1
+
+	_cleanup_chroot && _cleanup_pid_file
+}
+
+graceful() {
+	gracefulrestart
+}
+
+gracefulrestart() {
+	_graceful_stop && start
+}
+
+_graceful_stop() {
+	ebegin "Gracefully stopping Tor (Can take up to ${GRACEFUL_STOP_TIMEOUT} seconds)"
+
+	_start_stop_daemon --progress --stop --signal INT \
+			--retry "${GRACEFUL_STOP_TIMEOUT}" --pidfile "${PID_FILE}"
+
+	eend "$?" || return 1
+
+	_cleanup_chroot
+}
+
+gracefulstop() {
+	_graceful_stop && /etc/init.d/tor-chroot zap
+}
+
+reload() {
+	if [ ! -f "${PID_FILE}" ]; then
+		eerror "${SVCNAME} isn't running"
+		return 1
+	fi
+
+	if [ "${CHROOT_TOR_RC_UPDATE}" = true ]; then
+		_check_tor_rc "${TOR_RC}" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" \
+				"${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" true || return 1
+	else
+		_check_tor_rc "${CHROOT_DIR}${CHROOT_TOR_RC}" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" \
+				"${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" true || return 1
+	fi
+
+	if [ "${CHROOT_TOR_RC_UPDATE}" = true ]; then
+		_update_torrc || return 1
+	fi
+
+	ebegin "Reloading Tor configuration"
+	_start_stop_daemon --signal HUP --pidfile "${PID_FILE}"
+	eend "$?"
+}
