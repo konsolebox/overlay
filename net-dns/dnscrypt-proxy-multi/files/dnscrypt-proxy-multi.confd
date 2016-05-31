@@ -1,0 +1,22 @@
+# Specifies the path to the ruby executable which would run
+# /usr/bin/dnscrypt-proxy-multi.
+#
+# Default is '/usr/bin/ruby'.
+#
+RUBY_EXEC=/usr/bin/ruby
+
+# Change this to specify a different file for storing the PID of
+# dnscrypt-proxy-multi.
+#
+# Default is '/run/dnscrypt-proxy-multi.pid'.
+#
+PID_FILE=/run/dnscrypt-proxy-multi.pid
+
+# Specifies arguments passed to dnscrypt-proxy-multi.
+#
+# Run 'dnscrypt-proxy-multi --help' for more info
+#
+DNSCRYPT_PROXY_MULTI_OPTIONS='--local-ip=127.0.100.1-254 --local-port=53
+		--resolvers-list=/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv
+		--max-instances=10 --dnscrypt-proxy-user=dnscrypt
+		--syslog --dnscrypt-proxy-syslog'

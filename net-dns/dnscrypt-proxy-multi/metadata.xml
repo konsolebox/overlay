@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+		<description>Author of dnscrypt-proxy-multi</description>
+	</maintainer>
+	<longdescription>
+		Runs multiple instances of dnscrypt-proxy.  It parses a CSV
+		file and makes use of the entries found in it as target remote
+		services when creating instances of dnscrypt-proxy.  Remote
+		services are checked for availability before an instance of
+		dnscrypt-proxy is used to connect to them.  An FQDN can also be
+		used to check if a remote service can resolve names.  The
+		script waits for all instances to exit before it exits.  It
+		also automaticaly stops them when it receives SIGTERM or
+		SIGINT.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">konsolebox/scripts</remote-id>
+		<bugs-to>https://github.com/konsolebox/scripts/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
