@@ -29,8 +29,11 @@ DEPEND="
 	seccomp? ( sys-libs/libseccomp )
 	systemd? ( sys-apps/systemd )"
 RDEPEND="${DEPEND}
-	chroot? ( virtual/awk )
-	chroot? ( sys-apps/rcopy )
+	chroot? (
+		sys-apps/rcopy
+		sys-process/psmisc
+		virtual/awk
+	)
 	selinux? ( sec-policy/selinux-tor )"
 
 pkg_setup() {
@@ -95,7 +98,7 @@ src_install() {
 pkg_postinst() {
 	readme.gentoo_create_doc
 
-	einfo
+	einfo ""
 
 	if use chroot; then
 		einfo "If you plan to run Tor in chroot mode, configure /etc/conf.d/tor-chroot,"
@@ -104,7 +107,7 @@ pkg_postinst() {
 		einfo "If you plan to run Tor in chroot mode, please enable 'chroot' use flag."
 	fi
 
-	einfo
+	einfo ""
 
 	if [[ $(gcc-major-version) -eq 4 && $(gcc-minor-version) -eq 8 && $(gcc-micro-version) -ge 1 ]]; then
 		ewarn "Due to a bug in  >=gcc-4.8.1, compiling ${P} with -Os leads to an infinite"

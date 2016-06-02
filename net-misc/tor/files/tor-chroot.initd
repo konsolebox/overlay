@@ -10,7 +10,7 @@ CHROOT_JCHROOT_EXEC=${CHROOT_JCHROOT_EXEC:-/usr/bin/jchroot}
 CHROOT_JCHROOT_NEW_USER_NS=${CHROOT_JCHROOT_NEW_USER_NS:-false}
 CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL=${CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL:-true}
 CHROOT_MOUNT_CHECK_TIMEOUT=${CHROOT_MOUNT_CHECK_TIMEOUT:-20}
-CHROOT_REFRESH_BINARIES=${CHROOT_REFRESH_BINARIES:-true}
+CHROOT_REFRESH_BINARIES=${CHROOT_REFRESH_BINARIES:-false}
 CHROOT_TOR_DATA_DIR=${CHROOT_TOR_DATA_DIR:-/var/lib/tor/data}
 CHROOT_TOR_DATA_DIR_BIND=${CHROOT_TOR_DATA_DIR_BIND:-false}
 CHROOT_TOR_HOME_DIR=${CHROOT_TOR_HOME_DIR:-/var/lib/tor}
@@ -36,15 +36,15 @@ else
 	unset EINFO_VERBOSE
 fi
 
-extra_commands="checkconfig setup"
-extra_started_commands="graceful gracefulrestart gracefulstop reload"
-description="Anonymizing overlay network for TCP"
+description="Anonymizing overlay network for TCP (Chroot Mode)"
 description_checkconfig="Check if ${TOR_RC} is valid"
-description_reload="Reload the configuration"
-description_graceful="Gracefully restart"
 description_gracefulrestart="Gracefully restart"
 description_gracefulstop="Gracefully stop"
+description_graceful="Gracefully restart"
+description_reload="Reload the configuration"
 description_setup="Set up chroot directory"
+extra_commands="checkconfig setup"
+extra_started_commands="graceful gracefulrestart gracefulstop reload"
 
 depend() {
 	need net
@@ -96,7 +96,7 @@ setup() {
 		ewarn "${CHROOT_DIR} already exists and some things might be overridden."
 		ewarn "Press CTRL+C within 10 seconds if you don't want to continue."
 		sleep 10
-		echo
+		einfo ""
 	fi
 
 	ebegin "Setting up the chroot directory"
@@ -104,26 +104,26 @@ setup() {
 	local __
 
 	for __ in '' /dev "/etc/tor" "${CHROOT_TOR_HOME_DIR}" "${CHROOT_TOR_DATA_DIR}" /var/tmp /tmp; do
-		_call /bin/mkdir -p "${CHROOT_DIR}$__"
+		_call mkdir -p "${CHROOT_DIR}$__"
 	done
 
-	_call /bin/chown "${TOR_USER}:${TOR_GROUP}" "${CHROOT_DIR}/etc/tor" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}"
-	_call /bin/chmod 0750 "${CHROOT_DIR}/etc/tor" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}"
-	_call /bin/chmod 0777 "${CHROOT_DIR}/var/tmp" "${CHROOT_DIR}/tmp"
+	_call chown "${TOR_USER}:${TOR_GROUP}" "${CHROOT_DIR}/etc/tor" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}"
+	_call chmod 0750 "${CHROOT_DIR}/etc/tor" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}"
+	_call chmod 0777 "${CHROOT_DIR}/var/tmp" "${CHROOT_DIR}/tmp"
 
 	local libdir
-	libdir=$(ldd /usr/bin/tor | /usr/bin/awk -F/ '$1 ~ /=>/ && $2 ~ /^lib/ && NF > 2 { print $2; exit }')
-	_call /usr/bin/rcopy -t "${CHROOT_DIR}" -- /usr/bin/tor "/${libdir}/libnss_compat.so."*
+	libdir=$(ldd /usr/bin/tor | awk -F/ '$3 ~ /^ld-linux/ { print "/" $2 }')
+	_call rcopy -t "${CHROOT_DIR}" -- /usr/bin/tor "/${libdir}/libnss_compat.so."*
 
-	/bin/grep --color=never "${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}"/etc/passwd || _die "Failed to create or update ${CHROOT_DIR}/etc/passwd."
-	/bin/grep --color=never "${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}"/etc/group || _die "Failed to create or update ${CHROOT_DIR}/etc/group."
+	grep --color=never "^${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}"/etc/passwd || _die "Failed to create or update ${CHROOT_DIR}/etc/passwd."
+	grep --color=never "^${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}"/etc/group || _die "Failed to create or update ${CHROOT_DIR}/etc/group."
 
 	_mknod "${CHROOT_DIR}"/dev/random 644 c 1 8 || return 1
 	_mknod "${CHROOT_DIR}"/dev/urandom 644 c 1 9 || return 1
 	_mknod "${CHROOT_DIR}"/dev/null 666 c 1 3 || return 1
 
 	einfo "Done."
-	echo
+	einfo ""
 	einfo "If you use syslog, you may need to manually configure ${CHROOT_DIR}/dev/log."
 	einfo "See /etc/tor/torrc.notes."
 }
@@ -201,7 +201,7 @@ _check_chroot() {
 }
 
 _mountpoint() {
-	/usr/bin/awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$1" r=1 /proc/mounts
+	awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$1" r=1 /proc/mounts
 }
 
 _mount() {
@@ -216,13 +216,13 @@ _mount() {
 	_mountpoint "${to}" && return 0
 
 	ebegin "Mounting ${from} to ${to}"
-	/bin/mount "${from}" "${to}" "$@"
+	mount "${from}" "${to}" "$@"
 	eend "$?"
 }
 
 _update_torrc() {
 	ebegin "Updating ${CHROOT_DIR}${CHROOT_TOR_RC} based on ${TOR_RC}"
-	/usr/bin/awk '$1 != "User"' "${TOR_RC}" > "${CHROOT_DIR}${CHROOT_TOR_RC}"
+	awk '$1 != "User"' "${TOR_RC}" > "${CHROOT_DIR}${CHROOT_TOR_RC}"
 	eend "$?"
 }
 
@@ -240,17 +240,6 @@ _start_stop_daemon() {
 
 start() {
 	_check_chroot_dir_value || return 1
-
-	local abs
-	abs=$(readlink -m "${CHROOT_DIR}")
-
-	if [ -z "${abs}" ]; then
-		eerror "Failed to get absolute value of CHROOT."
-		return 1
-	elif [ "${abs}" = / ]; then
-		eerror "You can't have the root directory set as chroot."
-		return 1
-	fi
 
 	if [ -e "${CHROOT_DIR}" ] && fuser -s "${CHROOT_DIR}"; then
 		eerror "Some processes are still accessing ${CHROOT_DIR}."
@@ -276,7 +265,8 @@ start() {
 	if [ "${CHROOT_REFRESH_BINARIES}" = true ]; then
 		ebegin "Re-copying binaries to ${CHROOT_DIR}"
 
-		local libdir="$(ldd /usr/bin/tor | awk -F/ '$1 ~ /=>/ && $2 ~ /^lib/ && NF > 2 { print $2; exit }')"
+		local libdir
+		libdir=$(ldd /usr/bin/tor | awk -F/ '$3 ~ /^ld-linux/ { print "/" $2 }')
 
 		if [ ! -f /usr/bin/rcopy ]; then
 			eend 1
@@ -311,23 +301,23 @@ start() {
 		done
 
 		if [ "${CHROOT_JCHROOT}" = false ] || [ "${CHROOT_JCHROOT_NEW_USER_NS}" = false ]; then
-			vebegin "Updating ${CHROOT_DIR}/etc/passwd with '/bin/grep --color=never ${TOR_USER}: /etc/passwd'"
+			vebegin "Updating ${CHROOT_DIR}/etc/passwd with 'grep --color=never ${TOR_USER}: /etc/passwd'"
 
-			if /bin/grep --color=never "${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}/etc/passwd"; then
+			if grep --color=never "${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}/etc/passwd"; then
 				veend 0
 			else
 				eend 1
-				[ "${VERBOSE}" = false ] && eerror "Failed to update ${CHROOT_DIR}/etc/passwd using '/bin/grep --color=never ${TOR_USER}: /etc/passwd'."
+				[ "${VERBOSE}" = false ] && eerror "Failed to update ${CHROOT_DIR}/etc/passwd using 'grep --color=never ${TOR_USER}: /etc/passwd'."
 				return 1
 			fi
 
-			vebegin "Updating ${CHROOT_DIR}/etc/group with '/bin/grep --color=never ${TOR_GROUP}: /etc/group'"
+			vebegin "Updating ${CHROOT_DIR}/etc/group with 'grep --color=never ${TOR_GROUP}: /etc/group'"
 
-			if /bin/grep --color=never "${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}/etc/group"; then
+			if grep --color=never "${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}/etc/group"; then
 				veend 0
 			else
 				eend 1
-				[ "${VERBOSE}" = false ] && eerror "Failed to update ${CHROOT_DIR}/etc/group using '/bin/grep --color=never ${TOR_GROUP}: /etc/group'."
+				[ "${VERBOSE}" = false ] && eerror "Failed to update ${CHROOT_DIR}/etc/group using 'grep --color=never ${TOR_GROUP}: /etc/group'."
 				return 1
 			fi
 		fi
@@ -350,17 +340,18 @@ start() {
 	if [ "${CHROOT_JCHROOT}" = true ]; then
 		if [ "${CHROOT_JCHROOT_NEW_USER_NS}" = true ]; then
 			if [ "${CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL}" = true ] && [ -r /proc/config.gz ]; then
-				zcat /proc/config.gz | /bin/grep -q '^CONFIG_USER_NS=[yY]' &>/dev/null || \
+				zcat /proc/config.gz | grep -q '^CONFIG_USER_NS=[yY]' >/dev/null 2>&1 || \
 					ewarn "Warning: Kernel doesn't seem configured with CONFIG_USER_NS."
 			fi
 
 			ebegin "Starting chrooted Tor in new user namespace using ${CHROOT_JCHROOT_EXEC}"
 
-			: > "${PID_FILE}" && chown "${TOR_USER}:${TOR_GROUP}" "${PID_FILE}" && \
+			: > "${PID_FILE}" && chown "${TOR_USER}:${TOR_GROUP}" "${PID_FILE}" && {
 				_start_stop_daemon --start --background --env HOME="${CHROOT_TOR_HOME_DIR}" \
 						--user="${TOR_USER}" --group="${TOR_GROUP}" -- \
 						"${CHROOT_JCHROOT_EXEC}" --new-user-ns --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
 						/usr/bin/tor -f "${CHROOT_TOR_RC}" --DataDirectory "${CHROOT_TOR_DATA_DIR}"
+			}
 		else
 			ebegin "Starting chrooted Tor using ${CHROOT_JCHROOT_EXEC}"
 
@@ -385,7 +376,7 @@ _umount() {
 	local dir="$1"
 	_mountpoint "${dir}" || return 0
 	ebegin "Unmounting ${dir}"
-	/bin/umount "${dir}"
+	umount "${dir}"
 	eend "$?"
 }
 
@@ -447,7 +438,7 @@ stop() {
 		return
 	fi
 
-	ebegin "Stopping Tor"
+	ebegin "Stopping Tor (chroot)"
 	_start_stop_daemon --stop --pidfile "${PID_FILE}"
 	eend "$?" || return 1
 
@@ -463,7 +454,7 @@ gracefulrestart() {
 }
 
 _graceful_stop() {
-	ebegin "Gracefully stopping Tor (Can take up to ${GRACEFUL_STOP_TIMEOUT} seconds)"
+	ebegin "Gracefully stopping Tor (chroot) (Can take up to ${GRACEFUL_STOP_TIMEOUT} seconds)"
 
 	_start_stop_daemon --progress --stop --signal INT \
 			--retry "${GRACEFUL_STOP_TIMEOUT}" --pidfile "${PID_FILE}"

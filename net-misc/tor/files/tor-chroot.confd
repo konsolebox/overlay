@@ -29,7 +29,7 @@ CHROOT_EXEC=/bin/chroot
 #
 # Default value is 'false'.
 #
-CHROOT_JCHROOT=true
+CHROOT_JCHROOT=false
 
 # Set the location of jchroot.
 #
@@ -44,7 +44,7 @@ CHROOT_JCHROOT_EXEC=/usr/bin/jchroot
 #
 # Default value is 'false'.
 #
-CHROOT_JCHROOT_NEW_USER_NS=true
+CHROOT_JCHROOT_NEW_USER_NS=false
 
 # Check if CONFIG_USER_NS is set in /proc/config.gz, if file exists.
 # It gives a warning if CONFIG_USER_NS isn't set.
@@ -60,12 +60,12 @@ CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL=true
 #
 CHROOT_MOUNT_CHECK_TIMEOUT=20
 
-# Set this option to 'false' if you don't want to
-# re-copy runtime binaries to chroot directory everytime Tor starts.
+# Set this option to 'true' if you want to re-copy runtime binaries to
+# chroot directory everytime Tor starts.
 #
-# Default value is 'true'.
+# Default value is 'false'.
 #
-CHROOT_REFRESH_BINARIES=true
+CHROOT_REFRESH_BINARIES=false
 
 # Specifies the relative location of Tor's data directory in CHROOT_DIR.
 #
