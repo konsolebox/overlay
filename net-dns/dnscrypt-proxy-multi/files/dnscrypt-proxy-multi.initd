@@ -2,14 +2,16 @@
 # Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+RUBY_EXEC=${RUBY_EXEC:-/usr/bin/ruby}
+PID_FILE=${PID_FILE:-/run/dnscrypt-proxy-multi.pid}
+
+description="Runs multiple instances of dnscrypt-proxy"
+
 depend() {
 	use net
 	before dns
 	after logger
 }
-
-RUBY_EXEC=${RUBY_EXEC:-/usr/bin/ruby}
-PID_FILE=${PID_FILE:-/run/dnscrypt-proxy-multi.pid}
 
 start() {
 	ebegin "Starting dnscrypt-proxy-multi"

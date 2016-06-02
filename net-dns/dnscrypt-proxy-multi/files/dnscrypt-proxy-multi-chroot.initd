@@ -1,0 +1,402 @@
+#!/sbin/openrc-run
+# Copyright 1999-2016 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+CHROOT_DIR=${CHROOT_DIR:-/chroot/dnscrypt-proxy-multi}
+CHROOT_DIR_CHECK=${CHROOT_DIR_CHECK:-true}
+CHROOT_EXEC=${CHROOT_EXEC:-/bin/chroot}
+CHROOT_JCHROOT=${CHROOT_JCHROOT:-false}
+CHROOT_JCHROOT_EXEC=${CHROOT_JCHROOT_EXEC:-/usr/bin/jchroot}
+CHROOT_JCHROOT_NEW_USER_NS=${CHROOT_JCHROOT_NEW_USER_NS:-false}
+CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL=${CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL:-true}
+CHROOT_LOG_DIR=${CHROOT_LOG_DIR:-/var/log/dnscrypt-proxy-multi}
+CHROOT_LOG_DIR_BIND=${CHROOT_LOG_DIR_BIND:-false}
+CHROOT_RESOLVERS_LIST=${CHROOT_RESOLVERS_LIST:-/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv}
+CHROOT_RESOLVERS_LIST_UPDATE=${CHROOT_RESOLVERS_LIST_UPDATE:-false}
+DPM_GROUP=${DPM_GROUP:-dnscrypt}
+DPM_USER=${DPM_USER:-dnscrypt}
+LOG_DIR=${LOG_DIR:-/var/log/dnscrypt-proxy-multi}
+PID_FILE=${PID_FILE:-/run/dnscrypt-proxy-multi-chroot.pid}
+PRIVILEGE_DROP_MODE=${PRIVILEGE_DROP_MODE:-chroot}
+RESOLVERS_LIST=${RESOLVERS_LIST:-/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv}
+VERBOSE=${VERBOSE:-false}
+VERBOSE_START_STOP_DAEMON=${VERBOSE_START_STOP_DAEMON:-false}
+
+if [ "${VERBOSE}" = true ]; then
+	EINFO_VERBOSE=true
+	export EINFO_VERBOSE
+else
+	unset EINFO_VERBOSE
+fi
+
+extra_commands="setup"
+description="Runs multiple instances of dnscrypt-proxy (Chroot Mode)"
+description_setup="Set up chroot directory"
+
+depend() {
+	use net
+	before dns
+	after logger
+}
+
+_check_chroot_dir_value() {
+	if [ -z "${CHROOT_DIR}" ]; then
+		eerror "Please set a value for 'CHROOT_DIR' in '/etc/conf.d/dnscrypt-proxy-multi-chroot'."
+		return 1
+	elif [ "${CHROOT_DIR}" = / ]; then
+		eerror "Root directory can't be set as chroot directory."
+		return 1
+	fi
+
+	return 0
+}
+
+_die() {
+	eerror "$1"
+	exit 1
+}
+
+_call() {
+	"$@" || _die "Command failed: $*"
+}
+
+_mknod() {
+	local target mode
+	target=$1 mode=$2
+	shift 2
+
+	if [ -e "${target}" ]; then
+		if [ -c "${target}" ]; then
+			ewarn "Skipping creation of ${target} as it already exists."
+			return 0
+		else
+			eerror "${target} exists but is not a device node."
+			return 1
+		fi
+	else
+		_call mknod -m "${mode}" "${target}" "$@"
+	fi
+}
+
+_get_chroot_ruby_package() {
+	if [ -z "${CHROOT_RUBY_PACKAGE}" ]; then
+		CHROOT_RUBY_PACKAGE=$(qlist -CIS dev-lang/ruby | tail -n 1)
+		[ "$?" -eq 0 ] && [ -n "${CHROOT_RUBY_PACKAGE}" ] || _die "Failed to get default value for CHROOT_RUBY_PACKAGE."
+	fi
+}
+
+_get_ruby_exec() {
+	qlist -C "${CHROOT_RUBY_PACKAGE}" | grep '^/usr/bin/ruby' | tail -n 1
+}
+
+_get_chroot_ruby_exec() {
+	if [ -z "${CHROOT_RUBY_EXEC}" ]; then
+		_get_chroot_ruby_package
+		CHROOT_RUBY_EXEC=$(_get_ruby_exec)
+		[ "$?" -eq 0 ] && [ -n "${CHROOT_RUBY_EXEC}" ] || _die "Failed to get default value for CHROOT_RUBY_EXEC."
+	fi
+}
+
+setup() {
+	_check_chroot_dir_value || return 1
+
+	if [ -d "${CHROOT_DIR}" ]; then
+		ewarn "${CHROOT_DIR} already exists and some things might be overridden."
+		ewarn "Press CTRL+C within 10 seconds if you don't want to continue."
+		sleep 10
+		einfo ""
+	fi
+
+	_get_chroot_ruby_package
+
+	ebegin "Setting up the chroot directory"
+
+	_call mkdir -p "${CHROOT_DIR}/dev" "${CHROOT_DIR}/etc" \
+			"${CHROOT_DIR}${CHROOT_LOG_DIR}" "${CHROOT_DIR}/tmp" \
+			"${CHROOT_DIR}/var/empty" "${CHROOT_DIR}/var/tmp" \
+			"${CHROOT_DIR}${CHROOT_RESOLVERS_LIST%/*}"
+
+	_call chown "${DPM_USER}:${DPM_GROUP}" "${CHROOT_DIR}/${CHROOT_LOG_DIR}"
+	_call chmod 0750 "${CHROOT_DIR}${CHROOT_LOG_DIR}"
+	_call chmod 0755 "${CHROOT_DIR}/var/empty"
+	_call chmod 0777 "${CHROOT_DIR}/tmp" "${CHROOT_DIR}/var/tmp"
+
+	_call cp "${RESOLVERS_LIST}" "${CHROOT_DIR}${CHROOT_RESOLVERS_LIST}"
+
+	local libdir
+	libdir=$(ldd "$(_get_ruby_exec)" | awk -F/ '$3 ~ /^ld-linux/ { print "/" $2 }')
+
+	(
+		qlist -C net-dns/dnscrypt-proxy "${CHROOT_RUBY_PACKAGE}" dev-ruby/rubygems \
+				net-dns/dnscrypt-proxy net-dns/dnscrypt-proxy-multi
+		printf '%s\n' "${libdir}/libnss_compat"*
+	) | grep -vEe '/(doc|conf\.d|init\.d|include|man)/' | xargs -- rcopy -t "${CHROOT_DIR}" || \
+	{
+		eend 1
+		eerror "Rcopy failed."
+		return 1
+	}
+
+	_mknod "${CHROOT_DIR}"/dev/random 644 c 1 8 || return 1
+	_mknod "${CHROOT_DIR}"/dev/urandom 644 c 1 9 || return 1
+	_mknod "${CHROOT_DIR}"/dev/null 666 c 1 3 || return 1
+
+	grep --color=never -e "^${DPM_USER}:" -e "^${DNSCRYPT_PROXY_USER}:" /etc/passwd > "${CHROOT_DIR}"/etc/passwd || \
+		_die "Failed to create or update ${CHROOT_DIR}/etc/passwd."
+
+	grep --color=never -e "^${DPM_GROUP}:" /etc/group > "${CHROOT_DIR}"/etc/group || \
+		_die "Failed to create or update ${CHROOT_DIR}/etc/group."
+
+	einfo "Done."
+	einfo ""
+	einfo "If you use syslog, you may need to manually configure ${CHROOT_DIR}/dev/log"
+	einfo "in /etc/syslog-ng/syslog-ng.conf.  Example:"
+	einfo ""
+	einfo 'source s_dnscrypt_proxy_multi { unix-stream("/chroot/dnscrypt-proxy-multi/dev/log" max-connections(10) group(dnscrypt)); };'
+	einfo 'filter f_dnscrypt_proxy { program(^dnscrypt-proxy$); };'
+	einfo 'filter f_dnscrypt_proxy_multi { program(^dnscrypt-proxy-multi$); };'
+	einfo 'destination d_dnscrypt_proxy { file("/var/log/dnscrypt-proxy.log"); };'
+	einfo 'destination d_dnscrypt_proxy_multi { file("/var/log/dnscrypt-proxy-multi.log"); };'
+	einfo 'log { source(s_dnscrypt_proxy_multi); filter(f_dnscrypt_proxy); destination(d_dnscrypt_proxy); };'
+	einfo 'log { source(s_dnscrypt_proxy_multi); filter(f_dnscrypt_proxy_multi); destination(d_dnscrypt_proxy_multi); };'
+}
+
+_mountpoint() {
+	awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$1" r=1 /proc/mounts
+}
+
+_mount() {
+	if [ "$#" -lt 3 ]; then
+		eerror "_mount(): Too few arguments."
+		return 1
+	fi
+
+	local from="$1" to="$2"
+	shift 2
+
+	_mountpoint "${to}" && return 0
+
+	ebegin "Mounting ${from} to ${to}"
+	mount "${from}" "${to}" "$@"
+	eend "$?"
+}
+
+_check_node() {
+	local node="$1" type="$2" minor="$3" major="$4"
+
+	if [ ! -"${type}" "${node}" ] || [ ! "$(stat -c '%t %T' "${node}")" = "${minor} ${major}" ]; then
+		eerror "Device node ${node} does not exist or is not valid."
+		return 1
+	fi
+
+	return 0
+}
+
+_check_chroot() {
+	checkpath -d -m 0750 -o "${DPM_USER}:${DPM_GROUP}" "${CHROOT_DIR}/${CHROOT_LOG_DIR}" || return 1
+	checkpath -d -m 0755 -o 0:0 "${CHROOT_DIR}/dev" "${CHROOT_DIR}/etc" "${CHROOT_DIR}/var/empty" || return 1
+	checkpath -d -m 0777 -o 0:0 "${CHROOT_DIR}/tmp" "${CHROOT_DIR}/var/tmp" || return 1
+
+	_check_node "${CHROOT_DIR}"/dev/null c 1 3 || return 1
+	_check_node "${CHROOT_DIR}"/dev/random c 1 8 || return 1
+	_check_node "${CHROOT_DIR}"/dev/urandom c 1 9 || return 1
+
+	return 0
+}
+
+_check_privilege_drop_mode() {
+	case ${PRIVILEGE_DROP_MODE} in
+	chroot|dnscrypt-proxy-multi|dpm|dnscrypt-proxy|dp)
+		;;
+	*)
+		eerror "Invalid privilege drop mode: ${PRIVILEGE_DROP_MODE}"
+		return 1
+		;;
+	esac
+
+	if [ "${CHROOT_JCHROOT}" = true ] && [ "${CHROOT_JCHROOT_NEW_USER_NS}" = true ]; then
+		case ${PRIVILEGE_DROP_MODE} in
+		dnscrypt-proxy-multi|dpm|dnscrypt-proxy|dp)
+			eerror "Privilege drop mode '${PRIVILEGE_DROP_MODE}' does not apply with CHROOT_JCHROOT_NEW_USER_NS."
+			return 1
+			;;
+		esac
+	fi
+
+	return 0
+}
+
+_start_stop_daemon() {
+	(
+		if [ "${VERBOSE_START_STOP_DAEMON}" = true ]; then
+			veinfo "Command: start-stop-daemon --verbose $*"
+			EINFO_VERBOSE=true
+			exec start-stop-daemon --verbose "$@"
+		else
+			veinfo "Command: start-stop-daemon $*"
+			unset EINFO_VERBOSE
+			exec start-stop-daemon "$@"
+		fi
+	)
+}
+
+start() {
+	_check_privilege_drop_mode || return 1
+	_get_chroot_ruby_exec
+
+	if [ -e "${CHROOT_DIR}" ] && fuser -s "${CHROOT_DIR}"; then
+		eerror "Some processes are still accessing ${CHROOT_DIR}."
+		return 1
+	fi
+
+	if [ "${CHROOT_DIR_CHECK}" = true ]; then
+		_check_chroot || {
+			eerror "Your chroot directory '${CHROOT_DIR}' is inconsistent."
+			eerror "Please run '/etc/init.d/dnscrpyt-proxy-multi-chroot setup' first."
+			return 1
+		}
+	fi
+
+	if [ "${CHROOT_RESOLVERS_LIST_UPDATE}" = true ]; then
+		ebegin "Updating ${CHROOT_DIR}${CHROOT_RESOLVERS_LIST} with ${RESOLVERS_LIST}"
+		cp "${CHROOT_DIR}${CHROOT_RESOLVERS_LIST}" "${RESOLVERS_LIST}"
+		eend "$?" || return 1
+	fi
+
+	if [ "${CHROOT_LOG_DIR_BIND}" = true ]; then
+		_mount "${LOG_DIR}" "${CHROOT_LOG_DIR}" -o bind || return 1
+	fi
+
+	if [ "${CHROOT_JCHROOT}" = true ]; then
+		if [ "${CHROOT_JCHROOT_NEW_USER_NS}" = true ]; then
+			if [ "${CHROOT_JCHROOT_NEW_USER_NS_CHECK_KERNEL}" = true ] && [ -r /proc/config.gz ]; then
+				zcat /proc/config.gz | grep -q '^CONFIG_USER_NS=[yY]' >/dev/null 2>&1 || \
+					ewarn "Warning: Kernel doesn't seem configured with CONFIG_USER_NS."
+			fi
+
+			ebegin "Starting chrooted dnscrypt-proxy-multi in new user namespace using ${CHROOT_JCHROOT_EXEC}"
+
+			: > "${PID_FILE}" && chown "${DPM_USER}:${DPM_GROUP}" "${PID_FILE}" && {
+				_start_stop_daemon --start --background --env HOME="${CHROOT_DNSCRYPT_PROXY_MULTI_HOME_DIR}" \
+						--user="${DPM_USER}" --group="${DPM_GROUP}" -- \
+						"${CHROOT_JCHROOT_EXEC}" --new-user-ns --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
+						"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
+						--resolvers-list="${CHROOT_RESOLVERS_LIST}"
+			}
+		else
+			ebegin "Starting chrooted dnscrypt-proxy-multi using ${CHROOT_JCHROOT_EXEC}"
+
+			case ${PRIVILEGE_DROP_MODE} in
+			chroot)
+				_start_stop_daemon --start --background -- \
+						"${CHROOT_JCHROOT_EXEC}" --user="${DPM_USER}" --group="${DPM_GROUP}" \
+						--pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
+						"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
+						--resolvers-list="${CHROOT_RESOLVERS_LIST}"
+				;;
+			dnscrpyt-proxy-multi|dpm)
+				_start_stop_daemon --start --background -- \
+						"${CHROOT_JCHROOT_EXEC}" --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
+						"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
+						--user="${DPM_USER}" --group="${DPM_GROUP}" \
+						--resolvers-list="${CHROOT_RESOLVERS_LIST}"
+				;;
+			dnscrypt-proxy|dp)
+				_start_stop_daemon --start --background -- \
+						"${CHROOT_JCHROOT_EXEC}" --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
+						"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
+						--dnscrypt-proxy-user="${DPM_USER}" --group="${DPM_GROUP}" \
+						--resolvers-list="${CHROOT_RESOLVERS_LIST}"
+				;;
+			esac
+		fi
+	else
+		ebegin "Starting chrooted dnscrypt-proxy-multi using ${CHROOT_EXEC}"
+
+		case ${PRIVILEGE_DROP_MODE} in
+		chroot)
+			_start_stop_daemon --start --background --make-pidfile --pidfile "${PID_FILE}" -- \
+					"${CHROOT_EXEC}" --userspec="${DPM_USER}:${DPM_GROUP}" "${CHROOT_DIR}" \
+					"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
+					--resolvers-list="${CHROOT_RESOLVERS_LIST}"
+			;;
+		dnscrpyt-proxy-multi|dpm)
+			_start_stop_daemon --start --background --make-pidfile --pidfile "${PID_FILE}" -- \
+					"${CHROOT_EXEC}" "${CHROOT_DIR}" \
+					"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
+					--user="${DPM_USER}" --group="${DPM_GROUP}" --resolvers-list="${CHROOT_RESOLVERS_LIST}"
+			;;
+		dnscrypt-proxy|dp)
+			_start_stop_daemon --start --background --make-pidfile --pidfile "${PID_FILE}" -- \
+					"${CHROOT_EXEC}" "${CHROOT_DIR}" \
+					"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
+					--dnscrypt-proxy-user="${DPM_USER}" --group="${DPM_GROUP}" \
+					--resolvers-list="${CHROOT_RESOLVERS_LIST}"
+			;;
+		esac
+	fi
+
+	eend "$?"
+}
+
+_umount() {
+	local dir="$1"
+	_mountpoint "${dir}" || return 0
+	ebegin "Unmounting ${dir}"
+	umount "${dir}"
+	eend "$?"
+}
+
+_wait_no_use_dir() {
+	local dir="$1"
+
+	if fuser -s "${dir}" 2>/dev/null; then
+		ebegin "Waiting until all processes stops using ${dir} (max. ${CHROOT_MOUNT_CHECK_TIMEOUT} seconds)"
+		local waited=0
+
+		while
+			sleep 1
+			waited=$(( waited + 1 ))
+			fuser -s "${dir}" 2>/dev/null
+		do
+			if [ "${waited}" -eq "${CHROOT_MOUNT_CHECK_TIMEOUT}" ]; then
+				eend 1
+				return 1
+			fi
+		done
+
+		eend 0
+	fi
+
+	return 0
+}
+
+_cleanup_chroot() {
+	local something_failed=false
+
+	if [ "${CHROOT_LOG_DIR_BIND}" = true ]; then
+		_wait_no_use_dir "${CHROOT_DIR}${CHROOT_LOG_DIR}" && \
+			_umount "${CHROOT_DIR}${CHROOT_LOG_DIR}" || \
+				something_failed=true
+	fi
+
+	[ "${something_failed}" = false ]
+}
+
+_cleanup_pid_file() {
+	if [ -e "${PID_FILE}" ] && ! fuser -s "${PID_FILE}"; then
+		vebegin "Removing ${PID_FILE}"
+		rm -f -- "${PID_FILE}"
+		veend "$?" || return 1
+	fi
+
+	return 0
+}
+
+stop() {
+	ebegin "Stopping dnscrypt-proxy-multi (chroot)"
+	start-stop-daemon --stop --quiet --pidfile "${PID_FILE}"
+	eend "$?" || return 1
+
+	_cleanup_chroot && _cleanup_pid_file
+}

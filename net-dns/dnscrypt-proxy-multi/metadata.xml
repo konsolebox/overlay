@@ -17,6 +17,9 @@
 		also automaticaly stops them when it receives SIGTERM or
 		SIGINT.
 	</longdescription>
+	<use>
+		<flag name="chroot">Add chroot support with /etc/init.d/dnscrypt-proxy-multi-chroot</flag>
+	</use>
 	<upstream>
 		<remote-id type="github">konsolebox/scripts</remote-id>
 		<bugs-to>https://github.com/konsolebox/scripts/issues</bugs-to>

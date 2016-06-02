@@ -14,9 +14,9 @@ PID_FILE=/run/dnscrypt-proxy-multi.pid
 
 # Specifies arguments passed to dnscrypt-proxy-multi.
 #
-# Run 'dnscrypt-proxy-multi --help' for more info
+# Run 'dnscrypt-proxy-multi --help' for more info.
 #
-DNSCRYPT_PROXY_MULTI_OPTIONS='--local-ip=127.0.100.1-254 --local-port=53
+DNSCRYPT_PROXY_MULTI_OPTIONS='--local-ip=127.0.0.1 --local-port=5300-5399
 		--resolvers-list=/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv
 		--max-instances=10 --dnscrypt-proxy-user=dnscrypt
 		--syslog --dnscrypt-proxy-syslog'
