@@ -1,5 +1,6 @@
 [konsolebox]
+auto-sync = yes
 location = /var/local/overlays/konsolebox
+masters = gentoo
 sync-type = git
 sync-uri = git://github.com/konsolebox/overlay.git
-auto-sync = yes
