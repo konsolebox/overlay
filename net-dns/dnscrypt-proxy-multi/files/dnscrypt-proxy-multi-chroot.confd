@@ -88,7 +88,11 @@ CHROOT_RESOLVERS_LIST=/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv
 #
 CHROOT_RESOLVERS_LIST_UPDATE=false
 
-# The installed ruby package that should be installed in chroot.
+# The installed Ruby package that should be installed in chroot.
+#
+# It is recommended that this is explicitly specified to prevent delays when
+# `qlist` is called, and prevent errors caused by incompatibilties with future
+# Ruby versions.
 #
 # Example: dev-lang/ruby:2.2
 #
@@ -96,8 +100,12 @@ CHROOT_RESOLVERS_LIST_UPDATE=false
 #
 CHROOT_RUBY_PACKAGE=
 
-# Specifies the path to the ruby executable which would run
+# Specifies the path to the ruby executable in CHROOT_DIR which would run
 # /usr/bin/dnscrypt-proxy-multi.
+#
+# It is recommended that this is explicitly specified to prevent delays when
+# `qlist` is called, and prevent errors caused by incompatibilties with future
+# Ruby versions.
 #
 # Example: /usr/bin/ruby22
 #

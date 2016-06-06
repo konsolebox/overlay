@@ -80,8 +80,10 @@ _mknod() {
 
 _get_chroot_ruby_package() {
 	if [ -z "${CHROOT_RUBY_PACKAGE}" ]; then
+		ewarn "Warning: Not specifying CHROOT_RUBY_PACKAGE could cause delays and cause incompatibilities with future versions of Ruby."
 		CHROOT_RUBY_PACKAGE=$(qlist -CIS dev-lang/ruby | tail -n 1)
 		[ "$?" -eq 0 ] && [ -n "${CHROOT_RUBY_PACKAGE}" ] || _die "Failed to get default value for CHROOT_RUBY_PACKAGE."
+		ewarn "The current produced value is ${CHROOT_RUBY_PACKAGE}."
 	fi
 }
 
@@ -92,8 +94,10 @@ _get_ruby_exec() {
 _get_chroot_ruby_exec() {
 	if [ -z "${CHROOT_RUBY_EXEC}" ]; then
 		_get_chroot_ruby_package
+		ewarn "Warning: Not specifying CHROOT_RUBY_EXEC could cause delays and cause incompatibilities with future versions of Ruby."
 		CHROOT_RUBY_EXEC=$(_get_ruby_exec)
 		[ "$?" -eq 0 ] && [ -n "${CHROOT_RUBY_EXEC}" ] || _die "Failed to get default value for CHROOT_RUBY_EXEC."
+		ewarn "The current produced value is ${CHROOT_RUBY_EXEC}.  It is based on the package ${CHROOT_RUBY_PACKAGE}."
 	fi
 }
 
