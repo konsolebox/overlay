@@ -263,7 +263,7 @@ start() {
 
 	if [ "${CHROOT_RESOLVERS_LIST_UPDATE}" = true ]; then
 		ebegin "Updating ${CHROOT_DIR}${CHROOT_RESOLVERS_LIST} with ${RESOLVERS_LIST}"
-		cp "${CHROOT_DIR}${CHROOT_RESOLVERS_LIST}" "${RESOLVERS_LIST}"
+		cp "${RESOLVERS_LIST}" "${CHROOT_DIR}${CHROOT_RESOLVERS_LIST}"
 		eend "$?" || return 1
 	fi
 
