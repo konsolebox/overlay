@@ -17,7 +17,10 @@ KEYWORDS=
 IUSE=
 
 DEPEND=
-RDEPEND='>=app-shells/bash-4.0'
+RDEPEND='
+	>=app-shells/bash-4.0
+	!app-text/binfind
+'
 
 src_install() {
 	mv -- "${PN}.sh" "${PN}"
