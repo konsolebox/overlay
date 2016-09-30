@@ -6,7 +6,7 @@ DESCRIPTION='Searches files based on the value of $PATH'
 HOMEPAGE='https://github.com/konsolebox/scripts'
 LICENSE='public-domain'
 
-SRC_URI='https://github.com/konsolebox/scripts/blob/a8b3cec9ccc70e91a5c42ab87d875b606fa88fc3/manfind.sh -> manfind-2015.02.19.sh'
+SRC_URI='https://raw.githubusercontent.com/konsolebox/scripts/a8b3cec9ccc70e91a5c42ab87d875b606fa88fc3/manfind.sh -> manfind-2015.02.19.sh'
 S=${WORKDIR}
 
 SLOT=0
