@@ -18,7 +18,7 @@ IUSE='chroot'
 
 DEPEND=
 RDEPEND='
-	=net-dns/dnscrypt-proxy-9999
+	>=net-dns/dnscrypt-proxy-1.7.0
 	>=dev-lang/ruby-2:=
 	chroot? (
 		app-portage/portage-utils
