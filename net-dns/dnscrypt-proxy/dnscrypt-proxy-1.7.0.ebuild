@@ -1,18 +1,17 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
 
-inherit eutils systemd user git-r3 autotools
+inherit systemd user
 
 DESCRIPTION='A tool for securing communications between a client and a DNS resolver'
 HOMEPAGE='http://dnscrypt.org/'
-
-EGIT_REPO_URI="https://github.com/jedisct1/${PN}.git"
+SRC_URI='https://github.com/jedisct1/dnscrypt-proxy/releases/download/1.7.0/dnscrypt-proxy-1.7.0.tar.bz2'
 
 LICENSE=ISC
 SLOT=0
-KEYWORDS=
+KEYWORDS='~amd64 ~x86'
 IUSE='+plugins systemd'
 
 CDEPEND='
@@ -28,10 +27,6 @@ DOCS='AUTHORS ChangeLog NEWS README* THANKS *txt'
 pkg_setup() {
 	enewgroup dnscrypt
 	enewuser dnscrypt -1 -1 /var/empty dnscrypt
-}
-
-src_prepare() {
-	eautoreconf
 }
 
 src_configure() {
