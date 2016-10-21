@@ -1,0 +1,42 @@
+#!/sbin/openrc-run
+# Copyright 1999-2016 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+PID_FILE=/run/${RC_SVCNAME}.pid
+STOP_TIMEOUT=${STOP_TIMEOUT:-30}
+RTORRENT_USER=${RTORRENT_USER:-rtorrent}
+RTORRENT_GROUP=${RTORRENT_GROUP:-rtorrent}
+
+description="BitTorrent Client using libtorrent"
+
+depend() {
+	use net ypbind nis
+	after slapd mysqld postgresql
+}
+
+start() {
+	RTORRENT_HOME_DIR=${RTORRENT_HOME_DIR:-$(getent passwd "${RTORRENT_USER}" | awk -F: '{ print $6 }')}
+	RTORRENT_HOME_DIR=${RTORRENT_HOME_DIR:-/home/${RTORRENT_USER}}
+
+	ebegin "Starting rTorrent"
+
+	start-stop-daemon \
+			--start \
+			--background \
+			--env HOME="${RTORRENT_HOME_DIR}" \
+			--env TERM=xterm \
+			--make-pidfile \
+			--name rtorrent \
+			--pidfile "${PID_FILE}" \
+			--user "${RTORRENT_USER}" \
+			--group "${RTORRENT_GROUP}" \
+			--exec /usr/bin/screen -- -D -m -S rtorrent /usr/bin/rtorrent ${RTORRENT_ARGS}
+
+	eend "$?"
+}
+
+stop() {
+	ebegin "Stopping rTorrent"
+	start-stop-daemon --stop --signal 15 --pidfile "${PID_FILE}" --retry "${STOP_TIMEOUT}"
+	eend "$?"
+}

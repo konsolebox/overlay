@@ -1,0 +1,326 @@
+#!/sbin/openrc-run
+# Copyright 1999-2016 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+CHROOT_CHECK_CONFIG_USER_NS=${CHROOT_CHECK_CONFIG_USER_NS:-true}
+CHROOT_DIR=${CHROOT_DIR:-/chroot/rtorrent}
+CHROOT_DIR_CHECK=${CHROOT_DIR_CHECK:-true}
+CHROOT_MOUNT_CHECK_TIMEOUT=${CHROOT_MOUNT_CHECK_TIMEOUT:-20}
+CHROOT_MOUNT_RTORRENT_HOME_DIR=${CHROOT_MOUNT_RTORRENT_HOME_DIR:-true}
+CHROOT_REFRESH_RUNTIME_FILES=${CHROOT_REFRESH_RUNTIME_FILES:-false}
+MOUNTS_FILE=/run/${RC_SVCNAME}.mounts
+PID_FILE=/run/${RC_SVCNAME}.pid
+RTORRENT_GROUP=${RTORRENT_GROUP:-rtorrent}
+RTORRENT_USER=${RTORRENT_USER:-rtorrent}
+STOP_TIMEOUT=${STOP_TIMEOUT:-30}
+VERBOSE=${VERBOSE:-false}
+VERBOSE_START_STOP_DAEMON=${VERBOSE_START_STOP_DAEMON:-false}
+
+if [ "${VERBOSE}" = true ]; then
+	export EINFO_VERBOSE=true
+else
+	unset EINFO_VERBOSE
+fi
+
+description="BitTorrent Client using libtorrent (Chroot Mode)"
+description_setup="Set up chroot directory"
+extra_commands="setup"
+
+depend() {
+	use net ypbind nis
+	after slapd mysqld postgresql
+}
+
+_check_chroot_dir_value() {
+	if [ -z "${CHROOT_DIR}" ]; then
+		"Please set a value for 'CHROOT_DIR' in '/etc/conf.d/${RC_SVCNAME}'."
+		return 1
+	elif [ "${CHROOT_DIR}" = / ]; then
+		eerror "Root directory can't be set as chroot directory."
+		return 1
+	fi
+
+	return 0
+}
+
+_call() {
+	ebegin "Running '$*'"
+	"$@"
+	eend "$?" || exit 1
+}
+
+_die() {
+	eerror "$1"
+	exit 1
+}
+
+_non_verbose_eerror() {
+	[ -z "${EINFO_VERBOSE}" ] && eerror "$1"
+	return 1
+}
+
+_mknod() {
+	local target mode
+	target=$1 mode=$2
+	shift 2
+
+	if [ -e "${target}" ]; then
+		if [ -c "${target}" ]; then
+			ewarn "Skipping creation of ${target} as it already exists."
+			return 0
+		else
+			eerror "${target} exists but is not a device node."
+			return 1
+		fi
+	else
+		_call mknod -m "${mode}" "${target}" "$@"
+	fi
+}
+
+setup() {
+	_check_chroot_dir_value || return 1
+
+	if [ -d "${CHROOT_DIR}" ]; then
+		ewarn "Chroot directry '${CHROOT_DIR}' already exists and some files may be overridden."
+		ewarn "Press CTRL+C within 10 seconds if you don't want to continue."
+		sleep 10
+		einfo ""
+	fi
+
+	ebegin "Setting up chroot directory '${CHROOT_DIR}'"
+
+	local __
+
+	for __ in '' /dev /etc /run /var/tmp /tmp; do
+		_call mkdir -p "${CHROOT_DIR}$__"
+	done
+
+	_call chmod 0777 /run "${CHROOT_DIR}/var/tmp" "${CHROOT_DIR}/tmp"
+	_call rcopy -t "${CHROOT_DIR}" -- /usr/bin/rtorrent /sbin/ldconfig
+	_call cp -va /etc/ld.so.conf* /etc/terminfo "${CHROOT_DIR}/etc/"
+	_call chroot "${CHROOT_DIR}" /sbin/ldconfig
+
+	grep --color=never "^${RTORRENT_USER}:" /etc/passwd > "${CHROOT_DIR}"/etc/passwd || _die "Failed to create or update '${CHROOT_DIR}/etc/passwd'."
+	grep --color=never "^${RTORRENT_GROUP}:" /etc/group > "${CHROOT_DIR}"/etc/group || _die "Failed to create or update '${CHROOT_DIR}/etc/group'."
+
+	_mknod "${CHROOT_DIR}"/dev/random 644 c 1 8 || return 1
+	_mknod "${CHROOT_DIR}"/dev/urandom 644 c 1 9 || return 1
+	_mknod "${CHROOT_DIR}"/dev/null 666 c 1 3 || return 1
+
+	einfo "Done."
+}
+
+_check_node() {
+	local node="$1" type="$2" minor="$3" major="$4"
+
+	if [ ! -"${type}" "${node}" ] || [ ! "$(stat -c '%t %T' "${node}")" = "${minor} ${major}" ]; then
+		eerror "Device node ${node} does not exist or is not valid."
+		return 1
+	fi
+
+	return 0
+}
+
+_check_chroot() {
+	local __
+
+	for __ in /run /var/tmp /tmp; do
+		checkpath -d -m 0777 -o 0:0 "${CHROOT_DIR}$__" || return 1
+	done
+
+	_check_node "${CHROOT_DIR}"/dev/null c 1 3 || return 1
+	_check_node "${CHROOT_DIR}"/dev/random c 1 8 || return 1
+	_check_node "${CHROOT_DIR}"/dev/urandom c 1 9 || return 1
+
+	return 0
+}
+
+_mountpoint() {
+	awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$(readlink -f "$1")" r=1 /proc/mounts
+}
+
+_mount() {
+	if [ "$#" -lt 3 ]; then
+		eerror "_mount: Too few arguments."
+		return 1
+	fi
+
+	local from="$1" to="$2" read_only=false __
+	shift 2
+
+	if [ ! -d "${to}" ]; then
+		ebegin "Creating directory ${to}"
+		mkdir -p "${to}"
+		eend "$?" || return 1
+	fi
+
+	for __; do
+		case $__ in
+		-r|--read-only)
+			read_only=true
+			;;
+		esac
+	done
+
+	_mountpoint "${to}" && {
+		eerror "Unexpected mount detected.  Please inspect and unmount ${to}."
+		return 1
+	}
+
+	if [ "${read_only}" = true ]; then
+		ebegin "Mounting ${from} to ${to} (RO)"
+	else
+		ebegin "Mounting ${from} to ${to}"
+	fi
+
+	mount "$@" "${from}" "${to}"
+	eend "$?" || return 1
+
+	vebegin "Writing '${to}' to ${MOUNTS_FILE}"
+	echo "${to}" >> "${MOUNTS_FILE}" || _non_verbose_eerror "Failed to write '${to}' to ${MOUNTS_FILE}"
+	veend "$?"
+}
+
+_wait_no_use_dir() {
+	local dir="$1"
+
+	if fuser -s "${dir}" 2>/dev/null; then
+		ebegin "Waiting until all processes stops using ${dir} (max. ${CHROOT_MOUNT_CHECK_TIMEOUT} seconds)"
+		local waited=0
+
+		while
+			sleep 1
+			waited=$(( waited + 1 ))
+			fuser -s "${dir}" 2>/dev/null
+		do
+			if [ "${waited}" -eq "${CHROOT_MOUNT_CHECK_TIMEOUT}" ]; then
+				eend 1
+				return 1
+			fi
+		done
+
+		eend 0
+	fi
+
+	return 0
+}
+
+_umount() {
+	local dir="$1"
+	_mountpoint "${dir}" || return 0
+	ebegin "Unmounting ${dir}"
+	umount "${dir}"
+	eend "$?"
+}
+
+_unmount_mounts() {
+	if [ -e "${MOUNTS_FILE}" ]; then
+		(
+			exec 3< "${MOUNTS_FILE}" || _die "Failed to open $__."
+
+			wait_no_use=false
+			[ "$1" == --wait-no-use ] && wait_no_use=true
+
+			while read __ <&3; do
+				[ "${wait_no_use}" = false ] || _wait_no_use_dir "$__" || return 1
+				_umount "$__" || return 1
+			done
+
+			exec 3<&-
+		)
+
+		vebegin "Removing ${MOUNTS_FILE}"
+		rm -- "${MOUNTS_FILE}" || _non_verbose_eerror "Failed to remove ${MOUNTS_FILE}"
+		veend "$?"
+	fi
+}
+
+_start_stop_daemon() {
+	(
+		if [ "${VERBOSE_START_STOP_DAEMON}" = true ]; then
+			export EINFO_VERBOSE=true
+			exec start-stop-daemon --verbose "$@"
+		else
+			unset EINFO_VERBOSE
+			exec start-stop-daemon "$@"
+		fi
+	)
+}
+
+start() {
+	_check_chroot_dir_value || return 1
+	_unmount_mounts || return 1
+
+	if [ "${CHROOT_DIR_CHECK}" = true ]; then
+		_check_chroot || {
+			eerror "Your chroot directory '${CHROOT_DIR}' is inconsistent."
+			eerror "Please run '/etc/init.d/${RC_SVCNAME} setup' first."
+			return 1
+		}
+	fi
+
+	if [ "${CHROOT_REFRESH_RUNTIME_FILES}" = true ]; then
+		local qopt='-q'
+		[ "${VERBOSE}" = true ] && qopt=
+		_call rcopy ${qopt} -t "${CHROOT_DIR}" -- /usr/bin/rtorrent /sbin/ldconfig
+		_call chmod 0777 /run "${CHROOT_DIR}/var/tmp" "${CHROOT_DIR}/tmp"
+		_call cp -a /etc/ld.so.conf* /etc/terminfo "${CHROOT_DIR}/etc/"
+		_call chroot "${CHROOT_DIR}" /sbin/ldconfig
+
+		grep --color=never "^${RTORRENT_USER}:" /etc/passwd > "${CHROOT_DIR}"/etc/passwd || _die "Failed to create or update '${CHROOT_DIR}/etc/passwd'."
+		grep --color=never "^${RTORRENT_GROUP}:" /etc/group > "${CHROOT_DIR}"/etc/group || _die "Failed to create or update '${CHROOT_DIR}/etc/group'."
+	fi
+
+	RTORRENT_HOME_DIR=${RTORRENT_HOME_DIR:-$(getent passwd "${RTORRENT_USER}" | awk -F: '{ print $6 }')}
+	RTORRENT_HOME_DIR=${RTORRENT_HOME_DIR:-/home/${RTORRENT_USER}}
+
+	if [ "${CHROOT_MOUNT_RTORRENT_HOME_DIR}" = true ]; then
+		_mount "${RTORRENT_HOME_DIR}" "${CHROOT_DIR}${RTORRENT_HOME_DIR}" --bind || return 1
+	fi
+
+	local dir
+
+	for dir in ${CHROOT_MOUNT}; do
+		_mount "${dir}" "${CHROOT_DIR}${dir}" --bind || { _unmount_mounts; return 1; }
+	done
+
+	for dir in ${CHROOT_MOUNT_READONLY}; do
+		_mount "${dir}" "${CHROOT_DIR}${dir}" --bind --read-only || { _unmount_mounts; return 1; }
+	done
+
+	if [ "${CHROOT_CHECK_CONFIG_USER_NS}" = true ]; then
+		zcat /proc/config.gz | grep -q '^CONFIG_USER_NS=[yY]' >/dev/null 2>&1 || \
+			ewarn "Warning: Kernel doesn't seem to be configured with CONFIG_USER_NS."
+	fi
+
+	vebegin "Initializing PID file ${PID_FILE}"
+	: > "${PID_FILE}" && chown "${RTORRENT_USER}:${RTORRENT_GROUP}" "${PID_FILE}" || _non_verbose_eerror "Failed to initialize PID file {PID_FILE}"
+	veend "$?" || return 1
+
+	ebegin "Starting rTorrent (chroot mode using '/usr/bin/jchroot --new-user-ns')"
+
+	_start_stop_daemon \
+			--start \
+			--background \
+			--pidfile="${PID_FILE}" \
+			--user="${RTORRENT_USER}" \
+			--group="${RTORRENT_GROUP}" \
+			-- /usr/bin/screen -D -m -S rtorrent \
+					/usr/bin/jchroot \
+							--env HOME="${RTORRENT_HOME_DIR}" \
+							--env TERM=xterm \
+							--new-user-ns \
+							--pidfile="${PID_FILE}" \
+							"${CHROOT_DIR}" \
+							-- /usr/bin/rtorrent ${RTORRENT_ARGS}
+
+	eend "$?"
+}
+
+stop() {
+	ebegin "Stopping rTorrent (chroot mode)"
+	start-stop-daemon --stop --signal TERM --pidfile "${PID_FILE}" --retry "${STOP_TIMEOUT}"
+	eend "$?" || return 1
+
+	_unmount_mounts --wait-no-use
+}
