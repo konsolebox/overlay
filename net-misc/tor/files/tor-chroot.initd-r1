@@ -18,33 +18,29 @@ CHROOT_TOR_HOME_DIR_BIND=${CHROOT_TOR_HOME_DIR_BIND:-true}
 CHROOT_TOR_RC=${CHROOT_TOR_RC:-/etc/tor/torrc}
 CHROOT_TOR_RC_UPDATE=${CHROOT_TOR_RC_UPDATE:-true}
 CHROOT_UPDATE_ETC_FILES=${CHROOT_UPDATE_ETC_FILES:-true}
-GRACEFUL_STOP=${GRACEFUL_STOP:-false}
-GRACEFUL_STOP_TIMEOUT=${GRACEFUL_STOP_TIMEOUT:-60}
-PID_FILE=${PID_FILE:-/run/tor-chroot.pid}
+MOUNTS_FILE=/run/${RC_SVCNAME}.mounts
+PID_FILE=/run/${RC_SVCNAME}.pid
+STOP_TIMEOUT=${STOP_TIMEOUT:-60}
 TOR_DATA_DIR=${TOR_DATA_DIR:-/var/lib/tor/data}
 TOR_GROUP=${TOR_GROUP:-tor}
 TOR_HOME_DIR=${TOR_HOME_DIR:-/var/lib/tor}
-TOR_RC=${TOR_RC:-"${CONFIG_FILE:-/etc/tor/torrc}"}
+TOR_RC=${TOR_RC:-${CONFIG_FILE:-/etc/tor/torrc}}
 TOR_USER=${TOR_USER:-tor}
 VERBOSE=${VERBOSE:-false}
 VERBOSE_START_STOP_DAEMON=${VERBOSE_START_STOP_DAEMON:-false}
 
 if [ "${VERBOSE}" = true ]; then
-	EINFO_VERBOSE=true
-	export EINFO_VERBOSE
+	export EINFO_VERBOSE=true
 else
 	unset EINFO_VERBOSE
 fi
 
 description="Anonymizing overlay network for TCP (Chroot Mode)"
 description_checkconfig="Check if ${TOR_RC} is valid"
-description_gracefulrestart="Gracefully restart"
-description_gracefulstop="Gracefully stop"
-description_graceful="Gracefully restart"
 description_reload="Reload the configuration"
 description_setup="Set up chroot directory"
 extra_commands="checkconfig setup"
-extra_started_commands="graceful gracefulrestart gracefulstop reload"
+extra_started_commands="reload"
 
 depend() {
 	need net
@@ -52,7 +48,7 @@ depend() {
 
 _check_chroot_dir_value() {
 	if [ -z "${CHROOT_DIR}" ]; then
-		eerror "Please set a value for 'CHROOT_DIR' in '/etc/conf.d/tor-chroot'."
+		"Please set a value for 'CHROOT_DIR' in '/etc/conf.d/${RC_SVCNAME}'."
 		return 1
 	elif [ "${CHROOT_DIR}" = / ]; then
 		eerror "Root directory can't be set as chroot directory."
@@ -62,13 +58,20 @@ _check_chroot_dir_value() {
 	return 0
 }
 
+_call() {
+	ebegin "Running '$*'"
+	"$@"
+	eend "$?" || exit 1
+}
+
 _die() {
 	eerror "$1"
 	exit 1
 }
 
-_call() {
-	"$@" || _die "Command failed: $*"
+_non_verbose_eerror() {
+	[ -z "${EINFO_VERBOSE}" ] && eerror "$1"
+	return 1
 }
 
 _mknod() {
@@ -136,7 +139,6 @@ _check_tor_rc() {
 	if [ ! -f "${file}" ]; then
 		eend 1
 		eerror "Tor configuration file '${file}' does not exist."
-		eerror "You need to setup the file first."
 		eerror "Example is in /etc/tor/torrc.sample."
 		return 1
 	fi
@@ -201,23 +203,103 @@ _check_chroot() {
 }
 
 _mountpoint() {
-	awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$1" r=1 /proc/mounts
+	awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$(readlink -f "$1")" r=1 /proc/mounts
 }
 
 _mount() {
 	if [ "$#" -lt 3 ]; then
-		eerror "_mount(): Too few arguments."
+		eerror "_mount: Too few arguments."
 		return 1
 	fi
 
-	local from="$1" to="$2"
+	local from="$1" to="$2" read_only=false __
 	shift 2
 
-	_mountpoint "${to}" && return 0
+	if [ ! -d "${to}" ]; then
+		ebegin "Creating directory ${to}"
+		mkdir -p "${to}"
+		eend "$?" || return 1
+	fi
 
-	ebegin "Mounting ${from} to ${to}"
-	mount "${from}" "${to}" "$@"
+	for __; do
+		case $__ in
+		-r|--read-only)
+			read_only=true
+			;;
+		esac
+	done
+
+	_mountpoint "${to}" && {
+		eerror "Unexpected mount detected.  Please inspect and unmount ${to}."
+		return 1
+	}
+
+	if [ "${read_only}" = true ]; then
+		ebegin "Mounting ${from} to ${to} (RO)"
+	else
+		ebegin "Mounting ${from} to ${to}"
+	fi
+
+	mount "$@" "${from}" "${to}"
+	eend "$?" || return 1
+
+	vebegin "Writing '${to}' to ${MOUNTS_FILE}"
+	echo "${to}" >> "${MOUNTS_FILE}" || _non_verbose_eerror "Failed to write '${to}' to ${MOUNTS_FILE}"
+	veend "$?"
+}
+
+_wait_no_use_dir() {
+	local dir="$1"
+
+	if fuser -s "${dir}" 2>/dev/null; then
+		ebegin "Waiting until all processes stops using ${dir} (max. ${CHROOT_MOUNT_CHECK_TIMEOUT} seconds)"
+		local waited=0
+
+		while
+			sleep 1
+			waited=$(( waited + 1 ))
+			fuser -s "${dir}" 2>/dev/null
+		do
+			if [ "${waited}" -eq "${CHROOT_MOUNT_CHECK_TIMEOUT}" ]; then
+				eend 1
+				return 1
+			fi
+		done
+
+		eend 0
+	fi
+
+	return 0
+}
+
+_umount() {
+	local dir="$1"
+	_mountpoint "${dir}" || return 0
+	ebegin "Unmounting ${dir}"
+	umount "${dir}"
 	eend "$?"
+}
+
+_unmount_mounts() {
+	if [ -e "${MOUNTS_FILE}" ]; then
+		(
+			exec 3< "${MOUNTS_FILE}" || _die "Failed to open $__."
+
+			wait_no_use=false
+			[ "$1" == --wait-no-use ] && wait_no_use=true
+
+			while read __ <&3; do
+				[ "${wait_no_use}" = false ] || _wait_no_use_dir "$__" || return 1
+				_umount "$__" || return 1
+			done
+
+			exec 3<&-
+		)
+
+		vebegin "Removing ${MOUNTS_FILE}"
+		rm -- "${MOUNTS_FILE}" || _non_verbose_eerror "Failed to remove ${MOUNTS_FILE}"
+		veend "$?"
+	fi
 }
 
 _update_torrc() {
@@ -229,7 +311,7 @@ _update_torrc() {
 _start_stop_daemon() {
 	(
 		if [ "${VERBOSE_START_STOP_DAEMON}" = true ]; then
-			EINFO_VERBOSE=true
+			export EINFO_VERBOSE=true
 			exec start-stop-daemon --verbose "$@"
 		else
 			unset EINFO_VERBOSE
@@ -240,6 +322,7 @@ _start_stop_daemon() {
 
 start() {
 	_check_chroot_dir_value || return 1
+	_unmount_mounts || return 1
 
 	if [ -e "${CHROOT_DIR}" ] && fuser -s "${CHROOT_DIR}"; then
 		eerror "Some processes are still accessing ${CHROOT_DIR}."
@@ -249,7 +332,7 @@ start() {
 	if [ "${CHROOT_DIR_CHECK}" = true ]; then
 		_check_chroot || {
 			eerror "Your chroot directory '${CHROOT_DIR}' is inconsistent."
-			eerror "Please run '/etc/init.d/tor-chroot setup' first."
+			eerror "Please run '/etc/init.d/${RC_SVCNAME} setup' first."
 			return 1
 		}
 	fi
@@ -274,9 +357,10 @@ start() {
 			return 1
 		fi
 
-		[ "${VERBOSE}" = true ] && QOPT= || QOPT='-q'
+		local qopt='-q'
+		[ "${VERBOSE}" = true ] && qopt=
 
-		/usr/bin/rcopy ${QOPT} -t "${CHROOT_DIR}" -- /usr/bin/tor "${libdir}"/libnss_compat.so.* || {
+		/usr/bin/rcopy ${qopt} -t "${CHROOT_DIR}" -- /usr/bin/tor "${libdir}"/libnss_compat.so.* || {
 			eend 1
 			eerror "Rcopy failed."
 			return 1
@@ -290,36 +374,18 @@ start() {
 
 		for __ in hosts host.conf localtime nsswitch.conf resolv.conf; do
 			vebegin "Copying /etc/$__ to ${CHROOT_DIR}/etc/"
-
-			if cp -- "/etc/$__" "${CHROOT_DIR}/etc/"; then
-				veend 0
-			else
-				eend 1
-				[ "${VERBOSE}" = false ] && error "Failed to copy /etc/$__ to ${CHROOT_DIR}/etc/."
-				return 1
-			fi
+			cp -- "/etc/$__" "${CHROOT_DIR}/etc/" || _non_verbose_eerror "Failed to copy /etc/$__ to ${CHROOT_DIR}/etc/."
+			veend "$?" || return 1
 		done
 
 		if [ "${CHROOT_JCHROOT}" = false ] || [ "${CHROOT_JCHROOT_NEW_USER_NS}" = false ]; then
 			vebegin "Updating ${CHROOT_DIR}/etc/passwd with 'grep --color=never ${TOR_USER}: /etc/passwd'"
-
-			if grep --color=never "${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}/etc/passwd"; then
-				veend 0
-			else
-				eend 1
-				[ "${VERBOSE}" = false ] && eerror "Failed to update ${CHROOT_DIR}/etc/passwd using 'grep --color=never ${TOR_USER}: /etc/passwd'."
-				return 1
-			fi
+			grep --color=never "${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}/etc/passwd" || _non_verbose_eerror "Failed to update ${CHROOT_DIR}/etc/passwd using 'grep --color=never ${TOR_USER}: /etc/passwd'."
+			veend "$?" || return 1
 
 			vebegin "Updating ${CHROOT_DIR}/etc/group with 'grep --color=never ${TOR_GROUP}: /etc/group'"
-
-			if grep --color=never "${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}/etc/group"; then
-				veend 0
-			else
-				eend 1
-				[ "${VERBOSE}" = false ] && eerror "Failed to update ${CHROOT_DIR}/etc/group using 'grep --color=never ${TOR_GROUP}: /etc/group'."
-				return 1
-			fi
+			grep --color=never "${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}/etc/group" || _non_verbose_eerror "Failed to update ${CHROOT_DIR}/etc/group using 'grep --color=never ${TOR_GROUP}: /etc/group'."
+			veend "$?" || return 1
 		fi
 
 		[ "${VERBOSE}" = false ] && eend 0
@@ -330,11 +396,11 @@ start() {
 	fi
 
 	if [ "${CHROOT_TOR_HOME_DIR_BIND}" = true ]; then
-		_mount "${TOR_HOME_DIR}" "${CHROOT_TOR_HOME_DIR}" -o bind || return 1
+		_mount "${TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" -o bind || return 1
 	fi
 
 	if [ "${CHROOT_TOR_DATA_DIR_BIND}" = true ]; then
-		_mount "${TOR_DATA_DIR}" "${CHROOT_TOR_DATA_DIR}" -o bind || return 1
+		_mount "${TOR_DATA_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" -o bind || { _unmount_mounts; return 1; }
 	fi
 
 	if [ "${CHROOT_JCHROOT}" = true ]; then
@@ -344,29 +410,51 @@ start() {
 					ewarn "Warning: Kernel doesn't seem configured with CONFIG_USER_NS."
 			fi
 
-			ebegin "Starting chrooted Tor in new user namespace using ${CHROOT_JCHROOT_EXEC}"
+			vebegin "Initializing PID file ${PID_FILE}"
+			: > "${PID_FILE}" && chown "${TOR_USER}:${TOR_GROUP}" "${PID_FILE}" || _non_verbose_eerror "Failed to initialize PID file {PID_FILE}"
+			veend "$?" || return 1
 
-			: > "${PID_FILE}" && chown "${TOR_USER}:${TOR_GROUP}" "${PID_FILE}" && {
-				_start_stop_daemon --start --background --env HOME="${CHROOT_TOR_HOME_DIR}" \
-						--user="${TOR_USER}" --group="${TOR_GROUP}" -- \
-						"${CHROOT_JCHROOT_EXEC}" --new-user-ns --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
-						/usr/bin/tor -f "${CHROOT_TOR_RC}" --DataDirectory "${CHROOT_TOR_DATA_DIR}"
-			}
+			ebegin "Starting Tor (chroot mode using '${CHROOT_JCHROOT_EXEC} --new-user-ns')"
+
+			_start_stop_daemon \
+					--start \
+					--background \
+					--env HOME="${CHROOT_TOR_HOME_DIR}" \
+					--user="${TOR_USER}" \
+					--group="${TOR_GROUP}" \
+					--pidfile="${PID_FILE}" \
+					-- "${CHROOT_JCHROOT_EXEC}" \
+							--new-user-ns \
+							--pidfile="${PID_FILE}" \
+							"${CHROOT_DIR}" \
+							-- /usr/bin/tor \
+									-f "${CHROOT_TOR_RC}" \
+									--DataDirectory "${CHROOT_TOR_DATA_DIR}"
 		else
-			ebegin "Starting chrooted Tor using ${CHROOT_JCHROOT_EXEC}"
+			ebegin "Starting Tor (chroot mode using '${CHROOT_JCHROOT_EXEC}')"
 
-			_start_stop_daemon --start --background -- \
-					"${CHROOT_JCHROOT_EXEC}" --user="${TOR_USER}" --group="${TOR_GROUP}" \
-					--env HOME="${CHROOT_TOR_HOME_DIR}" --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
-					/usr/bin/tor -f "${CHROOT_TOR_RC}" --DataDirectory "${CHROOT_TOR_DATA_DIR}"
+			_start_stop_daemon --start --background \
+					-- "${CHROOT_JCHROOT_EXEC}" \
+							--user="${TOR_USER}" \
+							--group="${TOR_GROUP}" \
+							--env HOME="${CHROOT_TOR_HOME_DIR}" \
+							--pidfile="${PID_FILE}" "${CHROOT_DIR}" \
+							-- /usr/bin/tor \
+									-f "${CHROOT_TOR_RC}" \
+									--DataDirectory "${CHROOT_TOR_DATA_DIR}"
 		fi
 	else
-		ebegin "Starting chrooted Tor using ${CHROOT_EXEC}"
+		ebegin "Starting Tor (chroot mode using '${CHROOT_EXEC}')"
 
-		_start_stop_daemon --start --background --make-pidfile --pidfile "${PID_FILE}" \
-				--env HOME="${CHROOT_TOR_HOME_DIR}" -- \
-				"${CHROOT_EXEC}" --userspec="${TOR_USER}:${TOR_GROUP}" "${CHROOT_DIR}" \
-				/usr/bin/tor -f "${CHROOT_TOR_RC}" --DataDirectory "${CHROOT_TOR_DATA_DIR}"
+		_start_stop_daemon --start --background \
+				--make-pidfile \
+				--pidfile "${PID_FILE}" \
+				--env HOME="${CHROOT_TOR_HOME_DIR}" \
+				-- "${CHROOT_EXEC}" \
+						--userspec="${TOR_USER}:${TOR_GROUP}" \
+						"${CHROOT_DIR}" \
+						/usr/bin/tor -f "${CHROOT_TOR_RC}" \
+								--DataDirectory "${CHROOT_TOR_DATA_DIR}"
 	fi
 
 	eend "$?"
@@ -404,73 +492,20 @@ _wait_no_use_dir() {
 	return 0
 }
 
-_cleanup_chroot() {
-	local something_failed=false
-
-	if [ "${CHROOT_TOR_HOME_DIR_BIND}" = true ]; then
-		_wait_no_use_dir "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" && \
-			_umount "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" || \
-				something_failed=true
-	fi
-
-	if [ "${CHROOT_TOR_DATA_DIR_BIND}" = true ]; then
-		_wait_no_use_dir "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" && \
-			_umount "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}" || \
-				something_failed=true
-	fi
-
-	[ "${something_failed}" = false ]
-}
-
-_cleanup_pid_file() {
-	if [ -e "${PID_FILE}" ] && ! fuser -s "${PID_FILE}"; then
-		vebegin "Removing ${PID_FILE}"
-		rm -f -- "${PID_FILE}"
-		veend "$?" || return 1
-	fi
-
-	return 0
-}
-
 stop() {
-	if [ "${GRACEFUL_STOP}" = true ]; then
-		_graceful_stop
-		return
-	fi
+	ebegin "Stopping Tor (chroot mode)"
 
-	ebegin "Stopping Tor (chroot)"
-	_start_stop_daemon --stop --pidfile "${PID_FILE}"
-	eend "$?" || return 1
-
-	_cleanup_chroot && _cleanup_pid_file
-}
-
-graceful() {
-	gracefulrestart
-}
-
-gracefulrestart() {
-	_graceful_stop && start
-}
-
-_graceful_stop() {
-	ebegin "Gracefully stopping Tor (chroot) (Can take up to ${GRACEFUL_STOP_TIMEOUT} seconds)"
-
-	_start_stop_daemon --progress --stop --signal INT \
-			--retry "${GRACEFUL_STOP_TIMEOUT}" --pidfile "${PID_FILE}"
+	_start_stop_daemon --stop --progress --signal INT --retry "${STOP_TIMEOUT}" \
+			--pidfile "${PID_FILE}"
 
 	eend "$?" || return 1
 
-	_cleanup_chroot
-}
-
-gracefulstop() {
-	_graceful_stop && /etc/init.d/tor-chroot zap
+	_unmount_mounts
 }
 
 reload() {
 	if [ ! -f "${PID_FILE}" ]; then
-		eerror "${SVCNAME} isn't running"
+		eerror "${RC_SVCNAME} is not running"
 		return 1
 	fi
 

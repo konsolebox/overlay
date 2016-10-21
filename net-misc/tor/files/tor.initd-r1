@@ -2,9 +2,8 @@
 # Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-GRACEFUL_STOP=${GRACEFUL_STOP:-false}
-GRACEFUL_STOP_TIMEOUT=${GRACEFUL_STOP_TIMEOUT:-60}
 PID_FILE=${PID_FILE:-/run/tor.pid}
+STOP_TIMEOUT=${STOP_TIMEOUT:-${GRACEFUL_TIMEOUT:-60}}
 TOR_DATA_DIR=${TOR_DATA_DIR:-/var/lib/tor/data}
 TOR_HOME_DIR=${TOR_HOME_DIR:-/var/lib/tor}
 TOR_RC=${TOR_RC:-/etc/tor/torrc}
@@ -12,12 +11,9 @@ TOR_USER=${TOR_USER:-tor}
 
 description="Anonymizing overlay network for TCP"
 description_checkconfig="Check for valid config file"
-description_gracefulrestart="Gracefully restart"
-description_gracefulstop="Gracefully stop"
-description_graceful="Gracefully restart"
 description_reload="Reload the configuration"
 extra_commands="checkconfig"
-extra_started_commands="graceful gracefulrestart gracefulstop reload"
+extra_started_commands="reload"
 
 depend() {
 	need net
@@ -31,7 +27,6 @@ _check_tor_rc() {
 	if [ ! -f "${file}" ]; then
 		eend 1
 		eerror "Tor configuration file '${file}' does not exist."
-		eerror "You need to setup the file first."
 		eerror "Example is in /etc/tor/torrc.sample."
 		return 1
 	fi
@@ -59,53 +54,35 @@ start() {
 
 	ebegin "Starting Tor"
 
-	start-stop-daemon --start --background --name tor --pidfile "${PID_FILE}" --env HOME="${TOR_HOME_DIR}" -- \
-			/usr/bin/tor -f "${TOR_RC}" --DataDirectory "${TOR_DATA_DIR}" --User tor
+	start-stop-daemon --start \
+			--background \
+			--name tor \
+			--pidfile "${PID_FILE}" \
+			--make-pidfile \
+			--env HOME="${TOR_HOME_DIR}" \
+			-- /usr/bin/tor -f "${TOR_RC}" --DataDirectory "${TOR_DATA_DIR}" --User "${TOR_USER}"
 
 	eend "$?"
 }
 
 stop() {
-	if [ "${GRACEFUL_STOP}" = true ]; then
-		_graceful_stop
-		return
-	fi
-
 	ebegin "Stopping Tor"
-	start-stop-daemon --stop --pidfile "${PID_FILE}"
-	eend "$?" || return 1
-}
 
-graceful() {
-	gracefulrestart
-}
+	start-stop-daemon --stop --progress --signal INT --retry "${STOP_TIMEOUT}" \
+			--pidfile "${PID_FILE}"
 
-gracefulrestart() {
-	_graceful_stop && start
-}
-
-_graceful_stop() {
-	ebegin "Gracefully stopping Tor (Can take up to ${GRACEFUL_STOP_TIMEOUT} seconds)"
-
-	_start_stop_daemon --progress --stop --signal INT \
-			--retry "${GRACEFUL_STOP_TIMEOUT}" --pidfile "${PID_FILE}"
-
-	eend "$?" || return 1
-}
-
-gracefulstop() {
-	_graceful_stop && /etc/init.d/tor zap
+	eend "$?"
 }
 
 reload() {
 	if [ ! -f "${PID_FILE}" ]; then
-		eerror "${SVCNAME} isn't running"
+		eerror "${RC_SVCNAME} is not running"
 		return 1
 	fi
 
 	checkconfig || return 1
 
 	ebegin "Reloading Tor configuration"
-	_start_stop_daemon --signal HUP --pidfile "${PID_FILE}"
+	start_stop_daemon --signal HUP --pidfile "${PID_FILE}"
 	eend "$?"
 }

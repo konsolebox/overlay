@@ -71,12 +71,12 @@ src_configure() {
 src_install() {
 	readme.gentoo_create_doc
 
-	newconfd "${FILESDIR}"/tor.confd tor
-	newinitd "${FILESDIR}"/tor.initd tor
+	newconfd "${FILESDIR}"/tor.confd-r1 tor
+	newinitd "${FILESDIR}"/tor.initd-r1 tor
 
 	if use chroot; then
-		newconfd "${FILESDIR}"/tor-chroot.confd tor-chroot
-		newinitd "${FILESDIR}"/tor-chroot.initd tor-chroot
+		newconfd "${FILESDIR}"/tor-chroot.confd-r1 tor-chroot
+		newinitd "${FILESDIR}"/tor-chroot.initd-r1 tor-chroot
 	fi
 
 	systemd_dounit "${FILESDIR}"/tor.service
