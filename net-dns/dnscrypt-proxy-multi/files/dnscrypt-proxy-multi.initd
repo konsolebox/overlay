@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 RUBY_EXEC=${RUBY_EXEC:-/usr/bin/ruby}
-PID_FILE=${PID_FILE:-/run/dnscrypt-proxy-multi.pid}
+PID_FILE=/run/dnscrypt-proxy-multi.pid
 
 description="Runs multiple instances of dnscrypt-proxy"
 

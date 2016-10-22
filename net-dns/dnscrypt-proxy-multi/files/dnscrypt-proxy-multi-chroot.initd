@@ -16,7 +16,8 @@ CHROOT_RESOLVERS_LIST_UPDATE=${CHROOT_RESOLVERS_LIST_UPDATE:-false}
 DPM_GROUP=${DPM_GROUP:-dnscrypt}
 DPM_USER=${DPM_USER:-dnscrypt}
 LOG_DIR=${LOG_DIR:-/var/log/dnscrypt-proxy-multi}
-PID_FILE=${PID_FILE:-/run/dnscrypt-proxy-multi-chroot.pid}
+MOUNTS_FILE=/run/${RC_SVCNAME}.mounts
+PID_FILE=/run/${RC_SVCNAME}.pid
 PRIVILEGE_DROP_MODE=${PRIVILEGE_DROP_MODE:-chroot}
 RESOLVERS_LIST=${RESOLVERS_LIST:-/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv}
 VERBOSE=${VERBOSE:-false}
@@ -51,13 +52,20 @@ _check_chroot_dir_value() {
 	return 0
 }
 
+_call() {
+	ebegin "Running '$*'"
+	"$@"
+	eend "$?" || exit 1
+}
+
 _die() {
 	eerror "$1"
 	exit 1
 }
 
-_call() {
-	"$@" || _die "Command failed: $*"
+_non_verbose_eerror() {
+	[ -z "${EINFO_VERBOSE}" ] && eerror "$1"
+	return 1
 }
 
 _mknod() {
@@ -166,23 +174,103 @@ setup() {
 }
 
 _mountpoint() {
-	awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$1" r=1 /proc/mounts
+	awk '$2 == mp { r = 0; exit 0 } END { exit r }' mp="$(readlink -f "$1")" r=1 /proc/mounts
 }
 
 _mount() {
 	if [ "$#" -lt 3 ]; then
-		eerror "_mount(): Too few arguments."
+		eerror "_mount: Too few arguments."
 		return 1
 	fi
 
-	local from="$1" to="$2"
+	local from="$1" to="$2" read_only=false __
 	shift 2
 
-	_mountpoint "${to}" && return 0
+	if [ ! -d "${to}" ]; then
+		ebegin "Creating directory ${to}"
+		mkdir -p "${to}"
+		eend "$?" || return 1
+	fi
 
-	ebegin "Mounting ${from} to ${to}"
-	mount "${from}" "${to}" "$@"
+	for __; do
+		case $__ in
+		-r|--read-only)
+			read_only=true
+			;;
+		esac
+	done
+
+	_mountpoint "${to}" && {
+		eerror "Unexpected mount detected.  Please inspect and unmount ${to}."
+		return 1
+	}
+
+	if [ "${read_only}" = true ]; then
+		ebegin "Mounting ${from} to ${to} (RO)"
+	else
+		ebegin "Mounting ${from} to ${to}"
+	fi
+
+	mount "$@" "${from}" "${to}"
+	eend "$?" || return 1
+
+	vebegin "Writing '${to}' to ${MOUNTS_FILE}"
+	echo "${to}" >> "${MOUNTS_FILE}" || _non_verbose_eerror "Failed to write '${to}' to ${MOUNTS_FILE}"
+	veend "$?"
+}
+
+_wait_no_use_dir() {
+	local dir="$1"
+
+	if fuser -s "${dir}" 2>/dev/null; then
+		ebegin "Waiting until all processes stops using ${dir} (max. ${CHROOT_MOUNT_CHECK_TIMEOUT} seconds)"
+		local waited=0
+
+		while
+			sleep 1
+			waited=$(( waited + 1 ))
+			fuser -s "${dir}" 2>/dev/null
+		do
+			if [ "${waited}" -eq "${CHROOT_MOUNT_CHECK_TIMEOUT}" ]; then
+				eend 1
+				return 1
+			fi
+		done
+
+		eend 0
+	fi
+
+	return 0
+}
+
+_umount() {
+	local dir="$1"
+	_mountpoint "${dir}" || return 0
+	ebegin "Unmounting ${dir}"
+	umount "${dir}"
 	eend "$?"
+}
+
+_unmount_mounts() {
+	if [ -e "${MOUNTS_FILE}" ]; then
+		(
+			exec 3< "${MOUNTS_FILE}" || _die "Failed to open $__."
+
+			wait_no_use=false
+			[ "$1" == --wait-no-use ] && wait_no_use=true
+
+			while read __ <&3; do
+				[ "${wait_no_use}" = false ] || _wait_no_use_dir "$__" || return 1
+				_umount "$__" || return 1
+			done
+
+			exec 3<&-
+		)
+
+		vebegin "Removing ${MOUNTS_FILE}"
+		rm -- "${MOUNTS_FILE}" || _non_verbose_eerror "Failed to remove ${MOUNTS_FILE}"
+		veend "$?"
+	fi
 }
 
 _check_node() {
@@ -245,6 +333,8 @@ _start_stop_daemon() {
 }
 
 start() {
+	_check_chroot_dir_value || return 1
+	_unmount_mounts || return 1
 	_check_privilege_drop_mode || return 1
 	_get_chroot_ruby_exec
 
@@ -278,17 +368,19 @@ start() {
 					ewarn "Warning: Kernel doesn't seem configured with CONFIG_USER_NS."
 			fi
 
-			ebegin "Starting chrooted dnscrypt-proxy-multi in new user namespace using ${CHROOT_JCHROOT_EXEC}"
+			vebegin "Initializing PID file ${PID_FILE}"
+			: > "${PID_FILE}" && chown "${DPM_USER}:${DPM_GROUP}" "${PID_FILE}" || _non_verbose_eerror "Failed to initialize PID file {PID_FILE}"
+			veend "$?" || return 1
 
-			: > "${PID_FILE}" && chown "${DPM_USER}:${DPM_GROUP}" "${PID_FILE}" && {
-				_start_stop_daemon --start --background --env HOME="${CHROOT_DNSCRYPT_PROXY_MULTI_HOME_DIR}" \
-						--user="${DPM_USER}" --group="${DPM_GROUP}" -- \
-						"${CHROOT_JCHROOT_EXEC}" --new-user-ns --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
-						"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
-						--resolvers-list="${CHROOT_RESOLVERS_LIST}"
-			}
+			ebegin "Starting dnscrypt-proxy-multi (chroot mode using '${CHROOT_JCHROOT_EXEC} --new-user-ns')"
+
+			_start_stop_daemon --start --background --env HOME="${CHROOT_DNSCRYPT_PROXY_MULTI_HOME_DIR}" \
+					--user="${DPM_USER}" --group="${DPM_GROUP}" -- \
+					"${CHROOT_JCHROOT_EXEC}" --new-user-ns --pidfile="${PID_FILE}" "${CHROOT_DIR}" -- \
+					"${CHROOT_RUBY_EXEC}" /usr/bin/dnscrypt-proxy-multi ${DNSCRYPT_PROXY_MULTI_OPTIONS} \
+					--resolvers-list="${CHROOT_RESOLVERS_LIST}"
 		else
-			ebegin "Starting chrooted dnscrypt-proxy-multi using ${CHROOT_JCHROOT_EXEC}"
+			ebegin "Starting dnscrypt-proxy-multi (chroot mode using '${CHROOT_JCHROOT_EXEC}')"
 
 			case ${PRIVILEGE_DROP_MODE} in
 			chroot)
@@ -315,7 +407,7 @@ start() {
 			esac
 		fi
 	else
-		ebegin "Starting chrooted dnscrypt-proxy-multi using ${CHROOT_EXEC}"
+		ebegin "Starting dnscrypt-proxy-multi (chroot mode using '${CHROOT_EXEC}')"
 
 		case ${PRIVILEGE_DROP_MODE} in
 		chroot)
@@ -375,32 +467,10 @@ _wait_no_use_dir() {
 	return 0
 }
 
-_cleanup_chroot() {
-	local something_failed=false
-
-	if [ "${CHROOT_LOG_DIR_BIND}" = true ]; then
-		_wait_no_use_dir "${CHROOT_DIR}${CHROOT_LOG_DIR}" && \
-			_umount "${CHROOT_DIR}${CHROOT_LOG_DIR}" || \
-				something_failed=true
-	fi
-
-	[ "${something_failed}" = false ]
-}
-
-_cleanup_pid_file() {
-	if [ -e "${PID_FILE}" ] && ! fuser -s "${PID_FILE}"; then
-		vebegin "Removing ${PID_FILE}"
-		rm -f -- "${PID_FILE}"
-		veend "$?" || return 1
-	fi
-
-	return 0
-}
-
 stop() {
 	ebegin "Stopping dnscrypt-proxy-multi (chroot)"
 	start-stop-daemon --stop --quiet --pidfile "${PID_FILE}"
 	eend "$?" || return 1
 
-	_cleanup_chroot && _cleanup_pid_file
+	_unmount_mounts
 }

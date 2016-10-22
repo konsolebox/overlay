@@ -3,14 +3,7 @@
 #
 # Default is '/usr/bin/ruby'.
 #
-RUBY_EXEC=/usr/bin/ruby
-
-# Change this to specify a different file for storing the PID of
-# dnscrypt-proxy-multi.
-#
-# Default is '/run/dnscrypt-proxy-multi.pid'.
-#
-PID_FILE=/run/dnscrypt-proxy-multi.pid
+#RUBY_EXEC=/usr/bin/ruby
 
 # Specifies arguments passed to dnscrypt-proxy-multi.
 #
