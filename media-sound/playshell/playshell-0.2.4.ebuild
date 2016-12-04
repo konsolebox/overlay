@@ -10,7 +10,7 @@ SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
 
 SLOT=0
 KEYWORDS='~amd64 ~x86'
-IUSE=''
+IUSE=
 
 DEPEND='>=app-shells/bash-3.2:='
 RDEPEND="${DEPEND} virtual/editor"
