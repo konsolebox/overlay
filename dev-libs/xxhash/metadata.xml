@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+	</maintainer>
+	<longdescription lang="en">
+		xxHash is an extremely fast non-cryptographic hash algorithm, working at speeds close to RAM limits. It is proposed in two flavors, 32 and 64 bits. 
+	</longdescription>
+	<use></use>
+	<upstream>
+		<remote-id type="github">Cyan4973/xxHash</remote-id>
+	</upstream>
+</pkgmetadata>
