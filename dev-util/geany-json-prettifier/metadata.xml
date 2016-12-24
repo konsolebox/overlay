@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+	</maintainer>
+	<longdescription lang="en">
+		JSON Prettifier is a plugin used to validate, format and prettify ugly, not formatted JSON files or to minify a prettified ones.
+	</longdescription>
+</pkgmetadata>
