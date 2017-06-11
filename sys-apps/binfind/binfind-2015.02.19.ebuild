@@ -1,4 +1,4 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
@@ -10,7 +10,7 @@ SRC_URI='https://raw.githubusercontent.com/konsolebox/scripts/a8b3cec9ccc70e91a5
 S=${WORKDIR}
 
 SLOT=0
-KEYWORDS='~amd64 ~x86'
+KEYWORDS='~amd64 ~arm ~x86'
 IUSE=
 
 DEPEND=
