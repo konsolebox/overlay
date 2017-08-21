@@ -7,7 +7,7 @@ inherit eutils cmake-utils
 
 DESCRIPTION='Extremely fast non-cryptographic hash algorithm'
 HOMEPAGE='http://www.xxhash.com/'
-SRC_URI="https://github.com/Cyan4973/xxHash/archive/v${PV}.tar.gz"
+SRC_URI="https://github.com/Cyan4973/xxHash/archive/v${PV}.tar.gz -> xxHash-${PV}.tar.gz"
 LICENSE=BSD-2
 SLOT=0
 KEYWORDS='~amd64 ~arm ~x86'
