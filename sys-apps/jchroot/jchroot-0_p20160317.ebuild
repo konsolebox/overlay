@@ -14,7 +14,7 @@ S=${WORKDIR}/jchroot-${COMMIT}
 
 LICENSE='ISC'
 SLOT=0
-KEYWORDS='~amd64 ~arm ~arm ~x86'
+KEYWORDS='amd64 arm ~x86'
 IUSE=
 
 src_compile() {
