@@ -7,10 +7,8 @@ inherit toolchain-funcs
 
 DESCRIPTION='chroot with more isolation'
 HOMEPAGE='https://github.com/vincentbernat/jchroot'
-COMMIT=3ad09cca4879c27f7eef657b7fa1dd8b4f6aa47b
 
-SRC_URI="https://github.com/vincentbernat/jchroot/archive/${COMMIT}.zip -> jchroot-${COMMIT}.zip"
-S=${WORKDIR}/jchroot-${COMMIT}
+SRC_URI="https://github.com/vincentbernat/jchroot/archive/v1.0.tar.gz -> jchroot-${PV}.tar.gz"
 
 LICENSE='ISC'
 SLOT=0
