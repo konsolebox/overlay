@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+		<description>author</description>
+	</maintainer>
+	<longdescription>
+		A KangarooTwelve library for Ruby that works on top of Digest::Base
+	</longdescription>
+	<upstream>
+		<remote-id type="github">konsolebox/digest-kangarootwelve-ruby</remote-id>
+		<bugs-to>https://github.com/konsolebox/digest-kangarootwelve-ruby/issues</bugs-to>
+	</upstream>
+	<use>
+		<flag name="test">Run tests.  This may require FEATURES="test".</flag>
+	</use>
+</pkgmetadata>
