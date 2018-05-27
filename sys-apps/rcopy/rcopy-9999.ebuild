@@ -20,6 +20,5 @@ DEPEND=
 RDEPEND='>=app-shells/bash-4.0'
 
 src_install() {
-	mv -- rcopy.bash rcopy
-	dobin rcopy
+	mv -- rcopy.bash rcopy && dobin rcopy
 }
