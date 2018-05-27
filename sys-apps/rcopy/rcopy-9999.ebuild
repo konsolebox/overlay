@@ -9,7 +9,7 @@ DESCRIPTION='Relatively copies binaries along with their dependencies to a direc
 HOMEPAGE='https://github.com/konsolebox/scripts'
 LICENSE='public-domain'
 
-EGIT_REPO_URI='git://github.com/konsolebox/scripts.git'
+EGIT_REPO_URI='https://github.com/konsolebox/scripts.git'
 SRC_URI=
 
 SLOT=0
