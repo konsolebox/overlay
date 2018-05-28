@@ -6,7 +6,7 @@ DESCRIPTION='Relatively copies binaries along with their dependencies to a direc
 HOMEPAGE='https://github.com/konsolebox/scripts'
 LICENSE='public-domain'
 
-SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/982d58cbf1b817d81f1f084ceba683b42336e8aa/rcopy.bash -> rcopy-${PV}.bash"
+SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/79b5dc687b74ce1348adbade858058723391a127/rcopy.bash -> rcopy-${PV}.bash"
 S=${WORKDIR}
 
 SLOT=0
