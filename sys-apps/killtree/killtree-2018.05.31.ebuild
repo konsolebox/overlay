@@ -6,7 +6,10 @@ DESCRIPTION='Sends signals to process trees'
 HOMEPAGE='https://github.com/konsolebox/scripts'
 LICENSE='public-domain'
 
-SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/c980f2dc0bb2814e69ca14c30ca40881c0c82eb9/killtree.bash -> killtree-${PV}.bash"
+COMMIT=8190d4ba054ce12cd431447eb019b1f2949a1687
+FN=${P}.bash
+
+SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${COMMIT}/${PN}.bash -> ${FN}"
 S=${WORKDIR}
 
 SLOT=0
@@ -20,9 +23,9 @@ RDEPEND='
 '
 
 src_unpack() {
-	cp -v -- "${DISTDIR}/${A}" "${WORKDIR}/killtree"
+	cp -v -- "${DISTDIR}/${FN}" "${WORKDIR}/${PN}"
 }
 
 src_install() {
-	dobin killtree
+	dobin "${PN}"
 }
