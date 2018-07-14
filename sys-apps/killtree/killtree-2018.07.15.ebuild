@@ -6,7 +6,7 @@ DESCRIPTION='Sends signals to process trees'
 HOMEPAGE='https://github.com/konsolebox/scripts'
 LICENSE='public-domain'
 
-COMMIT=635a139a296c9f57349066602723518734d7208a
+COMMIT=5fc7bf962744a8d519d6d5edf429d8f42f52b37c
 FN=${P}.bash
 
 SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${COMMIT}/${PN}.bash -> ${FN}"
