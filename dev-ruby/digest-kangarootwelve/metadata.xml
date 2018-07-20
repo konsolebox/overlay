@@ -14,6 +14,24 @@
 		<bugs-to>https://github.com/konsolebox/digest-kangarootwelve-ruby/issues</bugs-to>
 	</upstream>
 	<use>
+		<flag name="target_armv6m">Build 'armv6m' target.</flag>
+		<flag name="target_armv7a">Build 'armv7a' target.</flag>
+		<flag name="target_armv7m">Build 'armv7m' target.</flag>
+		<flag name="target_armv8a">Build 'armv8a' target.</flag>
+		<flag name="target_asmx86-64">Build 'asmx86-64' target.</flag>
+		<flag name="target_asmx86-64shld">Build 'asmx86-64shld' target.</flag>
+		<flag name="target_avr8">Build 'avr8' target.</flag>
+		<flag name="target_bulldozer">Build 'bulldozer' target.</flag>
+		<flag name="target_compact">Build 'compact' target.</flag>
+		<flag name="target_generic32">Build 'generic32' target.</flag>
+		<flag name="target_generic32lc">Build 'generic32lc' target.</flag>
+		<flag name="target_generic64">Build 'generic64' target.</flag>
+		<flag name="target_generic64lc">Build 'generic64lc' target.</flag>
+		<flag name="target_haswell">Build 'haswell' target.</flag>
+		<flag name="target_nehalem">Build 'nehalem' target.</flag>
+		<flag name="target_reference">Build 'reference' target.</flag>
+		<flag name="target_reference32bits">Build 'reference32bits' target.</flag>
+		<flag name="target_sandybridge">Build 'sandybridge' target.</flag>
 		<flag name="test">Run tests.  This may require FEATURES="test".</flag>
 	</use>
 </pkgmetadata>
