@@ -21,6 +21,7 @@ SLOT=0
 KEYWORDS='~amd64 ~arm ~arm64 ~x86'
 
 ruby_add_bdepend '>=dev-ruby/rake-compiler-1.0'
+ruby_add_bdepend 'test? ( >=dev-ruby/minitest-5.8 )'
 
 each_ruby_compile() {
 	${RUBY} -S rake compile || die 'Failed to compile extension.'
