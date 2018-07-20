@@ -17,8 +17,8 @@ HOMEPAGE='https://github.com/konsolebox/digest-kangarootwelve-ruby'
 LICENSE=MIT
 
 TARGET_FLAGS='target_armv6m target_armv7a target_armv7m target_armv8a target_asmx86-64 target_asmx86-64shld target_avr8 target_bulldozer target_compact target_generic32 target_generic32lc target_generic64 target_generic64lc target_haswell target_nehalem target_reference target_reference32bits target_sandybridge'
-IUSE+=" ${TARGET_FLAGS/target_compact/+target_compact}"
-REQUIRED_USE+=" || ( ${TARGET_FLAGS} )"
+IUSE="${IUSE} ${TARGET_FLAGS/target_compact/+target_compact}"
+REQUIRED_USE="${REQUIRED_USE} || ( ${TARGET_FLAGS} ) !target_compact? ( test )"
 
 SLOT=0
 KEYWORDS='~amd64 ~arm ~arm64 ~x86'
@@ -26,19 +26,25 @@ KEYWORDS='~amd64 ~arm ~arm64 ~x86'
 ruby_add_bdepend '>=dev-ruby/rake-compiler-1.0'
 ruby_add_bdepend 'test? ( >=dev-ruby/minitest-5.8 )'
 
-get_active_target() {
+each_ruby_prepare() {
+	# Strip ext files from spec.files to reduce cp noise.  We don't install
+	# them anyway.
+	sed -i '/  ext\//d' digest-kangarootwelve.gemspec || die 'Failed to strip ext files from spec.files.'
+}
+
+dkt_get_active_target() {
 	local t
 
 	for t in ${TARGET_FLAGS}; do
-		use "$t" && __=${t#target_} && return 0
+		use "$t" && __=${t#target_} && return
 	done
 
-	__=
-	return 1
+	die 'Failed to get current target.'
 }
 
 each_ruby_compile() {
-	get_active_target && ${RUBY} -S rake compile -- --with-target="$__" || die 'Failed to compile extension.'
+	dkt_get_active_target
+	${RUBY} -S rake compile -- --with-target="$__" || die 'Failed to compile extension.'
 	use doc && rdoc --quiet --ri --output=ri ${RUBY_FAKEGEM_DOC_SOURCES}
 }
 
