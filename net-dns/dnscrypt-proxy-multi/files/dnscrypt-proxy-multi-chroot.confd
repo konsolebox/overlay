@@ -113,6 +113,20 @@
 #
 #CHROOT_RUBY_EXEC=
 
+# In some systems, some specific dependencies are required, but they are not
+# detected by rcopy as a dependency.  This is why they are explicitly passed
+# as an argument.
+#
+# Setting this variable to 'true' copies files whose paths are produced by
+# `qlist sys-devel/gcc | grep libgcc_s` during setup.  Default is 'true'.
+#
+#CHROOT_SETUP_COPY_LIBGCC_S=true
+
+# Setting this variable to 'true' copies files whose paths are produced by
+# `qlist sys-libs/glibc | grep libnss_compat` during setup.  Default is 'true'.
+#
+#CHROOT_SETUP_COPY_LIBNSS_COMPAT=true
+
 # Specifies the group that dnscrypt-proxy-multi or dnscrypt-proxy drops
 # privilege to.
 #

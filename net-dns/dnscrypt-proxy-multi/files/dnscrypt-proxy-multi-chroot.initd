@@ -1,10 +1,12 @@
 #!/sbin/openrc-run
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 CHROOT_DIR=${CHROOT_DIR:-/chroot/dnscrypt-proxy-multi}
 CHROOT_DIR_CHECK=${CHROOT_DIR_CHECK:-true}
 CHROOT_EXEC=${CHROOT_EXEC:-/bin/chroot}
+CHROOT_SETUP_COPY_LIBGCC_S=${CHROOT_SETUP_COPY_LIBGCC_S:-true}
+CHROOT_SETUP_COPY_LIBNSS_COMPAT=${CHROOT_SETUP_COPY_LIBNSS_COMPAT:-true}
 CHROOT_JCHROOT=${CHROOT_JCHROOT:-false}
 CHROOT_JCHROOT_EXEC=${CHROOT_JCHROOT_EXEC:-/usr/bin/jchroot}
 CHROOT_JCHROOT_NEW_USER_NS=${CHROOT_JCHROOT_NEW_USER_NS:-false}
@@ -96,17 +98,29 @@ _get_chroot_ruby_package() {
 }
 
 _get_ruby_exec() {
-	qlist -C "${CHROOT_RUBY_PACKAGE}" | grep '^/usr/bin/ruby' | tail -n 1
+	qlist -C "${CHROOT_RUBY_PACKAGE}" | grep '^/usr/bin/ruby'
 }
 
 _get_chroot_ruby_exec() {
 	if [ -z "${CHROOT_RUBY_EXEC}" ]; then
 		_get_chroot_ruby_package
-		ewarn "Warning: Not specifying CHROOT_RUBY_EXEC could cause delays and cause incompatibilities with future versions of Ruby."
+		ewarn "Warning: Not specifying CHROOT_RUBY_EXEC could cause delays and cause"
+		ewarn "incompatibilities with future versions of Ruby."
 		CHROOT_RUBY_EXEC=$(_get_ruby_exec)
 		[ "$?" -eq 0 ] && [ -n "${CHROOT_RUBY_EXEC}" ] || _die "Failed to get default value for CHROOT_RUBY_EXEC."
 		ewarn "The current produced value is ${CHROOT_RUBY_EXEC}.  It is based on the package ${CHROOT_RUBY_PACKAGE}."
 	fi
+}
+
+_generate_rcopy_targets() {
+	set -- /etc/ld.so.conf*
+	[ "$1" = '/etc/ld.so.conf*' ] && set --
+	(
+		printf '%s\n' /sbin/ldconfig "$@"
+		qlist -C net-dns/dnscrypt-proxy "${CHROOT_RUBY_PACKAGE}" dev-ruby/rubygems net-dns/dnscrypt-proxy net-dns/dnscrypt-proxy-multi
+		[ "${CHROOT_SETUP_COPY_LIBGCC_S}" = true ] && qlist sys-devel/gcc | grep libgcc_s
+		[ "${CHROOT_SETUP_COPY_LIBNSS_COMPAT}" = true ] && qlist sys-libs/glibc | grep libnss_compat
+	) | grep -vEe '/(doc|conf\.d|init\.d|include|man|ri)/' -e 'bin/(erb|irb|gem|hostip)'
 }
 
 setup() {
@@ -135,23 +149,9 @@ setup() {
 
 	_call cp "${RESOLVERS_LIST}" "${CHROOT_DIR}${CHROOT_RESOLVERS_LIST}"
 
-	local libdir
-	libdir=$(ldd "$(_get_ruby_exec)" | awk -F/ '$3 ~ /^ld-linux/ { print "/" $2 }')
-
-	(
-		qlist -C net-dns/dnscrypt-proxy "${CHROOT_RUBY_PACKAGE}" dev-ruby/rubygems \
-				net-dns/dnscrypt-proxy net-dns/dnscrypt-proxy-multi
-		printf '%s\n' "${libdir}/libnss_compat"*
-	) | grep -vEe '/(doc|conf\.d|init\.d|include|man)/' | xargs -- rcopy -t "${CHROOT_DIR}" || \
-	{
-		eend 1
-		eerror "Rcopy failed."
-		return 1
-	}
-
+	_mknod "${CHROOT_DIR}"/dev/null 666 c 1 3 || return 1
 	_mknod "${CHROOT_DIR}"/dev/random 644 c 1 8 || return 1
 	_mknod "${CHROOT_DIR}"/dev/urandom 644 c 1 9 || return 1
-	_mknod "${CHROOT_DIR}"/dev/null 666 c 1 3 || return 1
 
 	grep --color=never -e "^${DPM_USER}:" -e "^${DNSCRYPT_PROXY_USER}:" /etc/passwd > "${CHROOT_DIR}"/etc/passwd || \
 		_die "Failed to create or update ${CHROOT_DIR}/etc/passwd."
@@ -159,18 +159,37 @@ setup() {
 	grep --color=never -e "^${DPM_GROUP}:" /etc/group > "${CHROOT_DIR}"/etc/group || \
 		_die "Failed to create or update ${CHROOT_DIR}/etc/group."
 
-	einfo "Done."
-	einfo ""
-	einfo "If you use syslog, you may need to manually configure ${CHROOT_DIR}/dev/log"
-	einfo "in /etc/syslog-ng/syslog-ng.conf.  Example:"
-	einfo ""
-	einfo 'source s_dnscrypt_proxy_multi { unix-stream("/chroot/dnscrypt-proxy-multi/dev/log" max-connections(10) group(dnscrypt)); };'
+	ebegin "Copying files using rcopy"
+
+	_generate_rcopy_targets | xargs -- rcopy -t "${CHROOT_DIR}" || {
+		eerror "Rcopy failed."
+		return 1
+	}
+
+	ebegin "Running ${CHROOT_DIR}/sbin/ldconfig"
+	chroot "${CHROOT_DIR}" /sbin/ldconfig
+	eend "$?" || return 1
+
+	ebegin "Removing ${CHROOT_DIR}/sbin/ldconfig"
+	rm "${CHROOT_DIR}/sbin/ldconfig"
+	eend "$?" || return 1
+
+	einfo 'Done.'
+	einfo ''
+	einfo "If you use syslog, you may need to manually configure ${CHROOT_DIR}/dev/log."
+	einfo "Here's an example for /etc/syslog-ng/syslog-ng.conf:"
+	einfo ''
+	einfo "source s_dnscrypt_proxy_multi { unix-stream(\"${CHROOT_DIR}/dev/log\" max-connections(10) group(dnscrypt)); };"
 	einfo 'filter f_dnscrypt_proxy { program(^dnscrypt-proxy$); };'
 	einfo 'filter f_dnscrypt_proxy_multi { program(^dnscrypt-proxy-multi$); };'
 	einfo 'destination d_dnscrypt_proxy { file("/var/log/dnscrypt-proxy.log"); };'
 	einfo 'destination d_dnscrypt_proxy_multi { file("/var/log/dnscrypt-proxy-multi.log"); };'
 	einfo 'log { source(s_dnscrypt_proxy_multi); filter(f_dnscrypt_proxy); destination(d_dnscrypt_proxy); };'
 	einfo 'log { source(s_dnscrypt_proxy_multi); filter(f_dnscrypt_proxy_multi); destination(d_dnscrypt_proxy_multi); };'
+	einfo ''
+	einfo "It's necessary to restart the system logger after everything is set up."
+	einfo "${CHROOT_DIR}/dev/log is expected to be created after it."
+	einfo 'Example: /etc/init.d/syslog-ng restart'
 }
 
 _mountpoint() {
