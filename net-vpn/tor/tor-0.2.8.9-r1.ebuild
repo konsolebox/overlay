@@ -1,7 +1,7 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=5
+EAPI=6
 
 inherit eutils flag-o-matic readme.gentoo-r1 systemd toolchain-funcs versionator user
 
@@ -30,6 +30,8 @@ DEPEND="
 	systemd? ( sys-apps/systemd )"
 RDEPEND="${DEPEND}
 	chroot? (
+		app-portage/portage-utils
+		sys-apps/findutils
 		sys-apps/rcopy
 		sys-process/psmisc
 		virtual/awk
@@ -39,10 +41,6 @@ RDEPEND="${DEPEND}
 pkg_setup() {
 	enewgroup tor
 	enewuser tor -1 -1 /var/lib/tor tor
-}
-
-src_prepare() {
-	epatch_user
 }
 
 src_configure() {
@@ -71,15 +69,15 @@ src_configure() {
 src_install() {
 	readme.gentoo_create_doc
 
-	newconfd "${FILESDIR}"/tor.confd-r1 tor
-	newinitd "${FILESDIR}"/tor.initd-r1 tor
+	newconfd "${FILESDIR}"/0.2.8.9/tor.confd tor
+	newinitd "${FILESDIR}"/0.2.8.9/tor.initd tor
 
 	if use chroot; then
-		newconfd "${FILESDIR}"/tor-chroot.confd-r1 tor-chroot
-		newinitd "${FILESDIR}"/tor-chroot.initd-r1 tor-chroot
+		newconfd "${FILESDIR}"/0.2.8.9/tor-chroot.confd tor-chroot
+		newinitd "${FILESDIR}"/0.2.8.9/tor-chroot.initd tor-chroot
 	fi
 
-	systemd_dounit "${FILESDIR}"/tor.service
+	systemd_dounit "${FILESDIR}"/0.2.8.9/tor.service
 
 	emake DESTDIR="${ED}" install
 
@@ -91,8 +89,8 @@ src_install() {
 	fowners tor:tor /var/lib/tor
 
 	insinto /etc/tor/
-	newins "${FILESDIR}"/torrc torrc
-	newins "${FILESDIR}"/torrc.notes torrc.notes
+	newins "${FILESDIR}"/0.2.8.9/torrc torrc
+	newins "${FILESDIR}"/0.2.8.9/torrc.notes torrc.notes
 }
 
 pkg_postinst() {

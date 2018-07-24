@@ -1,5 +1,5 @@
 #!/sbin/openrc-run
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 CHROOT_DIR=${CHROOT_DIR:-/chroot/tor}
@@ -92,6 +92,14 @@ _mknod() {
 	fi
 }
 
+_generate_rcopy_targets() {
+	set -- /etc/ld.so.conf*
+	[ "$1" = '/etc/ld.so.conf*' ] && set --
+	printf '%s\n' /usr/bin/tor /sbin/ldconfig "$@"
+	qlist sys-devel/gcc | grep libgcc_s
+	qlist sys-libs/glibc | grep libnss_compat
+}
+
 setup() {
 	_check_chroot_dir_value || return 1
 
@@ -114,16 +122,27 @@ setup() {
 	_call chmod 0750 "${CHROOT_DIR}/etc/tor" "${CHROOT_DIR}${CHROOT_TOR_HOME_DIR}" "${CHROOT_DIR}${CHROOT_TOR_DATA_DIR}"
 	_call chmod 0777 "${CHROOT_DIR}/var/tmp" "${CHROOT_DIR}/tmp"
 
-	local libdir
-	libdir=$(ldd /usr/bin/tor | awk -F/ '$3 ~ /^ld-linux/ { print "/" $2 }')
-	_call rcopy -t "${CHROOT_DIR}" -- /usr/bin/tor "/${libdir}/libnss_compat.so."*
-
 	grep --color=never "^${TOR_USER}:" /etc/passwd > "${CHROOT_DIR}"/etc/passwd || _die "Failed to create or update ${CHROOT_DIR}/etc/passwd."
 	grep --color=never "^${TOR_GROUP}:" /etc/group > "${CHROOT_DIR}"/etc/group || _die "Failed to create or update ${CHROOT_DIR}/etc/group."
 
+	_mknod "${CHROOT_DIR}"/dev/null 666 c 1 3 || return 1
 	_mknod "${CHROOT_DIR}"/dev/random 644 c 1 8 || return 1
 	_mknod "${CHROOT_DIR}"/dev/urandom 644 c 1 9 || return 1
-	_mknod "${CHROOT_DIR}"/dev/null 666 c 1 3 || return 1
+
+	ebegin "Copying files using rcopy"
+
+	_generate_rcopy_targets | xargs rcopy -t "${CHROOT_DIR}" -- || {
+		eerror "Rcopy failed."
+		return 1
+	}
+
+	ebegin "Running ${CHROOT_DIR}/sbin/ldconfig"
+	chroot "${CHROOT_DIR}" /sbin/ldconfig
+	eend "$?" || return 1
+
+	ebegin "Removing ${CHROOT_DIR}/sbin/ldconfig"
+	rm "${CHROOT_DIR}/sbin/ldconfig"
+	eend "$?" || return 1
 
 	einfo "Done."
 	einfo ""
@@ -348,25 +367,23 @@ start() {
 	if [ "${CHROOT_REFRESH_BINARIES}" = true ]; then
 		ebegin "Re-copying binaries to ${CHROOT_DIR}"
 
-		local libdir
-		libdir=$(ldd /usr/bin/tor | awk -F/ '$3 ~ /^ld-linux/ { print "/" $2 }')
-
-		if [ ! -f /usr/bin/rcopy ]; then
-			eend 1
-			eerror "/usr/bin/rcopy does not exist.  Please install sys-apps/rcopy."
-			return 1
-		fi
-
 		local qopt='-q'
 		[ "${VERBOSE}" = true ] && qopt=
 
-		/usr/bin/rcopy ${qopt} -t "${CHROOT_DIR}" -- /usr/bin/tor "${libdir}"/libnss_compat.so.* || {
-			eend 1
+		_generate_rcopy_targets | xargs rcopy ${qopt} -t "${CHROOT_DIR}" -- || {
 			eerror "Rcopy failed."
 			return 1
 		}
 
-		eend 0
+		[ "${VERBOSE}" = false ] && eend 0
+
+		ebegin "Running ${CHROOT_DIR}/sbin/ldconfig"
+		chroot "${CHROOT_DIR}" /sbin/ldconfig
+		eend "$?" || return 1
+
+		ebegin "Removing ${CHROOT_DIR}/sbin/ldconfig"
+		rm "${CHROOT_DIR}/sbin/ldconfig"
+		eend "$?" || return 1
 	fi
 
 	if [ "${CHROOT_UPDATE_ETC_FILES}" = true ]; then
