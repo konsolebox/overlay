@@ -3,7 +3,7 @@
 
 EAPI=6
 
-inherit eutils flag-o-matic readme.gentoo-r1 systemd toolchain-funcs versionator user
+inherit flag-o-matic readme.gentoo-r1 systemd versionator user
 
 MY_PV=$(replace_version_separator 4 -)
 MY_PF=tor-${MY_PV}
@@ -16,7 +16,7 @@ S=${WORKDIR}/${MY_PF}
 LICENSE="BSD GPL-2"
 SLOT=0
 KEYWORDS="~amd64 ~arm ~x86"
-IUSE="chroot -bufferevents libressl scrypt seccomp selinux stats systemd tor-hardening transparent-proxy test web"
+IUSE="-bufferevents chroot libressl scrypt seccomp selinux stats systemd test tor-hardening transparent-proxy web"
 
 DEPEND="
 	app-text/asciidoc
@@ -38,6 +38,8 @@ RDEPEND="${DEPEND}
 	)
 	selinux? ( sec-policy/selinux-tor )"
 
+DOCS=(README ChangeLog ReleaseNotes doc/HACKING)
+
 pkg_setup() {
 	enewgroup tor
 	enewuser tor -1 -1 /var/lib/tor tor
@@ -52,7 +54,6 @@ src_configure() {
 	econf \
 		--enable-system-torrc \
 		--enable-asciidoc \
-		--docdir="${EPREFIX}/usr/share/doc/${PF}" \
 		$(use_enable stats instrument-downloads) \
 		$(use_enable bufferevents) \
 		$(use_enable scrypt libscrypt) \
@@ -67,6 +68,7 @@ src_configure() {
 }
 
 src_install() {
+	default
 	readme.gentoo_create_doc
 
 	newconfd "${FILESDIR}"/0.2.8.9/tor.confd tor
@@ -79,12 +81,7 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}"/0.2.8.9/tor.service
 
-	emake DESTDIR="${ED}" install
-
 	keepdir /var/lib/tor
-
-	dodoc -r README ChangeLog ReleaseNotes doc/HACKING
-
 	fperms 750 /var/lib/tor
 	fowners tor:tor /var/lib/tor
 
@@ -94,16 +91,5 @@ src_install() {
 }
 
 pkg_postinst() {
-	readme.gentoo_create_doc
-
-	einfo ""
-
-	if use chroot; then
-		einfo "If you plan to run Tor in chroot mode, configure /etc/conf.d/tor-chroot,"
-		einfo "and run /etc/init.d/tor-chroot setup."
-	else
-		einfo "If you plan to run Tor in chroot mode, please enable 'chroot' use flag."
-	fi
-
-	einfo ""
+	readme.gentoo_print_elog
 }
