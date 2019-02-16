@@ -7,26 +7,33 @@ inherit flag-o-matic toolchain-funcs multilib prefix
 
 # Official patchlevel
 # See ftp://ftp.cwru.edu/pub/bash/bash-4.4-patches/
-PLEVEL=${PV##*_p}
 MY_PV=${PV/_p*}
 MY_PV=${MY_PV/_/-}
 MY_P=${PN}-${MY_PV}
-
 IS_RELEASE=false
 [[ ${PV} != *_alpha* && ${PV} != *_beta* && ${PV} != *_rc* && ${PV} != *9999* ]] && IS_RELEASE=true
-
+PLEVEL=${PV##*_p}
 [[ ${PV} != *_p* ]] && PLEVEL=0
-patches() {
+
+get_patches() {
 	local opt=$1 plevel=${2:-${PLEVEL}} pn=${3:-${PN}} pv=${4:-${MY_PV}}
-	[[ ${plevel} -eq 0 ]] && return 1
-	eval set -- {1..${plevel}}
-	set -- $(printf "${pn}${pv/\.}-%03d " "$@")
+	local prefix=${pn}${pv/\.} patches=() i p s v
+
+	for (( i = 1; i <= plevel; ++i )); do
+		v=${i}
+		[[ i -le 999 ]] && v=00${v} v=${v:(-3)}
+		patches[i]=${prefix}-${v}
+	done
+
 	if [[ ${opt} == -s ]] ; then
-		echo "${@/#/${DISTDIR}/}"
+		__A0=("${patches[@]/#/${DISTDIR}/}")
 	else
-		local u
-		for u in ftp://ftp.cwru.edu/pub/bash mirror://gnu/${pn} ; do
-			printf "${u}/${pn}-${pv}-patches/%s " "$@"
+		__A0=() i=0
+
+		for s in "ftp://ftp.cwru.edu/pub/bash" "mirror://gnu/${pn}"; do
+			for p in "${patches[@]}"; do
+				__A0[i++]=${s}/${pn}-${pv}-patches/${p}
+			done
 		done
 	fi
 }
@@ -36,10 +43,12 @@ READLINE_VER="8.0"
 
 DESCRIPTION="The standard GNU Bourne again shell"
 HOMEPAGE="http://tiswww.case.edu/php/chet/bash/bashtop.html"
+
 if [[ ${IS_RELEASE} == true ]]; then
-	SRC_URI="mirror://gnu/bash/${MY_P}.tar.gz $(patches)"
+	get_patches
+	SRC_URI="mirror://gnu/bash/${MY_P}.tar.gz ${__A0[*]}"
 else
-	SRC_URI+=" ftp://ftp.cwru.edu/pub/bash/${MY_P}.tar.gz"
+	SRC_URI="ftp://ftp.cwru.edu/pub/bash/${MY_P}.tar.gz"
 fi
 
 LICENSE="GPL-3"
@@ -61,13 +70,23 @@ RDEPEND="
 
 S="${WORKDIR}/${MY_P}"
 
+pkg_setup() {
+	if use bashlogger ; then
+		ewarn "The logging patch should ONLY be used in restricted (i.e. honeypot) envs."
+		ewarn "This will log ALL output you enter into the shell, you have been warned."
+	fi
+}
+
 src_unpack() {
 	unpack ${MY_P}.tar.gz
 }
 
 src_prepare() {
 	# Include official patches
-	[[ ${PLEVEL} -gt 0 ]] && eapply -p0 $(patches -s)
+	if [[ ${PLEVEL} -gt 0 ]]; then
+		get_patches -s
+		eapply -p0 "${__A0[@]}"
+	fi
 
 	# Clean out local libs so we know we use system ones w/releases.
 	if ! use bundled-readline; then
