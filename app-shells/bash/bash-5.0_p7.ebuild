@@ -54,7 +54,7 @@ fi
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
-IUSE="afs bashlogger bundled-readline examples mem-scramble +net nls plugins +readline"
+IUSE="afs bashlogger bundled-readline examples mem-scramble +net nls plugins +readline vanilla"
 
 DEPEND="
 	>=sys-libs/ncurses-5.9-r3:0=
@@ -69,6 +69,14 @@ RDEPEND="
 #DEPEND+=" virtual/yacc"
 
 S="${WORKDIR}/${MY_P}"
+
+PATCHES=(
+	# Patches from Chet sent to bashbug ml
+	"${FILESDIR}"/${PN}-5.0-history-zero-length.patch
+	"${FILESDIR}"/${PN}-5.0-history-append.patch
+	"${FILESDIR}"/${PN}-5.0-syslog-history-extern.patch
+	"${FILESDIR}"/${PN}-5.0-assignment-preceding-builtin.patch
+)
 
 pkg_setup() {
 	if use bashlogger ; then
@@ -102,6 +110,7 @@ src_prepare() {
 	sed -i -r '/^(HS|RL)USER/s:=.*:=:' doc/Makefile.in || die
 	touch -r . doc/*
 
+	use vanilla || eapply -p0 "${PATCHES[@]}"
 	eapply_user
 }
 

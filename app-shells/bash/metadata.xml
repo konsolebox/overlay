@@ -16,6 +16,7 @@
 		</flag>
 		<flag name="net">Enable /dev/tcp/host/port redirection</flag>
 		<flag name="plugins">Add support for loading builtins at runtime via 'enable'</flag>
+		<flag name="vanilla">Only use release patches</flag>
 	</use>
 	<upstream>
 		<remote-id type="cpe">cpe:/a:gnu:bash</remote-id>
