@@ -10,19 +10,18 @@ DESCRIPTION="The standard GNU Bourne again shell"
 HOMEPAGE="http://tiswww.case.edu/php/chet/bash/bashtop.html"
 LICENSE="GPL-3"
 
+IUSE="afs bashlogger bundled-readline examples mem-scramble +net nls plugins +readline vanilla"
+SLOT=0
+
 MY_PV=${MY_PV/_/-}
 MY_PV=${PV/_p*}
 MY_P=${PN}-${MY_PV}
 PLEVEL=0
 
-IUSE="afs bashlogger bundled-readline examples mem-scramble +net nls plugins +readline vanilla"
-SLOT=0
-
 get_patches() {
-	local opt=$1 plevel=${2:-${PLEVEL}} pn=${3:-${PN}} pv=${4:-${MY_PV}}
-	local prefix=${pn}${pv/\.} patches=() i p s v
+	local opt=$1 prefix=${PN}${MY_PV/\.} patches=() i v s p
 
-	for (( i = 1; i <= plevel; ++i )); do
+	for (( i = 1; i <= PLEVEL; ++i )); do
 		v=${i}
 		[[ i -le 999 ]] && v=00${v} v=${v:(-3)}
 		patches[i]=${prefix}-${v}
@@ -33,12 +32,14 @@ get_patches() {
 	else
 		__A0=() i=0
 
-		for s in "ftp://ftp.cwru.edu/pub/bash" "mirror://gnu/${pn}"; do
+		for s in "ftp://ftp.cwru.edu/pub/bash" "mirror://gnu/${PN}"; do
 			for p in "${patches[@]}"; do
-				__A0[i++]=${s}/${pn}-${pv}-patches/${p}
+				__A0[i++]=${s}/${PN}-${MY_PV}-patches/${p}
 			done
 		done
 	fi
+
+	[[ ${#__A0[@]} -gt 0 ]]
 }
 
 if [[ ${PV} == *9999* ]]; then
@@ -52,9 +53,9 @@ else
 	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sh ~sparc ~x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 	READLINE_VER="8.0" # The version of readline this version of bash normally ships with.
 
+	SRC_URI="mirror://gnu/bash/${MY_P}.tar.gz"
 	[[ ${PV} == *_p* ]] && PLEVEL=${PV##*_p}
-	get_patches
-	SRC_URI="mirror://gnu/bash/${MY_P}.tar.gz ${__A0[*]}"
+	[[ PLEVEL -gt 0 ]] && get_patches && SRC_URI+=" ${__A0[*]}"
 
 	PATCHES=(
 		# Patches from Chet sent to bashbug ml
@@ -96,12 +97,9 @@ src_unpack() {
 
 src_prepare() {
 	# Include official patches
-	if [[ ${PLEVEL} -gt 0 ]]; then
-		get_patches -s
-		eapply -p0 "${__A0[@]}"
-	fi
+	[[ PLEVEL -gt 0 ]] && get_patches -s && eapply -p0 "${__A0[@]}"
 
-	# Clean out local libs so we know we use system ones w/releases.
+	# Clean out local libs so we know we use system ones when bundled-readline is disabled.
 	if ! use bundled-readline; then
 		rm -rf lib/{readline,termcap}/*
 		touch lib/{readline,termcap}/Makefile.in # for config.status
