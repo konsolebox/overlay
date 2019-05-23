@@ -27,7 +27,7 @@ get_patches() {
 		patches[i]=${prefix}-${v}
 	done
 
-	if [[ ${opt} == -s ]] ; then
+	if [[ ${opt} == -s ]]; then
 		__A0=("${patches[@]/#/${DISTDIR}/}")
 	else
 		__A0=() i=0
@@ -59,10 +59,10 @@ else
 
 	PATCHES=(
 		# Patches from Chet sent to bashbug ml
-		"${FILESDIR}"/${PN}-5.0-history-zero-length.patch
-		"${FILESDIR}"/${PN}-5.0-history-append.patch
-		"${FILESDIR}"/${PN}-5.0-syslog-history-extern.patch
-		"${FILESDIR}"/${PN}-5.0-assignment-preceding-builtin.patch
+		"${FILESDIR}/${PN}-5.0-history-zero-length.patch"
+		"${FILESDIR}/${PN}-5.0-history-append.patch"
+		"${FILESDIR}/${PN}-5.0-syslog-history-extern.patch"
+		"${FILESDIR}/${PN}-5.0-assignment-preceding-builtin.patch"
 	)
 fi
 
@@ -71,17 +71,19 @@ DEPEND="
 	readline? ( !bundled-readline? ( >=sys-libs/readline-${READLINE_VER:-0}:0= ) )
 	nls? ( virtual/libintl )
 "
+
 RDEPEND="
 	${DEPEND}
 	!<sys-apps/portage-2.1.6.7_p1
 "
-# we only need yacc when the .y files get patched (bash42-005)
-#DEPEND+=" virtual/yacc"
 
-S="${WORKDIR}/${MY_P}"
+# We only need yacc when the .y files get patched (bash42-005)
+# DEPEND+=" virtual/yacc"
+
+S=${WORKDIR}/${MY_P}
 
 pkg_setup() {
-	if use bashlogger ; then
+	if use bashlogger; then
 		ewarn "The logging patch should ONLY be used in restricted (i.e. honeypot) envs."
 		ewarn "This will log ALL output you enter into the shell, you have been warned."
 	fi
@@ -106,7 +108,7 @@ src_prepare() {
 		sed -ri -e 's:\$[(](RL|HIST)_LIBSRC[)]/[[:alpha:]]*.h::g' Makefile.in || die
 	fi
 
-	# Prefixify hardcoded path names. No-op for non-prefix.
+	# Prefixify hardcoded path names.  No-op for non-prefix.
 	hprefixify pathnames.h.in
 
 	# Avoid regenerating docs after patches #407985
@@ -120,7 +122,7 @@ src_prepare() {
 src_configure() {
 	local myconf=(
 		--disable-profiling
-		--docdir='$(datarootdir)'/doc/${PF}
+		--docdir='$(datarootdir)'/doc/"${PF}"
 		--htmldir='$(docdir)/html'
 		--with-curses
 		$(use_enable mem-scramble)
@@ -135,10 +137,10 @@ src_configure() {
 	# For descriptions of these, see config-top.h
 	# bashrc/#26952 bash_logout/#90488 ssh/#24762 mktemp/#574426
 	append-cppflags \
-		-DDEFAULT_PATH_VALUE=\'\"${EPREFIX}/usr/local/sbin:${EPREFIX}/usr/local/bin:${EPREFIX}/usr/sbin:${EPREFIX}/usr/bin:${EPREFIX}/sbin:${EPREFIX}/bin\"\' \
-		-DSTANDARD_UTILS_PATH=\'\"${EPREFIX}/bin:${EPREFIX}/usr/bin:${EPREFIX}/sbin:${EPREFIX}/usr/sbin\"\' \
-		-DSYS_BASHRC=\'\"${EPREFIX}/etc/bash/bashrc\"\' \
-		-DSYS_BASH_LOGOUT=\'\"${EPREFIX}/etc/bash/bash_logout\"\' \
+		-DDEFAULT_PATH_VALUE="'\"${EPREFIX}/usr/local/sbin:${EPREFIX}/usr/local/bin:${EPREFIX}/usr/sbin:${EPREFIX}/usr/bin:${EPREFIX}/sbin:${EPREFIX}/bin\"'" \
+		-DSTANDARD_UTILS_PATH="'\"${EPREFIX}/bin:${EPREFIX}/usr/bin:${EPREFIX}/sbin:${EPREFIX}/usr/sbin\"'" \
+		-DSYS_BASHRC="'\"${EPREFIX}/etc/bash/bashrc\"'" \
+		-DSYS_BASH_LOGOUT="'\"${EPREFIX}/etc/bash/bash_logout\"'" \
 		-DNON_INTERACTIVE_LOGIN_SHELLS \
 		-DSSH_SOURCE_BASHRC \
 		$(use bashlogger && echo -DSYSLOG_HISTORY)
@@ -146,49 +148,45 @@ src_configure() {
 	# Don't even think about building this statically without
 	# reading Bug 7714 first.  If you still build it statically,
 	# don't come crying to us with bugs ;).
-	#use static && export LDFLAGS="${LDFLAGS} -static"
-	use nls || myconf+=( --disable-nls )
+	#
+	# use static && export LDFLAGS="${LDFLAGS} -static"
+
+	use nls || myconf+=(--disable-nls)
 
 	# Use system readline unless bundled-readline is set.
+	#
+	# Historically, we always used the builtin readline, but since
+	# our handling of SONAME upgrades has gotten much more stable
+	# in the PM (and the readline ebuild itself preserves the old
+	# libs during upgrades), linking against the system copy should
+	# be safe.
 	if ! use bundled-readline; then
-		myconf+=( --with-installed-readline=. )
+		myconf+=(--with-installed-readline=.)
 
-		# Historically, we always used the builtin readline, but since
-		# our handling of SONAME upgrades has gotten much more stable
-		# in the PM (and the readline ebuild itself preserves the old
-		# libs during upgrades), linking against the system copy should
-		# be safe.
 		# Exact cached version here doesn't really matter as long as it
 		# is at least what's in the DEPEND up above.
 		export ac_cv_rl_version=${READLINE_VER%%_*}
 	fi
 
 	if use plugins; then
-		append-ldflags -Wl,-rpath,/usr/$(get_libdir)/bash
+		append-ldflags "-Wl,-rpath,/usr/$(get_libdir)/bash"
 	else
 		# Disable the plugins logic by hand since bash doesn't
 		# provide a way of doing it.
-		export ac_cv_func_dl{close,open,sym}=no \
-			ac_cv_lib_dl_dlopen=no ac_cv_header_dlfcn_h=no
-		sed -i \
-			-e '/LOCAL_LDFLAGS=/s:-rdynamic::' \
-			configure || die
+		export ac_cv_func_dl{close,open,sym}=no ac_cv_lib_dl_dlopen=no ac_cv_header_dlfcn_h=no
+		sed -i -e '/LOCAL_LDFLAGS=/s:-rdynamic::' configure || die
 	fi
+
 	tc-export AR #444070
 	econf "${myconf[@]}"
 }
 
 src_compile() {
 	emake
-
-	if use plugins ; then
-		emake -C examples/loadables all others
-	fi
+	use plugins && emake -C examples/loadables all others
 }
 
 src_install() {
-	local d f
-
 	default
 
 	dodir /bin
@@ -199,42 +197,41 @@ src_install() {
 	doins "${FILESDIR}"/bash_logout
 	doins "$(prefixify_ro "${FILESDIR}"/bashrc)"
 	keepdir /etc/bash/bashrc.d
+
+	local f d
 	insinto /etc/skel
-	for f in bash{_logout,_profile,rc} ; do
-		newins "${FILESDIR}"/dot-${f} .${f}
+
+	for f in bash{_logout,_profile,rc}; do
+		newins "${FILESDIR}/dot-${f}" ".${f}"
 	done
 
-	local sed_args=(
-		-e "s:#${USERLAND}#@::"
-		-e '/#@/d'
-	)
-	if ! use readline ; then
-		sed_args+=( #432338
-			-e '/^shopt -s histappend/s:^:#:'
-			-e 's:use_color=true:use_color=false:'
-		)
-	fi
-	sed -i \
-		"${sed_args[@]}" \
-		"${ED%/}"/etc/skel/.bashrc \
-		"${ED%/}"/etc/bash/bashrc || die
+	local sed_args=(-e "s:#${USERLAND}#@::" -e '/#@/d')
 
-	if use plugins ; then
+	if ! use readline; then
+		#432338
+		sed_args+=(-e '/^shopt -s histappend/s:^:#:' -e 's:use_color=true:use_color=false:')
+	fi
+
+	sed -i "${sed_args[@]}" "${ED%/}"/etc/skel/.bashrc "${ED%/}"/etc/bash/bashrc || die
+
+	if use plugins; then
 		exeinto /usr/$(get_libdir)/bash
-		doexe $(echo examples/loadables/*.o | sed 's:\.o::g')
+		local loadables=(examples/loadables/*.o)
+		[[ ${#loadables[@]} -gt 0 ]] && doexe "${loadables[@]%.o}"
 		insinto /usr/include/bash-plugins
 		doins *.h builtins/*.h include/*.h lib/{glob/glob.h,tilde/tilde.h}
 	fi
 
-	if use examples ; then
-		for d in examples/{functions,misc,scripts,startup-files} ; do
-			exeinto /usr/share/doc/${PF}/${d}
-			insinto /usr/share/doc/${PF}/${d}
-			for f in ${d}/* ; do
-				if [[ ${f##*/} != PERMISSION ]] && [[ ${f##*/} != *README ]] ; then
-					doexe ${f}
+	if use examples; then
+		for d in examples/{functions,misc,scripts,startup-files}; do
+			exeinto "/usr/share/doc/${PF}/${d}"
+			insinto "/usr/share/doc/${PF}/${d}"
+
+			for f in "${d}"/*; do
+				if [[ ${f##*/} != PERMISSION && ${f##*/} != *README ]]; then
+					doexe "${f}"
 				else
-					doins ${f}
+					doins "${f}"
 				fi
 			done
 		done
@@ -246,13 +243,13 @@ src_install() {
 }
 
 pkg_preinst() {
-	if [[ -e ${EROOT}/etc/bashrc ]] && [[ ! -d ${EROOT}/etc/bash ]] ; then
+	if [[ -e ${EROOT}/etc/bashrc && ! -d ${EROOT}/etc/bash ]]; then
 		mkdir -p "${EROOT}"/etc/bash
 		mv -f "${EROOT}"/etc/bashrc "${EROOT}"/etc/bash/
 	fi
 
-	if [[ -L ${EROOT}/bin/sh ]] ; then
-		# rewrite the symlink to ensure that its mtime changes. having /bin/sh
+	if [[ -L ${EROOT}/bin/sh ]]; then
+		# Rewrite the symlink to ensure that its mtime changes.  Having /bin/sh
 		# missing even temporarily causes a fatal error with paludis.
 		local target=$(readlink "${EROOT}"/bin/sh)
 		local tmp=$(emktemp "${EROOT}"/bin)
@@ -262,8 +259,6 @@ pkg_preinst() {
 }
 
 pkg_postinst() {
-	# If /bin/sh does not exist, provide it
-	if [[ ! -e ${EROOT}/bin/sh ]] ; then
-		ln -sf bash "${EROOT}"/bin/sh
-	fi
+	# If /bin/sh does not exist, provide it.
+	[[ -e ${EROOT}/bin/sh ]] || ln -sf bash "${EROOT}"/bin/sh
 }
