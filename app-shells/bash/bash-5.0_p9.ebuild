@@ -16,7 +16,6 @@ SLOT=0
 MY_PV=${MY_PV/_/-}
 MY_PV=${PV/_p*}
 MY_P=${PN}-${MY_PV}
-PLEVEL=0
 
 get_patches() {
 	local opt=$1 prefix=${PN}${MY_PV/\.} patches=() i v s p
@@ -42,6 +41,8 @@ get_patches() {
 	[[ ${#__A0[@]} -gt 0 ]]
 }
 
+PLEVEL=0
+
 if [[ ${PV} == *9999* ]]; then
 	EGIT_REPO_URI="https://git.savannah.gnu.org/git/bash.git"
 	[[ ${PV} == 99999 ]] && EGIT_BRANCH=devel
@@ -59,7 +60,6 @@ else
 
 	PATCHES=(
 		# Patches from Chet sent to bashbug ml
-		"${FILESDIR}/${PN}-5.0-history-zero-length.patch"
 		"${FILESDIR}/${PN}-5.0-history-append.patch"
 		"${FILESDIR}/${PN}-5.0-syslog-history-extern.patch"
 		"${FILESDIR}/${PN}-5.0-assignment-preceding-builtin.patch"
