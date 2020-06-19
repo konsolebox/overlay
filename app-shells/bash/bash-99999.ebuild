@@ -13,8 +13,8 @@ LICENSE="GPL-3"
 IUSE="afs bashlogger bundled-readline examples mem-scramble +net nls plugins +readline vanilla"
 SLOT=0
 
-MY_PV=${MY_PV/_/-}
 MY_PV=${PV/_p*}
+MY_PV=${MY_PV/_/-}
 MY_P=${PN}-${MY_PV}
 
 get_patches() {
