@@ -1,0 +1,11 @@
+--- CEGUI-0.6.2/XMLParserModules/TinyXMLParser/CEGUITinyXMLParser.cpp.orig	2021-03-10 17:12:25.532461514 +0800
++++ CEGUI-0.6.2/XMLParserModules/TinyXMLParser/CEGUITinyXMLParser.cpp	2021-03-10 17:11:05.624462412 +0800
+@@ -135,7 +135,7 @@
+                 processElement(childNode->ToElement());
+                 break;
+             case CEGUI_TINYXML_NAMESPACE::TiXmlNode::TEXT:
+-                if (childNode->ToText()->Value() != '\0')
++                if (childNode->ToText()->Value())
+                     d_handler->text((utf8*)childNode->ToText()->Value());
+                 break;
+ 
