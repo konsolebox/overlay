@@ -3,35 +3,37 @@
 
 EAPI=5
 
-inherit eutils systemd git-r3 autotools
+inherit eutils systemd user git-r3 autotools
 
 DESCRIPTION="A tool for securing communications between a client and a DNS resolver"
 HOMEPAGE="http://dnscrypt.org/"
 LICENSE=ISC
 
 SLOT=0
-IUSE="+plugins systemd"
+IUSE="plugins systemd"
 
 CDEPEND="
 	dev-libs/libsodium
 	net-libs/ldns
-	systemd? ( sys-apps/systemd )"
-RDEPEND="${CDEPEND}
-	acct-group/dnscrypt-proxy
-	acct-user/dnscrypt-proxy"
-DEPEND="${CDEPEND}
-	virtual/pkgconfig"
+	systemd? ( sys-apps/systemd )
+"
+RDEPEND="${CDEPEND}"
+DEPEND="${CDEPEND} virtual/pkgconfig"
 
 EGIT_REPO_URI="https://github.com/konsolebox/${PN}.git"
 
-DOCS="AUTHORS ChangeLog NEWS README* THANKS *txt"
+pkg_setup() {
+	enewgroup dnscrypt
+	enewuser dnscrypt -1 -1 /var/empty dnscrypt
+}
 
 src_prepare() {
 	eautoreconf
 }
 
 src_configure() {
-	econf $(use_enable plugins) $(use_with systemd)
+	econf --disable-static --docdir="${EPREFIX}/usr/share/doc/${PF}" \
+		$(use_enable plugins) $(use_with systemd)
 }
 
 src_install() {
@@ -39,6 +41,9 @@ src_install() {
 	newinitd "${FILESDIR}/${PN}.initd-1.6.1" "${PN}"
 	newconfd "${FILESDIR}/${PN}.confd-1.6.0-r1" "${PN}"
 	systemd_dounit "${FILESDIR}/${PN}.service"
+	find "${D}" -name '*.la' -delete || die
+	find "${D}" -name 'libdcplugin_example*' -delete || die
+	dodoc AUTHORS ChangeLog NEWS README* THANKS *txt
 }
 
 pkg_postinst() {
