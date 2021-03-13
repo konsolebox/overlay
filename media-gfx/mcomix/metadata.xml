@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="person">
+    <email>konsolebox@gmail.com</email>
+    <name>konsolebox</name>
+  </maintainer>
+  <use>
+    <flag name="comicthumb">Install comicthumb</flag>
+    <flag name="thumbnailer">Install comicthumb.thumbnailer</flag>
+  </use>
+  <upstream>
+    <remote-id type="sourceforge">mcomix</remote-id>
+    <remote-id type="github">multiSnow/mcomix3</remote-id>
+  </upstream>
+</pkgmetadata>
