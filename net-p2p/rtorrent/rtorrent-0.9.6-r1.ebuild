@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
@@ -7,12 +7,12 @@ inherit autotools eutils systemd user
 
 DESCRIPTION='BitTorrent Client using libtorrent'
 HOMEPAGE='https://rakshasa.github.io/rtorrent/'
-SRC_URI="http://rtorrent.net/downloads/${P}.tar.gz"
+SRC_URI="https://rtorrent.net/downloads/${P}.tar.gz"
 
 LICENSE=GPL-2
 SLOT=0
-KEYWORDS='~amd64 ~arm ~x86'
-IUSE='chroot daemon debug ipv6 selinux test xmlrpc'
+KEYWORDS="~amd64 ~arm ~arm64 ~x86"
+IUSE="chroot daemon debug ipv6 selinux test xmlrpc"
 
 COMMON_DEPEND="~net-libs/libtorrent-0.13.${PV##*.}
 	>=dev-libs/libsigc++-2.2.2:2
@@ -46,8 +46,10 @@ pkg_setup() {
 src_prepare() {
 	# bug #358271
 	epatch \
-		"${FILESDIR}"/${PN}-0.9.1-ncurses.patch \
-		"${FILESDIR}"/${PN}-0.9.4-tinfo.patch
+		"${FILESDIR}/${PN}-0.9.1-ncurses.patch" \
+		"${FILESDIR}/${PN}-0.9.4-tinfo.patch" \
+		"${FILESDIR}/${PN}-0.9.6-cppunit-pkgconfig.patch" \
+		"${FILESDIR}/${PN}-0.9.6-include-locale.patch"
 
 	# https://github.com/rakshasa/rtorrent/issues/332
 	cp "${FILESDIR}"/rtorrent.1 "${S}"/doc/ || die
@@ -57,7 +59,7 @@ src_prepare() {
 
 src_configure() {
 	# configure needs bash or script bombs out on some null shift, bug #291229
-	CONFIG_SHELL=${BASH} econf \
+	CONFIG_SHELL="${BASH}" econf \
 		--disable-dependency-tracking \
 		$(use_enable debug) \
 		$(use_enable ipv6) \
