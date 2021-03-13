@@ -1,7 +1,7 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 inherit flag-o-matic toolchain-funcs multilib prefix
 [[ ${PV} == *9999* ]] && inherit git-r3
@@ -51,8 +51,8 @@ elif [[ ${PV} == *_alpha* || ${PV} == *_beta* || ${PV} == *_rc* ]]; then
 	SRC_URI="ftp://ftp.cwru.edu/pub/bash/${MY_P}.tar.gz"
 	REQUIRED_USE="readline? ( bundled-readline )"
 else
-	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~ppc-aix ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
-	READLINE_VER="8.0" # The version of readline this version of bash normally ships with.
+	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+	READLINE_VER="8.1" # The version of readline this version of bash normally ships with.
 
 	SRC_URI="mirror://gnu/bash/${MY_P}.tar.gz"
 	[[ ${PV} == *_p* ]] && PLEVEL=${PV##*_p}
@@ -60,7 +60,6 @@ else
 
 	PATCHES=(
 		# Patches from Chet sent to bashbug ml
-		"${FILESDIR}/${PN}-5.0-history-append.patch"
 		"${FILESDIR}/${PN}-5.0-syslog-history-extern.patch"
 	)
 fi
@@ -121,8 +120,6 @@ src_prepare() {
 src_configure() {
 	local myconf=(
 		--disable-profiling
-		--docdir='$(datarootdir)'/doc/"${PF}"
-		--htmldir='$(docdir)/html'
 		--with-curses
 		$(use_enable mem-scramble)
 		$(use_enable net net-redirections)
@@ -247,11 +244,10 @@ pkg_preinst() {
 		mv -f "${EROOT}"/etc/bashrc "${EROOT}"/etc/bash/
 	fi
 
-	if [[ -L ${EROOT}/bin/sh ]]; then
+	if [[ -L ${EROOT}/bin/sh ]] ; then
 		# Rewrite the symlink to ensure that its mtime changes.  Having /bin/sh
 		# missing even temporarily causes a fatal error with paludis.
-		local target=$(readlink "${EROOT}"/bin/sh)
-		local tmp=$(emktemp "${EROOT}"/bin)
+		local target=$(readlink "${EROOT}"/bin/sh) tmp=${T}/sh
 		ln -sf "${target}" "${tmp}"
 		mv -f "${tmp}" "${EROOT}"/bin/sh
 	fi
