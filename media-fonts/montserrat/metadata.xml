@@ -5,9 +5,7 @@
 		<email>konsolebox@gmail.com</email>
 		<name>konsolebox</name>
 	</maintainer>
-	<longdescription>
-		Often compared to Proxima Nova for it’s charming utility, 
-		Montserrat is a useful typeface, loved by many web and UI 
-		designers.
-	</longdescription>
+	<upstream>
+		<remote-id type="github">JulietaUla/Montserrat</remote-id>
+	</upstream>
 </pkgmetadata>
