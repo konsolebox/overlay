@@ -1,19 +1,17 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
 
 inherit toolchain-funcs
 
-DESCRIPTION='chroot with more isolation'
-HOMEPAGE='https://github.com/vincentbernat/jchroot'
+DESCRIPTION="A chroot with more isolation"
+HOMEPAGE="https://github.com/vincentbernat/jchroot"
+LICENSE="ISC"
 
-SRC_URI="https://github.com/vincentbernat/jchroot/archive/v1.0.tar.gz -> jchroot-${PV}.tar.gz"
-
-LICENSE='ISC'
 SLOT=0
-KEYWORDS='~amd64 ~arm ~x86'
-IUSE=
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
+SRC_URI="https://github.com/vincentbernat/jchroot/archive/v${PV}.tar.gz -> jchroot-${PV}.tar.gz"
 
 src_compile() {
 	emake CC="$(tc-getCC)" CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}"
