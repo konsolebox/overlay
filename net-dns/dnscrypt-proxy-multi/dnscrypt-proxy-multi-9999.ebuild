@@ -1,23 +1,18 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
 
 inherit git-r3
 
-DESCRIPTION='Runs multiple instances of dnscrypt-proxy'
-HOMEPAGE='https://github.com/konsolebox/scripts'
-LICENSE='public-domain'
-
-EGIT_REPO_URI='https://github.com/konsolebox/scripts.git'
-SRC_URI=
+DESCRIPTION="Runs multiple instances of dnscrypt-proxy"
+HOMEPAGE="https://github.com/konsolebox/scripts"
+LICENSE="public-domain"
 
 SLOT=0
-KEYWORDS=
-IUSE='chroot'
+IUSE="chroot"
 
-DEPEND=
-RDEPEND='
+RDEPEND="
 	>=net-dns/dnscrypt-proxy-1.7.0
 	>=dev-lang/ruby-2:=
 	chroot? (
@@ -27,7 +22,9 @@ RDEPEND='
 		sys-process/psmisc
 		virtual/awk
 	)
-'
+"
+
+EGIT_REPO_URI="https://github.com/konsolebox/scripts.git"
 
 src_install() {
 	newconfd "${FILESDIR}/${PN}.confd" "${PN}"
