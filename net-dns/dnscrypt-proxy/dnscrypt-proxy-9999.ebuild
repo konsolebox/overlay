@@ -1,43 +1,37 @@
-# Copyright 1999-2019 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
 
-inherit eutils systemd user git-r3 autotools
+inherit eutils systemd git-r3 autotools
 
-DESCRIPTION='A tool for securing communications between a client and a DNS resolver'
-HOMEPAGE='http://dnscrypt.org/'
-
-EGIT_REPO_URI="https://github.com/dyne/${PN}.git"
-
+DESCRIPTION="A tool for securing communications between a client and a DNS resolver"
+HOMEPAGE="http://dnscrypt.org/"
 LICENSE=ISC
-SLOT=0
-KEYWORDS=
-IUSE='+plugins systemd'
 
-CDEPEND='
+SLOT=0
+IUSE="+plugins systemd"
+
+CDEPEND="
 	dev-libs/libsodium
 	net-libs/ldns
-	systemd? ( sys-apps/systemd )'
-RDEPEND="${CDEPEND}"
+	systemd? ( sys-apps/systemd )"
+RDEPEND="${CDEPEND}
+	acct-group/dnscrypt-proxy
+	acct-user/dnscrypt-proxy"
 DEPEND="${CDEPEND}
 	virtual/pkgconfig"
 
-DOCS='AUTHORS ChangeLog NEWS README* THANKS *txt'
+EGIT_REPO_URI="https://github.com/konsolebox/${PN}.git"
 
-pkg_setup() {
-	enewgroup dnscrypt
-	enewuser dnscrypt -1 -1 /var/empty dnscrypt
-}
+DOCS="AUTHORS ChangeLog NEWS README* THANKS *txt"
 
 src_prepare() {
 	eautoreconf
 }
 
 src_configure() {
-	econf \
-		$(use_enable plugins) \
-		$(use_with systemd)
+	econf $(use_enable plugins) $(use_with systemd)
 }
 
 src_install() {
