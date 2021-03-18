@@ -71,13 +71,13 @@ src_install() {
 	doman doc/rtorrent.1
 
 	if use daemon; then
-		newinitd "${FILESDIR}/rtorrent.init" rtorrent
-		newconfd "${FILESDIR}/rtorrent.conf" rtorrent
+		newinitd "${FILESDIR}/rtorrent.initd" rtorrent
+		newconfd "${FILESDIR}/rtorrent.confd" rtorrent
 		systemd_newunit "${FILESDIR}/rtorrent_at.service" "rtorrent@.service"
 
 		if use chroot; then
-			newinitd "${FILESDIR}/rtorrent-chroot.init" rtorrent-chroot
-			newconfd "${FILESDIR}/rtorrent-chroot.conf" rtorrent-chroot
+			newinitd "${FILESDIR}/rtorrent-chroot.initd" rtorrent-chroot
+			newconfd "${FILESDIR}/rtorrent-chroot.confd" rtorrent-chroot
 		fi
 	fi
 }
