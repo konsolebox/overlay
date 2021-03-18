@@ -9,7 +9,7 @@ LICENSE="public-domain"
 SLOT=0
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 RDEPEND="app-shells/bash sys-process/procps"
-COMMIT="db9d0c01d0244c67d370766009078b568af544ef"
+COMMIT="8839aae5a30a747a0e5d3bafe0d88f7c5cb08170"
 SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${COMMIT}/${PN}.bash -> ${PN}-${PV}.bash"
 S=${WORKDIR}
 
