@@ -1,5 +1,5 @@
 #!/sbin/openrc-run
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 CHROOT_DIR=${CHROOT_DIR:-/chroot/tor}
@@ -96,8 +96,8 @@ _generate_rcopy_targets() {
 	set -- /etc/ld.so.conf*
 	[ "$1" = '/etc/ld.so.conf*' ] && set --
 	printf '%s\n' /usr/bin/tor /sbin/ldconfig "$@"
-	qlist sys-devel/gcc | grep libgcc_s
-	qlist sys-libs/glibc | grep libnss_compat
+	qlist -eC sys-devel/gcc | grep libgcc_s
+	qlist -eC sys-libs/glibc | grep libnss_compat
 }
 
 setup() {
