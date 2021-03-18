@@ -1,5 +1,5 @@
 #!/sbin/openrc-run
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 CHROOT_DIR=${CHROOT_DIR:-/chroot/dnscrypt-proxy-multi}
@@ -98,7 +98,7 @@ _get_chroot_ruby_package() {
 }
 
 _get_ruby_exec() {
-	qlist -C "${CHROOT_RUBY_PACKAGE}" | grep '^/usr/bin/ruby'
+	qlist -eC "${CHROOT_RUBY_PACKAGE}" | grep '^/usr/bin/ruby'
 }
 
 _get_chroot_ruby_exec() {
@@ -117,9 +117,9 @@ _generate_rcopy_targets() {
 	[ "$1" = '/etc/ld.so.conf*' ] && set --
 	(
 		printf '%s\n' /sbin/ldconfig "$@"
-		qlist -C net-dns/dnscrypt-proxy "${CHROOT_RUBY_PACKAGE}" dev-ruby/rubygems net-dns/dnscrypt-proxy net-dns/dnscrypt-proxy-multi
-		[ "${CHROOT_SETUP_COPY_LIBGCC_S}" = true ] && qlist sys-devel/gcc | grep libgcc_s
-		[ "${CHROOT_SETUP_COPY_LIBNSS_COMPAT}" = true ] && qlist sys-libs/glibc | grep libnss_compat
+		qlist -eC net-dns/dnscrypt-proxy "${CHROOT_RUBY_PACKAGE}" dev-ruby/rubygems net-dns/dnscrypt-proxy net-dns/dnscrypt-proxy-multi
+		[ "${CHROOT_SETUP_COPY_LIBGCC_S}" = true ] && qlist -eC sys-devel/gcc | grep libgcc_s
+		[ "${CHROOT_SETUP_COPY_LIBNSS_COMPAT}" = true ] && qlist -eC sys-libs/glibc | grep libnss_compat
 	) | grep -vEe '/(doc|conf\.d|init\.d|include|man|ri)/' -e 'bin/(erb|irb|gem|hostip)'
 }
 
