@@ -3,13 +3,9 @@
 
 EAPI=7
 
-_BASH_BUILD_READLINE_VER=6.2
 _BASH_BUILD_INSTALL_TYPE=slotted
-inherit bash-build
-
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
-
-PATCHES=(
+_BASH_BUILD_READLINE_VER=6.2
+_BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/autoconf-mktime-2.53.patch #220040
 	"${FILESDIR}"/bash-3.0-protos.patch
 	"${FILESDIR}"/bash-3.0-rbash.patch #26854
@@ -23,3 +19,7 @@ PATCHES=(
 	"${FILESDIR}"/bash-3.0-strnlen.patch
 	"${FILESDIR}"/bash-3.1-dev-fd-buffer-overflow.patch #431850
 )
+
+inherit bash-build
+
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
