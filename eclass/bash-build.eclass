@@ -45,8 +45,10 @@ IUSE="afs bundled-readline mem-scramble +net nls +readline static vanilla"
 if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
 	SLOT=0
 	IUSE+=" bashlogger examples plugins"
-	[[ MY_PV_PARTS -ge 5 || (MY_PV_PARTS -eq 4 && MY_PV_PARTS[1] -ge 3) ]] || \
-		die "System bash must be at least version 4.3"
+
+	if [[ MY_PV_PARTS -lt 4 || (MY_PV_PARTS -eq 4 && MY_PV_PARTS[1] -lt 3) ]]; then
+		die "System bash must at least be version 4.3."
+	fi
 elif [[ ${_BASH_BUILD_INSTALL_TYPE} == slotted ]]; then
 	SLOT=${PV/_p/.} SLOT=${SLOT%%[-_]*}
 else
@@ -131,7 +133,8 @@ bash-build_pkg_setup() {
 		eerror "as it breaks LFS (struct stat64) on x86."
 		die "remove -malign-double from your CFLAGS mr ricer"
 	fi
-	if [[ " ${IUSE} " == *" bashlogger "* ]] && use bashlogger; then
+
+	if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]] && use bashlogger; then
 		ewarn "The logging patch should ONLY be used in restricted (i.e. honeypot) envs."
 		ewarn "This will log ALL output you enter into the shell, you have been warned."
 	fi
