@@ -22,6 +22,14 @@
 # Declares the required version of Readline.
 # This doesn't have to be specified in *9999* ebuilds.
 
+# @ECLASS-VARIABLE: _BASH_BUILD_PATCHES
+# @DESCRIPTION:
+# Specifies the patches
+
+# @ECLASS-VARIABLE: _BASH_BUILD_PATCH_OPTIONS
+# @DESCRIPTION:
+# Specifies the options for epatch
+
 [[ ${EAPI} == 7 ]] || die "EAPI needs to 7."
 
 inherit flag-o-matic toolchain-funcs multilib prefix
@@ -172,9 +180,11 @@ bash-build_src_prepare() {
 	sed -i -r '/^(HS|RL)USER/s:=.*:=:' doc/Makefile.in || die
 	touch -r . doc/*
 
-	[[ ${#PATCHES[@]} -gt 0 ]] && ! use vanilla && eapply "${PATCH_OPTIONS[@]}" "${PATCHES[@]}"
-	eapply_user
+	if [[ ${#_BASH_BUILD_PATCHES[@]} -gt 0 ]] && ! use vanilla; then
+		eapply "${_BASH_BUILD_PATCH_OPTIONS[@]}" "${_BASH_BUILD_PATCHES[@]}"
+	fi
 
+	eapply_user
 	[[ ${PV} == *9999* ]] && eautoreconf
 }
 
