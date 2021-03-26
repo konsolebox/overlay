@@ -30,7 +30,7 @@
 # @DESCRIPTION:
 # Specifies the options for epatch
 
-[[ ${EAPI} == 7 ]] || die "EAPI needs to 7."
+[[ ${EAPI} == 7 ]] || die "EAPI needs to be 7."
 
 inherit flag-o-matic toolchain-funcs multilib prefix
 [[ ${PV} == *9999* ]] && inherit autotools git-r3
