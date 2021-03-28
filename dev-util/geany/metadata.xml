@@ -19,10 +19,9 @@
 		filetypes like C, Java, PHP, HTML, Python, Perl, Pascal; symbol lists.
 	</longdescription>
 	<use>
-		<flag name="gtk3">Use GTK+3 instead of GTK+2</flag>
 		<flag name="konsolebox">
-			Use github.com/konsolebox/geany as source, or use patches from
-			github.com/konsolebox/geany-patches
+			Use https://github.com/konsolebox/geany.git as source, or use patches from
+			https://github.com/konsolebox/geany-patches
 		</flag>
 		<flag name="vte">Enable Terminal support (<pkg>x11-libs/vte</pkg>)</flag>
 	</use>
