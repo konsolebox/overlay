@@ -9,8 +9,8 @@ LICENSE="public-domain"
 SLOT=0
 KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 RDEPEND=">=app-shells/bash-4.0 sys-apps/coreutils sys-libs/glibc"
-COMMIT="8839aae5a30a747a0e5d3bafe0d88f7c5cb08170"
-SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${COMMIT}/${PN}.bash -> ${PN}-${PV}.bash"
+COMMIT="fdac8bb1ac01b9391589e14cb302dfa2ed8f9ec6"
+SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${COMMIT}/${PN}.bash -> ${P}.bash"
 S=${WORKDIR}
 
 src_unpack() {
