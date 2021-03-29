@@ -3,7 +3,7 @@
 
 EAPI=6
 
-inherit readme.gentoo-r1 systemd versionator user
+inherit flag-o-matic readme.gentoo-r1 systemd versionator user
 
 MY_PV=$(replace_version_separator 4 -)
 MY_PF=tor-${MY_PV}
@@ -16,24 +16,23 @@ S=${WORKDIR}/${MY_PF}
 LICENSE="BSD GPL-2"
 SLOT=0
 KEYWORDS="~amd64 ~arm ~x86"
-IUSE="chroot libressl lzma scrypt seccomp selinux systemd test tor-hardening web zstd"
+IUSE="-bufferevents chroot libressl scrypt seccomp selinux stats systemd test tor-hardening transparent-proxy web"
 
 DEPEND="
 	app-text/asciidoc
-	dev-libs/libevent[ssl]
+	dev-libs/libevent
 	sys-libs/zlib
+	bufferevents? ( dev-libs/libevent[ssl] )
 	!libressl? ( dev-libs/openssl:0=[-bindist] )
 	libressl? ( dev-libs/libressl:0= )
-	lzma? ( app-arch/xz-utils )
 	scrypt? ( app-crypt/libscrypt )
 	seccomp? ( sys-libs/libseccomp )
-	systemd? ( sys-apps/systemd )
-	zstd? ( app-arch/zstd )"
+	systemd? ( sys-apps/systemd )"
 RDEPEND="${DEPEND}
 	chroot? (
 		app-portage/portage-utils
 		sys-apps/findutils
-		sys-apps/rcopy
+		>=sys-apps/rcopy-2021.03.29
 		sys-process/psmisc
 		virtual/awk
 	)
@@ -47,22 +46,25 @@ pkg_setup() {
 }
 
 src_configure() {
+	# Upstream isn't sure of all the user provided CFLAGS that
+	# will break tor, but does recommend against -fstrict-aliasing.
+	# We'll filter-flags them here as we encounter them.
+	filter-flags -fstrict-aliasing
+
 	econf \
-		--localstatedir="${EPREFIX}/var" \
 		--enable-system-torrc \
 		--enable-asciidoc \
-		--disable-libfuzzer \
-		--disable-rust \
-		$(use_enable lzma) \
+		$(use_enable stats instrument-downloads) \
+		$(use_enable bufferevents) \
 		$(use_enable scrypt libscrypt) \
 		$(use_enable seccomp) \
 		$(use_enable systemd) \
 		$(use_enable tor-hardening gcc-hardening) \
 		$(use_enable tor-hardening linker-hardening) \
+		$(use_enable transparent-proxy transparent) \
 		$(use_enable web tor2web-mode) \
 		$(use_enable test unittests) \
-		$(use_enable test coverage) \
-		$(use_enable zstd)
+		$(use_enable test coverage)
 }
 
 src_install() {
