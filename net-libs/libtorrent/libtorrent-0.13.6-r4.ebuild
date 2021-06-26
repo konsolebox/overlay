@@ -18,16 +18,13 @@ LICENSE="GPL-2"
 SLOT="0"
 
 KEYWORDS="~amd64 ~arm ~arm64 ~x86"
-IUSE="debug ipv6 libressl ssl test"
+IUSE="debug ipv6 ssl test"
 RESTRICT="!test? ( test )"
 
 RDEPEND="
 	sys-libs/zlib
 	>=dev-libs/libsigc++-2.2.2:2
-	ssl? (
-	    !libressl? ( dev-libs/openssl:0= )
-	    libressl? ( dev-libs/libressl:= )
-	)"
+	ssl? ( dev-libs/openssl:0= )"
 DEPEND="${RDEPEND}
 	virtual/pkgconfig
 	dev-util/cppunit"
