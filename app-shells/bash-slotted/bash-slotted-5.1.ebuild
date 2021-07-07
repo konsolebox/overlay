@@ -5,8 +5,8 @@ EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=slotted
 _BASH_BUILD_READLINE_VER=8.1
-_BASH_BUILD__BASH_BUILD_PATCHES=("${FILESDIR}"/bash-5.0-syslog-history-extern.patch)
-_BASH_BUILD__BASH_BUILD_PATCH_OPTIONS=(-p0)
+_BASH_BUILD_PATCHES=("${FILESDIR}"/bash-5.0-syslog-history-extern.patch)
+_BASH_BUILD_PATCH_OPTIONS=(-p0)
 
 inherit bash-build
 
