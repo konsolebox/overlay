@@ -1,0 +1,32 @@
+diff --git a/lib/portage/util/env_update.py b/lib/portage/util/env_update.py
+index bb0ebf8..aef5b6d 100644
+--- a/lib/portage/util/env_update.py
++++ b/lib/portage/util/env_update.py
+@@ -26,6 +26,7 @@ from portage.util import (
+ from portage.util.listdir import listdir
+ from portage.dbapi.vartree import vartree
+ from portage.package.ebuild.config import config
++from portage.process import spawn
+ 
+ 
+ def env_update(
+@@ -444,3 +445,19 @@ def _env_update(makelinks, target_root, prev_mtimes, contents, env, writemsg_lev
+     for x in env_keys:
+         outfile.write("setenv %s '%s'\n" % (x, env[x]))
+     outfile.close()
++
++    # execute +x scripts in /etc/env-update.d/
++    env_update_d_dir = os.path.join(eroot, "etc", "env-update.d")
++    ensure_dirs(env_update_d_dir, mode=0o755)
++    fns = listdir(env_update_d_dir, EmptyOnError=1)
++    fns.sort()
++    for x in fns:
++        if len(x) < 3:
++            continue
++        if not x[0].isdigit() or not x[1].isdigit():
++            continue
++        if x.startswith(".") or x.endswith("~") or x.endswith(".bak"):
++            continue
++        x = os.path.join(env_update_d_dir, x)
++        if os.access(x, os.X_OK):
++            spawn(x)

@@ -1,0 +1,38 @@
+Document FEATURES=userpatches in make.conf(5)
+Adapted from comment in eapply_user() in phase-helpers.sh
+Signed-off-by: Robin Couto <dbtx@ozono.us>
+
+--- a/man/make.conf.5
++++ b/man/make.conf.5
+@@ -714,6 +714,31 @@
+ When portage is run as root, drop privileges to portage:portage during the
+ fetching of package sources.
+ .TP
++.B userpatches
++Apply patches in /etc/portage/patches/ during the prepare phase. The inner
++directory structure follows atom syntax in ebuild(5). Filenames ending
++in .diff and .patch found in all matching subdirectories are combined into a
++list of the patch basenames. Those in more-specific subdirectories override
++patches of the same basename found in less-specific subdirectories. An empty
++patch (or /dev/null symlink) negates a patch with the same basename found in
++a less-specific subdirectory. In order, from most to least specific, these
++subdirectories will be matched to the current ebuild:
++
++	${CATEGORY}/${P}-${PR}:${SLOT}
++.br
++	${CATEGORY}/${P}-${PR}
++.br
++	${CATEGORY}/${P}:${SLOT}
++.br
++	${CATEGORY}/${P}
++.br
++	${CATEGORY}/${PN}:${SLOT}
++.br
++	${CATEGORY}/${PN}
++
++For the first two forms, ${P}-r0 also matches and overrides ${P}, if the ebuild
++has no revision number. This feature is enabled by default.
++.TP
+ .B userpriv
+ Allow portage to drop root privileges and compile packages as
+ portage:portage without a sandbox (unless \fIusersandbox\fR is also used).

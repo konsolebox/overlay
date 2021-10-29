@@ -1,0 +1,37 @@
+diff --git a/bin/phase-helpers.sh b/bin/phase-helpers.sh
+index 94f4f24f2..16b02d13b 100644
+--- a/bin/phase-helpers.sh
++++ b/bin/phase-helpers.sh
+@@ -1136,6 +1136,7 @@ if ___eapi_has_eapply_user; then
+ 		local tagfile=${T}/.portage_user_patches_applied
+ 		[[ -f ${tagfile} ]] && return
+ 		>> "${tagfile}"
++		[[ " ${FEATURES} " == *" userpatches "* ]] || return 0
+ 
+ 		local basedir=${PORTAGE_CONFIGROOT%/}/etc/portage/patches
+ 
+diff --git a/cnf/make.globals b/cnf/make.globals
+index b8bc90ae0..3441c65b0 100644
+--- a/cnf/make.globals
++++ b/cnf/make.globals
+@@ -61,7 +61,7 @@ FEATURES="assume-digests binpkg-docompress binpkg-dostrip binpkg-logs
+           preserve-libs protect-owned qa-unresolved-soname-deps
+           sandbox sfperms strict
+           unknown-features-warn unmerge-logs unmerge-orphans userfetch
+-          userpriv usersandbox usersync"
++          userpatches userpriv usersandbox usersync"
+ 
+ # Ignore file collisions in /lib/modules since files inside this directory
+ # are never unmerged, and therefore collisions must be ignored in order for
+diff --git a/lib/portage/const.py b/lib/portage/const.py
+index abe0ef6c6..1163cf6dc 100644
+--- a/lib/portage/const.py
++++ b/lib/portage/const.py
+@@ -207,6 +207,7 @@ SUPPORTED_FEATURES = frozenset(
+         "unprivileged",
+         "userfetch",
+         "userpriv",
++        "userpatches",
+         "usersandbox",
+         "usersync",
+         "webrsync-gpg",
