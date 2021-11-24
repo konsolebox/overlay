@@ -1,0 +1,12 @@
+diff --git a/tlock.h b/tlock.h
+index 5fd7f57..7a87dea 100644
+--- a/tlock.h
++++ b/tlock.h
+@@ -35,6 +35,7 @@
+ #include <termios.h>
+ #include <fcntl.h>
+ #include <err.h>
++#include <crypt.h>
+ 
+ /* for Linux-PAM interfaces */
+ #include <security/pam_appl.h>
