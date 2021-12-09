@@ -10,16 +10,16 @@
 	<name>Mikle Kolyada</name>
 </maintainer>
 <use>
+	<flag name="asterisk-patch">
+		Apply patch that makes libpam_misc's misc_conv function display
+		asterisks instead of nothing when asking no-echo input
+	</flag>
 	<flag name="berkdb">
 		Build the pam_userdb module, that allows to authenticate users
 		against a Berkeley DB file. Please note that enabling this USE
 		flag will create a PAM module that links to the Berkeley DB (as
 		provided by <pkg>sys-libs/db</pkg>) installed in /usr/lib and
 		will thus not work for boot-critical services authentication.
-	</flag>
-	<flag name="asterisk-patch">
-		Apply patch that modifies libpam_misc's behavior to display asterisks 
-		instead of nothing
 	</flag>
 </use>
 <upstream>
