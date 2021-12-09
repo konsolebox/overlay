@@ -67,8 +67,8 @@ pkg_setup() {
 src_prepare() {
 	sed -i '/^LOOPDEV=/s:$: || exit 0:' tests/{compat,mode}-test || die
 	default
+	use asterisk-patch && eapply "${FILESDIR}"/cryptsetup-2.4.1-show-asterisk-on-password-input-r1.patch
 	eautoreconf
-	use asterisk-patch && eapply "${FILESDIR}"/cryptsetup-2.4.1-show-asterisk-on-password-input.patch
 }
 
 src_configure() {
