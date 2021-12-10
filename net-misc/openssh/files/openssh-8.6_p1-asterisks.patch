@@ -1,0 +1,83 @@
+diff --git a/openbsd-compat/readpassphrase.c b/openbsd-compat/readpassphrase.c
+index ff8ff3d..62e116b 100644
+--- a/openbsd-compat/readpassphrase.c
++++ b/openbsd-compat/readpassphrase.c
+@@ -50,6 +50,25 @@ static volatile sig_atomic_t signo[_NSIG];
+ 
+ static void handler(int);
+ 
++/* Copied from bash's shtty.c
++ * Copyright (C) 1999 Free Software Foundation, Inc.
++ * Licensed under GPL v2 or later version */
++static void tt_setonechar(struct termios *ttp)
++{
++	ttp->c_lflag &= ~ICANON;
++	ttp->c_lflag |= ISIG;
++	ttp->c_lflag |= IEXTEN;
++	ttp->c_iflag |= ICRNL;
++	ttp->c_iflag &= ~INLCR;
++	ttp->c_oflag |= OPOST;
++	ttp->c_oflag |= ONLCR;
++	ttp->c_oflag &= ~OCRNL;
++	ttp->c_oflag &= ~ONOCR;
++	ttp->c_oflag &= ~ONLRET;
++	ttp->c_cc[VMIN] = 1;
++	ttp->c_cc[VTIME] = 0;
++}
++
+ char *
+ readpassphrase(const char *prompt, char *buf, size_t bufsiz, int flags)
+ {
+@@ -93,8 +112,10 @@ restart:
+ 	 */
+ 	if (input != STDIN_FILENO && tcgetattr(input, &oterm) == 0) {
+ 		memcpy(&term, &oterm, sizeof(term));
+-		if (!(flags & RPP_ECHO_ON))
++		if (!(flags & RPP_ECHO_ON) || (flags & RPP_ASTERISK))
+ 			term.c_lflag &= ~(ECHO | ECHONL);
++		if ((flags & RPP_ASTERISK))
++			tt_setonechar(&term);
+ #ifdef VSTATUS
+ 		if (term.c_cc[VSTATUS] != _POSIX_VDISABLE)
+ 			term.c_cc[VSTATUS] = _POSIX_VDISABLE;
+@@ -130,7 +151,14 @@ restart:
+ 	end = buf + bufsiz - 1;
+ 	p = buf;
+ 	while ((nr = read(input, &ch, 1)) == 1 && ch != '\n' && ch != '\r') {
+-		if (p < end) {
++		if ((ch == '\b' || ch == CERASE) && !(term.c_lflag & ECHO)) {
++			if (p > buf) {
++				(void)write(output, "\b \b", 3);
++				--p;
++			}
++		} else if (p < end) {
++			if ((flags & RPP_ASTERISK) && !(term.c_lflag & ECHO))
++				(void)write(output, "*", 1);
+ 			if ((flags & RPP_SEVENBIT))
+ 				ch &= 0x7f;
+ 			if (isalpha((unsigned char)ch)) {
+diff --git a/openbsd-compat/readpassphrase.h b/openbsd-compat/readpassphrase.h
+index 5fd7c5d..8077ae8 100644
+--- a/openbsd-compat/readpassphrase.h
++++ b/openbsd-compat/readpassphrase.h
+@@ -36,6 +36,7 @@
+ #define RPP_FORCEUPPER  0x08		/* Force input to upper case. */
+ #define RPP_SEVENBIT    0x10		/* Strip the high bit from input. */
+ #define RPP_STDIN       0x20		/* Read from stdin, not /dev/tty */
++#define RPP_ASTERISK    0x40		/* Display asterisks */
+ 
+ char * readpassphrase(const char *, char *, size_t, int);
+ 
+diff --git a/readpass.c b/readpass.c
+index 9c7476c..6af8aa5 100644
+--- a/readpass.c
++++ b/readpass.c
+@@ -139,7 +139,7 @@ read_passphrase(const char *prompt, int flags)
+ 			allow_askpass = 0;
+ 	}
+ 
+-	rppflags = (flags & RP_ECHO) ? RPP_ECHO_ON : RPP_ECHO_OFF;
++	rppflags = (flags & RP_ECHO) ? RPP_ECHO_ON : RPP_ASTERISK; // RPP_ECHO_OFF;
+ 	if (use_askpass)
+ 		debug_f("requested to askpass");
+ 	else if (flags & RP_USE_ASKPASS)
