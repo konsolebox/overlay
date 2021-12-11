@@ -20,7 +20,7 @@ LICENSE=MIT
 SLOT=0
 KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~m68k ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86"
 
-ruby_add_bdepend ">=dev-ruby/rake-compiler-1.0"
+ruby_add_bdepend ">=dev-ruby/rake-compiler-1.0 <=dev-ruby/rake-compiler-1.1.1"
 ruby_add_bdepend "test? ( >=dev-ruby/minitest-5.8 <dev-ruby/minitest-6 )"
 
 each_ruby_compile() {
