@@ -9,6 +9,7 @@ RUBY_FAKEGEM_DOC_SOURCES="ext/digest/kangarootwelve/ext.c lib/digest/kangarootwe
 RUBY_FAKEGEM_EXTRADOC="README.md"
 RUBY_FAKEGEM_RECIPE_TEST=rake
 RUBY_FAKEGEM_TASK_TEST=test
+RUBY_FAKEGEM_EXTENSIONS=("ext/digest/kangarootwelve/extconf.rb")
 
 inherit ruby-fakegem
 

@@ -9,6 +9,7 @@ RUBY_FAKEGEM_DOC_SOURCES="ext/digest/kangarootwelve/ext.c lib/digest/kangarootwe
 RUBY_FAKEGEM_EXTRADOC="README.md"
 RUBY_FAKEGEM_RECIPE_TEST=rake
 RUBY_FAKEGEM_TASK_TEST=test
+RUBY_FAKEGEM_EXTENSIONS=("ext/digest/kangarootwelve/extconf.rb")
 
 inherit ruby-fakegem
 
@@ -24,7 +25,7 @@ SLOT=0
 KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~m68k ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86"
 
 ruby_add_bdepend ">=dev-ruby/rake-compiler-1.0"
-ruby_add_bdepend "test? ( >=dev-ruby/minitest-5.8 )"
+ruby_add_bdepend "test? ( >=dev-ruby/minitest-5.8 <dev-ruby/minitest-6 )"
 
 each_ruby_prepare() {
 	# Strip ext files from spec.files to reduce cp noise.  We don't install them anyway.
