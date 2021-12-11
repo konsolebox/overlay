@@ -9,6 +9,7 @@ RUBY_FAKEGEM_DOC_SOURCES="ext/digest/xxhash/ext.c lib/digest/xxhash/version.rb"
 RUBY_FAKEGEM_EXTRADOC="README.md"
 RUBY_FAKEGEM_RECIPE_TEST=rake
 RUBY_FAKEGEM_TASK_TEST=test
+RUBY_FAKEGEM_EXTENSIONS=("ext/digest/xxhash/extconf.rb")
 
 inherit ruby-fakegem
 
