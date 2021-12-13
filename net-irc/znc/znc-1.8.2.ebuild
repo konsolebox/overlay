@@ -14,6 +14,7 @@ DESCRIPTION="An advanced IRC Bouncer"
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
 	EGIT_REPO_URI=${EGIT_REPO_URI:-"https://github.com/znc/znc.git"}
+	EGIT_BRANCH=master
 	SRC_URI=""
 else
 	MY_PV=${PV/_/-}

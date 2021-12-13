@@ -26,6 +26,7 @@ RDEPEND="
 "
 
 EGIT_REPO_URI="https://github.com/konsolebox/scripts.git"
+EGIT_BRANCH=master
 
 src_install() {
 	newconfd "${FILESDIR}/${PN}.confd" "${PN}"

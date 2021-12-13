@@ -11,6 +11,7 @@ LICENSE="ISC"
 
 SLOT=0
 EGIT_REPO_URI="https://github.com/vincentbernat/jchroot.git"
+EGIT_BRANCH=master
 
 src_compile() {
 	emake CC="$(tc-getCC)" CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}"

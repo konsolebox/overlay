@@ -8,6 +8,7 @@ DESCRIPTION="Font inspired by the signage found in a historical neighborhood of 
 HOMEPAGE="https://github.com/JulietaUla/Montserrat/"
 SRC_URI=
 EGIT_REPO_URI="https://github.com/JulietaUla/Montserrat.git"
+EGIT_BRANCH=master
 LICENSE="OFL-1.1"
 SLOT=0
 KEYWORDS=

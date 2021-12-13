@@ -15,6 +15,7 @@ inherit ruby-fakegem
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/pry/${PN}.git"
+	EGIT_BRANCH=master
 	EGIT_CHECKOUT_DIR=${WORKDIR}/all/${P}
 	SRC_URI=
 	KEYWORDS=

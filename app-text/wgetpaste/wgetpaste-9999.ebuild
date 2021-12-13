@@ -8,6 +8,7 @@ inherit git-r3
 DESCRIPTION="Command-line interface to various pastebins"
 HOMEPAGE="http://wgetpaste.zlin.dk/"
 EGIT_REPO_URI="https://github.com/zlin/wgetpaste.git"
+EGIT_BRANCH=master
 LICENSE="public-domain"
 SLOT="0"
 IUSE="+ssl"

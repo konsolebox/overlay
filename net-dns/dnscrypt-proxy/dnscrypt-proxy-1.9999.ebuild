@@ -21,6 +21,7 @@ RDEPEND="${CDEPEND}"
 DEPEND="${CDEPEND} virtual/pkgconfig"
 
 EGIT_REPO_URI="https://github.com/konsolebox/${PN}.git"
+EGIT_BRANCH=master
 
 pkg_setup() {
 	enewgroup dnscrypt

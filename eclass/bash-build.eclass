@@ -97,7 +97,15 @@ PLEVEL=0
 
 if [[ ${PV} == *9999* ]]; then
 	EGIT_REPO_URI="https://git.savannah.gnu.org/git/bash.git"
-	[[ ${PV} == 99999 ]] && EGIT_BRANCH=devel
+
+	if [[ ${PV} == 9999 ]]; then
+		EGIT_BRANCH=master
+	elif [[ ${PV} == 99999 ]]; then
+		EGIT_BRANCH=devel
+	else
+		die "Invalid *9999* version"
+	fi
+
 	REQUIRED_USE="readline? ( bundled-readline )"
 elif [[ ${PV} == *_alpha* || ${PV} == *_beta* || ${PV} == *_rc* ]]; then
 	SRC_URI="ftp://ftp.cwru.edu/pub/bash/bash-${MY_PV}.tar.gz"

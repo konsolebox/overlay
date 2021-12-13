@@ -27,12 +27,9 @@ pkg_setup() {
 }
 
 src_unpack() {
-	if use konsolebox; then
-		export EGIT_REPO_URI="https://github.com/konsolebox/geany.git"
-	else
-		export EGIT_REPO_URI="https://github.com/geany/geany.git"
-	fi
-
+	EGIT_REPO_URI="https://github.com/geany/geany.git"
+	use konsolebox && EGIT_REPO_URI="https://github.com/konsolebox/geany.git"
+	EGIT_BRANCH=master
 	git-r3_src_unpack
 }
 
