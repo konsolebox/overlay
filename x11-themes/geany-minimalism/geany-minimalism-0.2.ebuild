@@ -7,7 +7,7 @@ HOMEPAGE="https://github.com/konsolebox/geany-minimalism"
 LICENSE="GPL-2+"
 SRC_URI="https://github.com/konsolebox/${PN}/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
 SLOT=0
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux ~x86-linux"
 RDEPEND="dev-util/geany"
 
 src_install() {
