@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -28,8 +28,8 @@ DEPEND="!build? ( $(python_gen_impl_dep 'ssl(+)') )
 	>=sys-apps/sed-4.0.5 sys-devel/patch
 	doc? ( app-text/xmlto ~app-text/docbook-xml-dtd-4.4 )
 	apidoc? (
-		dev-python/sphinx
-		dev-python/sphinx-epytext
+		dev-python/sphinx[${PYTHON_USEDEP}]
+		dev-python/sphinx-epytext[${PYTHON_USEDEP}]
 	)"
 # Require sandbox-2.2 for bug #288863.
 # For whirlpool hash, require python[ssl] (bug #425046).
@@ -48,7 +48,7 @@ RDEPEND="
 		>=app-admin/eselect-1.2
 		rsync-verify? (
 			>=app-portage/gemato-14.5[${PYTHON_USEDEP}]
-			>=app-crypt/openpgp-keys-gentoo-release-20180706
+			>=sec-keys/openpgp-keys-gentoo-release-20180706
 			>=app-crypt/gnupg-2.2.4-r2[ssl(-)]
 		)
 	)
