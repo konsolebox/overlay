@@ -58,7 +58,7 @@ if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
 		die "System bash must at least be version 4.3."
 	fi
 elif [[ ${_BASH_BUILD_INSTALL_TYPE} == slotted ]]; then
-	SLOT=${PV/_p/.} SLOT=${SLOT%%[-_]*}
+	SLOT=${PV/_p/.} SLOT=${SLOT//_/-}
 else
 	die "Invalid install type: ${_BASH_BUILD_INSTALL_TYPE}"
 fi
@@ -85,7 +85,7 @@ _bash-build_get_patches() {
 	else
 		__A0=()
 
-		for s in "ftp://ftp.cwru.edu/pub/bash" "mirror://gnu/bash"; do
+		for s in "mirror://gnu/bash" "ftp://ftp.cwru.edu/pub/bash"; do
 			__A0+=("${patches[@]/#/${s}/bash-${MY_PV}-patches/}")
 		done
 	fi
@@ -108,8 +108,9 @@ if [[ ${PV} == *9999* ]]; then
 
 	REQUIRED_USE="readline? ( bundled-readline )"
 elif [[ ${PV} == *_alpha* || ${PV} == *_beta* || ${PV} == *_rc* ]]; then
-	SRC_URI="ftp://ftp.cwru.edu/pub/bash/bash-${MY_PV}.tar.gz"
+	SRC_URI="mirror://gnu/bash/bash-${MY_PV}.tar.gz ftp://ftp.cwru.edu/pub/bash/bash-${MY_PV}.tar.gz"
 	REQUIRED_USE="readline? ( bundled-readline )"
+	S=${WORKDIR}/bash-${MY_PV}
 else
 	[[ -z ${_BASH_BUILD_READLINE_VER} ]] && die "Readline version not provided."
 	SRC_URI="mirror://gnu/bash/bash-${MY_PV}.tar.gz"
@@ -136,9 +137,9 @@ DEPEND="
 	!sys-libs/libtermcap-compat
 "
 
-[[ ${_BASH_BUILD_INSTALL_TYPE} == slotted && (${PN} != bash || ${SLOT} != "${MY_PV}") ]] && RDEPEND+="
-	!app-shells/bash:${MY_PV}
-"
+BDEPEND="virtual/yacc"
+
+[[ ${SLOT} != 0 && ${PN} != bash ]] && RDEPEND+="!app-shells/bash:${SLOT}"
 
 # @FUNCTION: bash-build_pkg_setup
 # @DESCRIPTION:
@@ -150,7 +151,7 @@ bash-build_pkg_setup() {
 		die "remove -malign-double from your CFLAGS mr ricer"
 	fi
 
-	if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]] && use bashlogger; then
+	if [[ ${SLOT} == 0 ]] && use bashlogger; then
 		ewarn "The logging patch should ONLY be used in restricted (i.e. honeypot) envs."
 		ewarn "This will log ALL output you enter into the shell, you have been warned."
 	fi
@@ -234,19 +235,17 @@ bash-build_src_configure() {
 		append-cppflags -DUSE_MKTEMP -DUSE_MKSTEMP # mktemp/#574426
 	fi
 
-	if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
+	if [[ ${SLOT} == 0 ]]; then
 		use bashlogger && append-cppflags -DSYSLOG_HISTORY
 
 		if use plugins; then
-			append-ldflags "-Wl,-rpath,/usr/$(get_libdir)/bash"
+			append-ldflags "-Wl,-rpath,${EPREFIX}/usr/$(get_libdir)/bash"
 		else
 			# Disable the plugins logic by hand since bash doesn't
 			# provide a way of doing it.
 			export ac_cv_func_dl{close,open,sym}=no ac_cv_lib_dl_dlopen=no ac_cv_header_dlfcn_h=no
 			sed -i -e '/LOCAL_LDFLAGS=/s:-rdynamic::' configure || die
 		fi
-	elif [[ ${_BASH_BUILD_INSTALL_TYPE} != slotted ]]; then
-		die "Invalid install type: ${_BASH_BUILD_INSTALL_TYPE}"
 	fi
 
 	use static && append-ldflags -static
@@ -266,14 +265,14 @@ bash-build_src_configure() {
 # Implements src_compile
 bash-build_src_compile() {
 	emake || die "emake failed"
-	[[ ${_BASH_BUILD_INSTALL_TYPE} == system ]] && use plugins && emake -C examples/loadables all other
+	[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables all other
 }
 
 # @FUNCTION: bash-build_src_compile
 # @DESCRIPTION:
 # Implements src_install
 bash-build_src_install() {
-	if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
+	if [[ ${SLOT} == 0 ]]; then
 		default
 
 		dodir /bin
@@ -324,7 +323,7 @@ bash-build_src_install() {
 		doman doc/*.1
 		newdoc CWRU/changelog ChangeLog
 		dosym bash.info /usr/share/info/bashref.info
-	elif [[ ${_BASH_BUILD_INSTALL_TYPE} == slotted ]]; then
+	else
 		into /
 		newbin bash "bash-${SLOT}"
 		newman doc/bash.1 "bash-${SLOT}.1"
@@ -333,8 +332,6 @@ bash-build_src_install() {
 		newins doc/bashref.info "bash-${SLOT}.info"
 		dosym "bash-${SLOT}.info" "/usr/share/info/bashref-${SLOT}.info"
 		dodoc README NEWS AUTHORS CHANGES COMPAT Y2K doc/FAQ doc/INTRO
-	else
-		die "Invalid install type: ${_BASH_BUILD_INSTALL_TYPE}"
 	fi
 }
 
@@ -342,21 +339,11 @@ bash-build_src_install() {
 # @DESCRIPTION:
 # Implements pkg_preinst
 bash-build_pkg_preinst() {
-	if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
+	if [[ ${SLOT} == 0 ]]; then
 		if [[ -e ${EROOT}/etc/bashrc && ! -d ${EROOT}/etc/bash ]]; then
 			mkdir -p "${EROOT}"/etc/bash
 			mv -f "${EROOT}"/etc/bashrc "${EROOT}"/etc/bash/
 		fi
-
-		if [[ -L ${EROOT}/bin/sh ]] ; then
-			# Rewrite the symlink to ensure that its mtime changes.  Having /bin/sh
-			# missing even temporarily causes a fatal error with paludis.
-			local target=$(readlink "${EROOT}"/bin/sh)
-			ln -sf "${target}" "${T}"/sh
-			mv -f "${T}"/sh "${EROOT}"/bin/sh
-		fi
-	elif [[ ${_BASH_BUILD_INSTALL_TYPE} != slotted ]]; then
-		die "Invalid install type: ${_BASH_BUILD_INSTALL_TYPE}"
 	fi
 }
 
@@ -364,11 +351,9 @@ bash-build_pkg_preinst() {
 # @DESCRIPTION:
 # Implements pkg_postinst
 bash-build_pkg_postinst() {
-	if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
+	if [[ ${SLOT} == 0 ]]; then
 		# If /bin/sh does not exist, provide it.
 		[[ -e ${EROOT}/bin/sh ]] || ln -sf bash "${EROOT}"/bin/sh
-	elif [[ ${_BASH_BUILD_INSTALL_TYPE} != slotted ]]; then
-		die "Invalid install type: ${_BASH_BUILD_INSTALL_TYPE}"
 	fi
 }
 
