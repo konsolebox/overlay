@@ -11,7 +11,10 @@ inherit distutils-r1 linux-info tmpfiles prefix
 
 DESCRIPTION="The package management and distribution system for Gentoo"
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Portage"
-SRC_URI="https://gitweb.gentoo.org/proj/portage.git/snapshot/${P}.tar.bz2"
+SRC_URI="
+	https://gitweb.gentoo.org/proj/portage.git/snapshot/${P}.tar.bz2
+	https://gitweb.gentoo.org/proj/portage.git/patch/?id=c309328c4e1f6254251d31149ee47b4266d4d70f
+		-> ${P}-setuptools-install-depr.patch"
 
 LICENSE="GPL-2"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
@@ -54,7 +57,6 @@ RDEPEND="
 	)
 	elibc_glibc? ( >=sys-apps/sandbox-2.2 )
 	elibc_musl? ( >=sys-apps/sandbox-2.2 )
-	elibc_uclibc? ( >=sys-apps/sandbox-2.2 )
 	kernel_linux? ( sys-apps/util-linux )
 	>=app-misc/pax-utils-0.1.17
 	selinux? ( >=sys-libs/libselinux-2.0.94[python,${PYTHON_USEDEP}] )
@@ -68,7 +70,8 @@ RDEPEND="
 PDEPEND="
 	!build? (
 		>=net-misc/rsync-2.6.4
-		userland_GNU? ( >=sys-apps/coreutils-6.4 )
+		>=sys-apps/file-5.41
+		>=sys-apps/coreutils-6.4
 	)"
 # coreutils-6.4 rdep is for date format in emerge-webrsync #164532
 # NOTE: FEATURES=installsources requires debugedit and rsync
@@ -80,10 +83,15 @@ pkg_pretend() {
 }
 
 python_prepare_all() {
-	use unofficial && eapply \
-		"${FILESDIR}"/portage-3.0.28-env-update-post-update.patch \
-		"${FILESDIR}"/portage-3.0.28-userpatches-manual.patch \
+	local PATCHES=(
+		"${DISTDIR}/${P}-setuptools-install-depr.patch"
+	)
+
+	use unofficial && PATCHES+=(
+		"${FILESDIR}"/portage-3.0.28-env-update-post-update.patch
+		"${FILESDIR}"/portage-3.0.28-userpatches-manual.patch
 		"${FILESDIR}"/portage-3.0.28-userpatches.patch
+	)
 
 	distutils-r1_python_prepare_all
 
