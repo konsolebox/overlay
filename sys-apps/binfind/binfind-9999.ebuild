@@ -3,17 +3,9 @@
 
 EAPI=5
 
-inherit git-r3
+KONSOLEBOX_SCRIPTS_EXT=bash
+inherit konsolebox-scripts
 
-DESCRIPTION="Searches files based on the value of $PATH"
-HOMEPAGE="https://github.com/konsolebox/scripts"
+DESCRIPTION="Searches files based on the value of \$PATH"
 LICENSE="public-domain"
-
-SLOT=0
 RDEPEND="app-shells/bash !app-text/binfind sys-apps/findutils"
-EGIT_REPO_URI="https://github.com/konsolebox/scripts.git"
-EGIT_BRANCH=master
-
-src_install() {
-	mv -- "${PN}.bash" "${PN}" && dobin "${PN}"
-}
