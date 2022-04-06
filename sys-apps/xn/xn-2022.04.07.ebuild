@@ -4,7 +4,7 @@
 EAPI=5
 
 KONSOLEBOX_SCRIPTS_EXT=rb
-KONSOLEBOX_SCRIPTS_COMMIT="be6f2f4d24f40f6246dc1c81be6ab8655c52b801"
+KONSOLEBOX_SCRIPTS_COMMIT="0125c40f037e912b3c269d38830391375c5a8e49"
 inherit konsolebox-scripts
 
 DESCRIPTION="Renames files and directories based on their 160-bit KangarooTwelve checksum"
