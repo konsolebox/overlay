@@ -6,11 +6,11 @@ EAPI=5
 inherit git-r3 toolchain-funcs
 
 DESCRIPTION="Pipe Watch: monitor recent lines of output from pipe"
-HOMEPAGE="https://www.kylheku.com/git/pw.git"
+HOMEPAGE="https://www.kylheku.com/cgit/pw/"
 LICENSE="BSD-2"
 
 SLOT=0
-EGIT_REPO_URI="https://www.kylheku.com/cgit/pw/"
+EGIT_REPO_URI="https://www.kylheku.com/git/pw.git"
 EGIT_BRANCH=master
 
 src_prepare() {
