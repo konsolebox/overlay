@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+	</maintainer>
+	<upstream>
+		<maintainer>
+			<email>kaz@kylheku.com</email>
+			<name>Kaz Kylheku</name>
+		</maintainer>
+		<bugs-to>https://www.kylheku.com/cgit/pw/</bugs-to>
+	</upstream>
+</pkgmetadata>
