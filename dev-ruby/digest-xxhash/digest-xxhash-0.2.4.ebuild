@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
-USE_RUBY="ruby22 ruby23 ruby24 ruby25 ruby26 ruby27 ruby30"
+USE_RUBY="ruby22 ruby23 ruby24 ruby25 ruby26 ruby27 ruby30 ruby31"
 
 RUBY_FAKEGEM_RECIPE_DOC=rdoc
 RUBY_FAKEGEM_DOC_SOURCES="ext/digest/xxhash/ext.c lib/digest/xxhash/version.rb"
