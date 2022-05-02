@@ -22,7 +22,7 @@ IUSE="${IUSE} ${TARGET_FLAGS/target_compact/+target_compact}"
 REQUIRED_USE="${REQUIRED_USE} || ( ${TARGET_FLAGS} ) !target_compact? ( test )"
 
 SLOT=0
-KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 
 ruby_add_bdepend ">=dev-ruby/rake-compiler-1.0 || ( <dev-ruby/rake-compiler-1.1.3 >dev-ruby/rake-compiler-1.1.5 )"
 ruby_add_bdepend "test? ( >=dev-ruby/minitest-5.8 )"
