@@ -1,1 +1,11 @@
+=app-shells/bash-99999
+=app-shells/bash-slotted-99999
+=app-text/trim-trailing-spaces-99999
+=sys-apps/binfind-99999
+=sys-apps/killtree-99999
+=sys-apps/libfind-99999
+=sys-apps/manfind-99999
+=sys-apps/rcopy-99999
+=sys-apps/tail-follow-grep-99999
+=sys-apps/xn-99999
 net-irc/znc
