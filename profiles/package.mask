@@ -9,3 +9,4 @@
 =sys-apps/tail-follow-grep-99999
 =sys-apps/xn-99999
 net-irc/znc
+net-p2p/rtorrent
