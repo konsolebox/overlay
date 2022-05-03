@@ -9,3 +9,4 @@ inherit konsolebox-scripts
 DESCRIPTION="Finds library files based on expressions"
 LICENSE="public-domain"
 RDEPEND="app-shells/bash sys-apps/findutils"
+IUSE="nounset"

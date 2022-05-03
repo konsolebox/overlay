@@ -11,6 +11,9 @@
 		dependencies to a virtual root directory.  The resulting file's
 		path is reproduced based on its source.
 	</longdescription>
+	<use>
+		<flag name="nounset">Inject '[[ BASH_VERSINFO -ge 5 ]] &amp;&amp; set -u' to script</flag>
+	</use>
 	<upstream>
 		<remote-id type="github">konsolebox/scripts</remote-id>
 		<bugs-to>https://github.com/konsolebox/scripts/issues</bugs-to>

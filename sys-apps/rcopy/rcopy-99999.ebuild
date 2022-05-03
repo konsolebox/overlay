@@ -9,3 +9,4 @@ inherit konsolebox-scripts
 DESCRIPTION="Relatively copies binaries along with their dependencies to a directory"
 LICENSE="public-domain"
 RDEPEND=">=app-shells/bash-4.0 sys-apps/coreutils sys-libs/glibc"
+IUSE="nounset"

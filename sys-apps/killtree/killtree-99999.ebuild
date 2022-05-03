@@ -9,3 +9,4 @@ inherit konsolebox-scripts
 DESCRIPTION="Sends signals to process trees"
 LICENSE="public-domain"
 RDEPEND="app-shells/bash sys-process/procps"
+IUSE="nounset"

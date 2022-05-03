@@ -9,3 +9,4 @@ inherit konsolebox-scripts
 DESCRIPTION="Searches files based on the value of \$PATH"
 LICENSE="public-domain"
 RDEPEND="app-shells/bash !app-text/binfind sys-apps/findutils"
+IUSE="nounset"

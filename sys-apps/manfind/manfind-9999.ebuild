@@ -9,3 +9,4 @@ inherit konsolebox-scripts
 DESCRIPTION="Searches for manual pages based on \$MANPATH"
 LICENSE="public-domain"
 RDEPEND="app-shells/bash sys-apps/findutils"
+IUSE="nounset"
