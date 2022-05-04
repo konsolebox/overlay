@@ -9,6 +9,9 @@
 	<longdescription>
 		Removes trailing spaces in files
 	</longdescription>
+	<use>
+		<flag name="nounset">Inject '[[ BASH_VERSINFO -ge 5 ]] &amp;&amp; set -u' to script</flag>
+	</use>
 	<upstream>
 		<remote-id type="github">konsolebox/scripts</remote-id>
 		<bugs-to>https://github.com/konsolebox/scripts/issues</bugs-to>
