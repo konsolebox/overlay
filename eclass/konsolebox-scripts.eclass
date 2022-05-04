@@ -46,12 +46,12 @@ SLOT=${SLOT-0}
 
 # @FUNCTION: konsolebox-scripts_src_unpack()
 # @DESCRIPTION:
-# Implements src_prepere
+# Implements src_unpack
 konsolebox-scripts_src_unpack() {
-	if [[ ${PV} != 9999* ]]; then
-		cp -v -- "${DISTDIR}/${A}" "${WORKDIR}/${PN}" || die
-	else
+	if [[ ${PV} == 9999* ]]; then
 		git-r3_src_unpack
+	else
+		cp -v -- "${DISTDIR}/${A}" "${WORKDIR}/${PN}" || die
 	fi
 }
 
@@ -60,7 +60,12 @@ konsolebox-scripts_src_unpack() {
 # Implements src_prepere
 konsolebox-scripts_src_prepare() {
 	if [[ ${PV} == 9999* ]]; then
-		mv -- "${PN}.${KONSOLEBOX_SCRIPTS_EXT}" "${PN}" || die
+		cp -v -- "${PN}.${KONSOLEBOX_SCRIPTS_EXT}" "${PN}" || die
+	fi
+
+	if has nounset ${IUSE//+} && use nounset; then
+		[[ ${KONSOLEBOX_SCRIPTS_EXT} == bash ]] || die "Nounset is only valid in bash scripts."
+		sed -ie '1s|.*|&\n\n\[\[ BASH_VERSINFO -ge 5 \]\] \&\& set -u|' "${PN}" || die
 	fi
 }
 
@@ -68,11 +73,6 @@ konsolebox-scripts_src_prepare() {
 # @DESCRIPTION:
 # Implements src_install
 konsolebox-scripts_src_install() {
-	if has nounset ${IUSE//+} && use nounset; then
-		[[ ${KONSOLEBOX_SCRIPTS_EXT} == bash ]] || die "Nounset is only valid in bash scripts."
-		sed -ie '1s|.*|&\n\n\[\[ BASH_VERSINFO -ge 5 \]\] \&\& set -u|' "${PN}" || die
-	fi
-
 	dobin "${PN}"
 }
 
