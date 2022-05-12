@@ -20,17 +20,17 @@ RDEPEND="${DEPEND}
 	virtual/jpeg
 	dev-python/pillow[${PYTHON_USEDEP}]
 	dev-python/pygobject[${PYTHON_USEDEP}]
-	!media-gfx/comix
+	!media-gfx/comix"
+BDEPEND="sys-devel/gettext
 	app-arch/gzip"
-BDEPEND="sys-devel/gettext"
 
-REQUIRED_USE=${PYTHON_REQUIRED_USE}
+REQUIRED_USE="${PYTHON_REQUIRED_USE}
+	thumbnailer? ( comicthumb )"
 
 src_prepare() {
 	default
 
-	for file in mcomix/messages/*/LC_MESSAGES/*po
-	do
+	for file in mcomix/messages/*/LC_MESSAGES/*po; do
 		msgfmt ${file} -o ${file/po/mo} || die
 		rm ${file} || die
 	done
