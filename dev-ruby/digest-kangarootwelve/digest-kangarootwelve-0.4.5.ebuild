@@ -46,7 +46,10 @@ _digest_kangarootwelve_get_active_target() {
 each_ruby_compile() {
 	_digest_kangarootwelve_get_active_target
 	${RUBY} -S rake compile -- --with-target="$__" --enable-verbose-mode || die "Failed to compile extension."
-	use doc && rdoc --quiet --ri --output=ri ${RUBY_FAKEGEM_DOC_SOURCES}
+
+	if use doc; then
+		rdoc --quiet --ri --output=ri ${RUBY_FAKEGEM_DOC_SOURCES} || die
+	fi
 }
 
 each_ruby_install() {
