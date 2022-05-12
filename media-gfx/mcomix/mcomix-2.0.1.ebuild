@@ -20,7 +20,8 @@ RDEPEND="${DEPEND}
 	virtual/jpeg
 	dev-python/pillow[${PYTHON_USEDEP}]
 	dev-python/pygobject[${PYTHON_USEDEP}]
-	!media-gfx/comix"
+	!media-gfx/comix
+	app-arch/gzip"
 BDEPEND="sys-devel/gettext"
 
 REQUIRED_USE="${PYTHON_REQUIRED_USE}
@@ -37,7 +38,7 @@ src_prepare() {
 	done
 
 	use comicthumb && eapply "${FILESDIR}/comicthumb-mcomix3-f8679cf.patch"
-	zcat mcomix.1.gz > mcomix.1 || die
+	gunzip mcomix.1.gz || die
 }
 
 src_install() {

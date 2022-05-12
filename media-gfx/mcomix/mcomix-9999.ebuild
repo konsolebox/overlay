@@ -36,7 +36,7 @@ src_prepare() {
 	done
 
 	use comicthumb && eapply "${FILESDIR}/comicthumb-mcomix3-f8679cf.patch"
-	zcat mcomix.1.gz > mcomix.1 || die
+	gunzip mcomix.1.gz || die
 }
 
 src_install() {
