@@ -26,7 +26,10 @@ ruby_add_bdepend "test? ( >=dev-ruby/minitest-5.8 <dev-ruby/minitest-6 )"
 
 each_ruby_compile() {
 	${RUBY} -S rake compile || die 'Failed to compile extension.'
-	use doc && rdoc --quiet --ri --output=ri ${RUBY_FAKEGEM_DOC_SOURCES}
+
+	if use doc; then
+		rdoc --quiet --ri --output=ri ${RUBY_FAKEGEM_DOC_SOURCES} || die
+	fi
 }
 
 each_ruby_install() {
