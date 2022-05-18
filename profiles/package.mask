@@ -8,4 +8,5 @@
 =sys-apps/rcopy-99999
 =sys-apps/tail-follow-grep-99999
 =sys-apps/xn-99999
+dev-ruby/rubygems
 net-irc/znc
