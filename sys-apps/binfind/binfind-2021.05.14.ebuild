@@ -1,7 +1,7 @@
 # Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=5
+EAPI=6
 
 KONSOLEBOX_SCRIPTS_COMMIT="f34bcc33177c34eff5b6108fba3f8ef5aa984ce1"
 KONSOLEBOX_SCRIPTS_EXT=bash
