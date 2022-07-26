@@ -5,6 +5,10 @@
 		<email>konsolebox@gmail.com</email>
 		<name>konsolebox</name>
 	</maintainer>
+	<longdescription>
+		Package for Bash that allows supplemental installation of other
+		versions besides the one installed for the system
+	</longdescription>
 	<use>
 		<flag name="bundled-readline">Use bundled readline</flag>
 		<flag name="mem-scramble">
