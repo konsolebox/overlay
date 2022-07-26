@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 # @ECLASS: bash-build.eclass
@@ -14,7 +14,7 @@
 
 # @ECLASS-VARIABLE: _BASH_BUILD_INSTALL_TYPE
 # @DESCRIPTION:
-# Indicates whether the installation type is 'system' or 'slotted'
+# Indicates whether the installation type is 'system' or 'supplemental'
 # @REQUIRED
 
 # @ECLASS-VARIABLE: _BASH_BUILD_READLINE_VER
@@ -57,7 +57,7 @@ if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
 	if [[ MY_PV_PARTS -lt 4 || (MY_PV_PARTS -eq 4 && MY_PV_PARTS[1] -lt 3) ]]; then
 		die "System bash must at least be version 4.3."
 	fi
-elif [[ ${_BASH_BUILD_INSTALL_TYPE} == slotted ]]; then
+elif [[ ${_BASH_BUILD_INSTALL_TYPE} == supplemental ]]; then
 	SLOT=${PV/_p/.} SLOT=${SLOT//_/-}
 else
 	die "Invalid install type: ${_BASH_BUILD_INSTALL_TYPE}"

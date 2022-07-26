@@ -1,5 +1,5 @@
 =app-shells/bash-99999
-=app-shells/bash-slotted-99999
+=app-shells/bash-supplemental-99999
 =app-text/trim-trailing-spaces-99999
 =sys-apps/binfind-99999
 =sys-apps/killtree-99999

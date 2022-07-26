@@ -1,9 +1,9 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
-_BASH_BUILD_INSTALL_TYPE=slotted
+_BASH_BUILD_INSTALL_TYPE=supplemental
 _BASH_BUILD_READLINE_VER=6.2
 _BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/bash-4.2-execute-job-control.patch #383237
