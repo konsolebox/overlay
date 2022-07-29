@@ -63,6 +63,8 @@ konsolebox-scripts_src_prepare() {
 		cp -v -- "${PN}.${KONSOLEBOX_SCRIPTS_EXT}" "${PN}" || die
 	fi
 
+	default
+
 	if has nounset ${IUSE//+} && use nounset; then
 		[[ ${KONSOLEBOX_SCRIPTS_EXT} == bash ]] || die "Nounset is only valid in bash scripts."
 		sed -ie '1s|.*|&\n\n\[\[ BASH_VERSINFO -ge 5 \]\] \&\& set -u|' "${PN}" || die
