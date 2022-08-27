@@ -265,7 +265,7 @@ bash-build_src_configure() {
 # Implements src_compile
 bash-build_src_compile() {
 	emake || die "emake failed"
-	[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables all other
+	[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables all others
 }
 
 # @FUNCTION: bash-build_src_compile
