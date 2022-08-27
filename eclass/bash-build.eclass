@@ -298,9 +298,8 @@ bash-build_src_install() {
 
 		if use plugins; then
 			exeinto "/usr/$(get_libdir)/bash"
-			shopt -q nullglob || die "Nullglob has to be enabled here."
 			local loadables=(examples/loadables/*.o)
-			[[ ${#loadables[@]} -gt 0 ]] && doexe "${loadables[@]%.o}"
+			[[ ${#loadables[@]} -gt 0 && -e ${loadables} ]] && doexe "${loadables[@]%.o}"
 			insinto /usr/include/bash-plugins
 			doins *.h builtins/*.h include/*.h lib/{glob/glob.h,tilde/tilde.h}
 		fi
