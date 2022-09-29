@@ -109,7 +109,7 @@ elif [[ ${PV} == *_alpha* || ${PV} == *_beta* || ${PV} == *_rc* ]]; then
 	SRC_URI="mirror://gnu/bash/bash-${MY_PV}.tar.gz ftp://ftp.cwru.edu/pub/bash/bash-${MY_PV}.tar.gz"
 	S=${WORKDIR}/bash-${MY_PV}
 else
-	[[ -z ${_BASH_BUILD_READLINE_VER} ]] && die "Readline version not provided."
+	[[ ${SLOT} == 0 && -z ${_BASH_BUILD_READLINE_VER} ]] && die "Readline version not provided."
 	SRC_URI="mirror://gnu/bash/bash-${MY_PV}.tar.gz"
 	[[ ${PV} == *_p* ]] && PLEVEL=${PV##*_p}
 	[[ PLEVEL -gt 0 ]] && _bash-build_get_patches && SRC_URI+=" ${__A0[*]}"
