@@ -4,7 +4,6 @@
 EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_READLINE_VER=8.0
 _BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/bash-5.0-history-append.patch
 	"${FILESDIR}"/bash-5.0-syslog-history-extern.patch

@@ -4,7 +4,6 @@
 EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_READLINE_VER=6.2
 _BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/autoconf-mktime-2.53.patch #220040
 	"${FILESDIR}"/bash-2.05b-parallel-build.patch #41002

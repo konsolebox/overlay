@@ -4,7 +4,6 @@
 EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_READLINE_VER=6.2
 _BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/bash-4.2-execute-job-control.patch #383237
 	"${FILESDIR}"/bash-4.2-parallel-build.patch

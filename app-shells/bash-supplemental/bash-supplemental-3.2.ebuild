@@ -4,7 +4,6 @@
 EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_READLINE_VER=6.2
 _BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/autoconf-mktime-2.59.patch #220040
 	"${FILESDIR}"/bash-3.2-loadables.patch

@@ -4,7 +4,6 @@
 EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_READLINE_VER=6.3
 _BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/bash-4.3-mapfile-improper-array-name-validation.patch
 	"${FILESDIR}"/bash-4.3-arrayfunc.patch

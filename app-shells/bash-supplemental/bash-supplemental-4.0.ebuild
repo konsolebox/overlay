@@ -4,7 +4,6 @@
 EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_READLINE_VER=6.2
 _BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/bash-4.0-configure.patch #304901
 	"${FILESDIR}"/bash-4.x-deferred-heredocs.patch

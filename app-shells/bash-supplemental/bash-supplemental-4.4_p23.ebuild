@@ -4,7 +4,6 @@
 EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_READLINE_VER=7.0
 _BASH_BUILD_PATCHES=(
 	"${FILESDIR}"/bash-4.4-jobs_overflow.patch #644720
 	"${FILESDIR}"/bash-4.4-set-SHOBJ_STATUS.patch #644720
