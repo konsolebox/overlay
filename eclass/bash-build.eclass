@@ -94,6 +94,7 @@ _bash-build_get_patches() {
 }
 
 PLEVEL=0
+MAY_USE_SYSTEM_READLINE=false
 
 if [[ ${PV} == *9999* ]]; then
 	EGIT_REPO_URI="https://git.savannah.gnu.org/git/bash.git"
@@ -109,22 +110,27 @@ elif [[ ${PV} == *_alpha* || ${PV} == *_beta* || ${PV} == *_rc* ]]; then
 	SRC_URI="mirror://gnu/bash/bash-${MY_PV}.tar.gz ftp://ftp.cwru.edu/pub/bash/bash-${MY_PV}.tar.gz"
 	S=${WORKDIR}/bash-${MY_PV}
 else
-	[[ ${SLOT} == 0 && -z ${_BASH_BUILD_READLINE_VER} ]] && die "Readline version not provided."
+	[[ ${SLOT} == 0 ]] && MAY_USE_SYSTEM_READLINE=true
 	SRC_URI="mirror://gnu/bash/bash-${MY_PV}.tar.gz"
 	[[ ${PV} == *_p* ]] && PLEVEL=${PV##*_p}
 	[[ PLEVEL -gt 0 ]] && _bash-build_get_patches && SRC_URI+=" ${__A0[*]}"
 	S=${WORKDIR}/bash-${MY_PV}
 fi
 
-if [[ ${SLOT} != 0 || ${PV} == *9999* || ${PV} == *_alpha* || ${PV} == *_beta* ||
-		${PV} == *_rc* ]]; then
+if [[ ${MAY_USE_SYSTEM_READLINE} == true ]]; then
+	[[ -z ${_BASH_BUILD_READLINE_VER-} ]] && die "Readline version needs to be provided."
+	NON_STATIC_READLINE_DEP="readline? ( !bundled-readline? ( >=sys-libs/readline-${_BASH_BUILD_READLINE_VER}:0= ) )"
+	STATIC_READLINE_DEP="readline? ( !bundled-readline? ( >=sys-libs/readline-${_BASH_BUILD_READLINE_VER}[static-libs(+)] ) )"
+else
+	NON_STATIC_READLINE_DEP=
+	STATIC_READLINE_DEP=
 	REQUIRED_USE="readline? ( bundled-readline )"
 fi
 
 RDEPEND="
 	!static? (
 		>=sys-libs/ncurses-5.9-r3:0=
-		readline? ( !bundled-readline? ( >=sys-libs/readline-${_BASH_BUILD_READLINE_VER:-0}:0= ) )
+		${NON_STATIC_READLINE_DEP}
 	)
 "
 
@@ -132,7 +138,7 @@ DEPEND="
 	${RDEPEND}
 	static? (
 		>=sys-libs/ncurses-5.9-r3[static-libs(+)]
-		readline? ( !bundled-readline? ( >=sys-libs/readline-${_BASH_BUILD_READLINE_VER:-0}[static-libs(+)] ) )
+		${STATIC_READLINE_DEP}
 	)
 	nls? ( virtual/libintl )
 	!<sys-apps/portage-2.1.6.7_p1
