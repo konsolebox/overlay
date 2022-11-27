@@ -13,15 +13,7 @@ SLOT=0
 EGIT_REPO_URI="https://www.kylheku.com/git/pw.git"
 EGIT_BRANCH=master
 
-src_prepare() {
-	rm -f Makefile || die
-}
-
-src_compile() {
-	emake CC="$(tc-getCC)" CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" pw
-}
-
 src_install() {
-	doman "${PN}.1"
-	dobin "${PN}"
+	doman pw.1 pw-relnotes.5
+	dobin pw
 }
