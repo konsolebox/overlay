@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -23,7 +23,7 @@ DEPEND="
 	dev-libs/libevent
 	sys-libs/zlib
 	bufferevents? ( dev-libs/libevent[ssl] )
-	dev-libs/openssl:0=[-bindist]
+	dev-libs/openssl:0=
 	scrypt? ( app-crypt/libscrypt )
 	seccomp? ( sys-libs/libseccomp )
 	systemd? ( sys-apps/systemd )"
@@ -33,7 +33,10 @@ RDEPEND="${DEPEND}
 		sys-apps/findutils
 		>=sys-apps/rcopy-2021.03.29
 		sys-process/psmisc
-		virtual/awk
+		|| (
+			app-alternatives/awk
+			virtual/awk
+		)
 	)
 	selinux? ( sec-policy/selinux-tor )"
 
