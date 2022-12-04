@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -9,7 +9,7 @@ MY_P="Linux-${PN^^}-${PV}"
 # Can reconsider w/ EAPI 8 and IDEPEND, bug #810979
 TMPFILES_OPTIONAL=1
 
-inherit autotools db-use fcaps toolchain-funcs multilib-minimal
+inherit autotools db-use fcaps flag-o-matic toolchain-funcs usr-ldscript multilib-minimal
 
 DESCRIPTION="Linux-PAM (Pluggable Authentication Modules)"
 HOMEPAGE="https://github.com/linux-pam/linux-pam"
@@ -19,7 +19,7 @@ SRC_URI="https://github.com/linux-pam/linux-pam/releases/download/v${PV}/${MY_P}
 
 LICENSE="|| ( BSD GPL-2 )"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux"
 IUSE="asterisk-patch audit berkdb debug nis selinux"
 
 BDEPEND="
@@ -27,7 +27,7 @@ BDEPEND="
 	sys-devel/flex
 	sys-devel/gettext
 	virtual/pkgconfig
-	virtual/yacc
+	app-alternatives/yacc
 "
 
 DEPEND="
@@ -45,6 +45,11 @@ PDEPEND=">=sys-auth/pambase-20200616"
 
 S="${WORKDIR}/${MY_P}"
 
+PATCHES=(
+	"${FILESDIR}"/${PN}-1.5.1-musl.patch
+	"${FILESDIR}"/${PN}-1.5.2-clang-15-configure-implicit-func.patch
+)
+
 src_prepare() {
 	default
 	use asterisk-patch && eapply "${FILESDIR}"/pam-1.5.2-libpam_misc-mask-mode.patch
@@ -56,13 +61,26 @@ multilib_src_configure() {
 	# Do not let user's BROWSER setting mess us up. #549684
 	unset BROWSER
 
+	# This whole weird has_version libxcrypt block can go once
+	# musl systems have libxcrypt[system] if we ever make
+	# that mandatory. See bug #867991.
+	if use elibc_musl && ! has_version sys-libs/libxcrypt[system] ; then
+		# Avoid picking up symbol-versioned compat symbol on musl systems
+		export ac_cv_search_crypt_gensalt_rn=no
+
+		# Need to avoid picking up the libxcrypt headers which define
+		# CRYPT_GENSALT_IMPLEMENTS_AUTO_ENTROPY.
+		cp "${ESYSROOT}"/usr/include/crypt.h "${T}"/crypt.h || die
+		append-cppflags -I"${T}"
+	fi
+
 	local myconf=(
 		CC_FOR_BUILD="$(tc-getBUILD_CC)"
 		--with-db-uniquename=-$(db_findver sys-libs/db)
-		--with-xml-catalog=/etc/xml/catalog
-		--enable-securedir=/$(get_libdir)/security
-		--includedir=/usr/include/security
-		--libdir=/usr/$(get_libdir)
+		--with-xml-catalog="${EPREFIX}"/etc/xml/catalog
+		--enable-securedir="${EPREFIX}"/$(get_libdir)/security
+		--includedir="${EPREFIX}"/usr/include/security
+		--libdir="${EPREFIX}"/usr/$(get_libdir)
 		--enable-pie
 		--enable-unix
 		--disable-prelude
@@ -87,6 +105,8 @@ multilib_src_compile() {
 multilib_src_install() {
 	emake DESTDIR="${D}" install \
 		sepermitlockdir="/run/sepermit"
+
+	gen_usr_ldscript -a pam pam_misc pamc
 }
 
 multilib_src_install_all() {
@@ -119,7 +139,7 @@ pkg_postinst() {
 	ewarn "restart the software manually after the update."
 	ewarn ""
 	ewarn "You can get a list of such software running a command like"
-	ewarn "  lsof / | egrep -i 'del.*libpam\\.so'"
+	ewarn "  lsof / | grep -E -i 'del.*libpam\\.so'"
 	ewarn ""
 	ewarn "Alternatively, simply reboot your system."
 
