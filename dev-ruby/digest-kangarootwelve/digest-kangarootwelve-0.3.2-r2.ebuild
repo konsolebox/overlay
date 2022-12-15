@@ -17,9 +17,9 @@ DESCRIPTION="KangarooTwelve for Ruby"
 HOMEPAGE="https://github.com/konsolebox/digest-kangarootwelve-ruby"
 LICENSE=MIT
 
-TARGET_FLAGS="target_armv6 target_armv6m target_armv7a target_armv7m target_armv8a target_avr8 target_avx target_avx2 target_avx2noasm target_avx512 target_avx512noasm target_compact target_generic32 target_generic32lc target_generic64 target_generic64lc target_reference target_reference32bits target_ssse3 target_xop"
-IUSE="${IUSE} ${TARGET_FLAGS/target_compact/+target_compact}"
-REQUIRED_USE="${REQUIRED_USE} || ( ${TARGET_FLAGS} ) !target_compact? ( test )"
+TARGET_FLAGS="target_armv6m target_armv7a target_armv7m target_armv8a target_asmx86-64 target_asmx86-64shld target_avr8 target_bulldozer target_compact target_generic32 target_generic32lc target_generic64 target_generic64lc target_haswell target_nehalem target_reference target_reference32bits target_sandybridge"
+IUSE="${IUSE-} ${TARGET_FLAGS/target_compact/+target_compact}"
+REQUIRED_USE="${REQUIRED_USE-} ^^ ( ${TARGET_FLAGS} ) !target_compact? ( test )"
 
 SLOT=0
 KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
@@ -33,19 +33,19 @@ each_ruby_prepare() {
 		die "Failed to strip ext files from spec.files."
 }
 
-_digest_kangarootwelve_get_active_target() {
+_digest_kangarootwelve_get_selected_target() {
 	local t
 
 	for t in ${TARGET_FLAGS}; do
 		use "$t" && __=${t#target_} && return
 	done
 
-	die "Failed to get current target."
+	die "Failed to get selected target."
 }
 
 each_ruby_compile() {
-	_digest_kangarootwelve_get_active_target
-	${RUBY} -S rake compile -- --with-target="$__" --enable-verbose-mode || die "Failed to compile extension."
+	_digest_kangarootwelve_get_selected_target
+	${RUBY} -S rake compile -- --with-target="$__" || die "Failed to compile extension."
 
 	if use doc; then
 		rdoc --quiet --ri --output=ri ${RUBY_FAKEGEM_DOC_SOURCES} || die
