@@ -12,21 +12,21 @@
 # @DESCRIPTION:
 # This eclass contains unified code for building bash.
 
-# @ECLASS-VARIABLE: _BASH_BUILD_INSTALL_TYPE
+# @ECLASS_VARIABLE: _BASH_BUILD_INSTALL_TYPE
 # @DESCRIPTION:
 # Indicates whether the installation type is 'system' or 'supplemental'
 # @REQUIRED
 
-# @ECLASS-VARIABLE: _BASH_BUILD_READLINE_VER
+# @ECLASS_VARIABLE: _BASH_BUILD_READLINE_VER
 # @DESCRIPTION:
 # Declares the required version of Readline.
 # This doesn't have to be specified in *9999* ebuilds.
 
-# @ECLASS-VARIABLE: _BASH_BUILD_PATCHES
+# @ECLASS_VARIABLE: _BASH_BUILD_PATCHES
 # @DESCRIPTION:
 # Specifies the patches
 
-# @ECLASS-VARIABLE: _BASH_BUILD_PATCH_OPTIONS
+# @ECLASS_VARIABLE: _BASH_BUILD_PATCH_OPTIONS
 # @DESCRIPTION:
 # Specifies the options for epatch
 
