@@ -6,10 +6,11 @@ EAPI=7
 _BASH_BUILD_INSTALL_TYPE=system
 _BASH_BUILD_READLINE_VER=8.0
 _BASH_BUILD_PATCHES=(
-	"${FILESDIR}"/bash-5.0-history-append.patch
-	"${FILESDIR}"/bash-5.0-syslog-history-extern.patch
+	bash-5.0-history-append.patch
+	bash-5.0-syslog-history-extern.patch
 )
 _BASH_BUILD_PATCH_OPTIONS=(-p0)
+_BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 

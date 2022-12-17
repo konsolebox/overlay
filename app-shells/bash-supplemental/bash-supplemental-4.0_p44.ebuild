@@ -5,14 +5,15 @@ EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
 _BASH_BUILD_PATCHES=(
-	"${FILESDIR}"/bash-4.0-configure.patch #304901
-	"${FILESDIR}"/bash-4.x-deferred-heredocs.patch
-	"${FILESDIR}"/bash-2.05b-parallel-build.patch #41002
-	"${FILESDIR}"/bash-4.0-ldflags-for-build.patch #211947
-	"${FILESDIR}"/bash-4.0-negative-return.patch
-	"${FILESDIR}"/bash-4.0-parallel-build.patch #267613
-	"${FILESDIR}"/bash-4.2-dev-fd-buffer-overflow.patch #431850
+	bash-4.0-configure.patch #304901
+	bash-4.x-deferred-heredocs.patch
+	bash-2.05b-parallel-build.patch #41002
+	bash-4.0-ldflags-for-build.patch #211947
+	bash-4.0-negative-return.patch
+	bash-4.0-parallel-build.patch #267613
+	bash-4.2-dev-fd-buffer-overflow.patch #431850
 )
+_BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 

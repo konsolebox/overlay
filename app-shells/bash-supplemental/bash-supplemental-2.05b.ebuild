@@ -5,16 +5,17 @@ EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
 _BASH_BUILD_PATCHES=(
-	"${FILESDIR}"/bash-2.05b-destdir.patch
-	"${FILESDIR}"/autoconf-mktime-2.53.patch #220040
-	"${FILESDIR}"/bash-2.05b-protos.patch
-	"${FILESDIR}"/bash-2.05b-empty-herestring.patch
-	"${FILESDIR}"/bash-2.05b-rbash.patch #26854
-	"${FILESDIR}"/bash-2.05b-parallel-build.patch #41002
-	"${FILESDIR}"/bash-2.05b-jobs.patch
-	"${FILESDIR}"/bash-2.05b-fix-job-warning.patch
-	"${FILESDIR}"/bash-3.1-dev-fd-buffer-overflow.patch #431850
+	bash-2.05b-destdir.patch
+	autoconf-mktime-2.53.patch #220040
+	bash-2.05b-protos.patch
+	bash-2.05b-empty-herestring.patch
+	bash-2.05b-rbash.patch #26854
+	bash-2.05b-parallel-build.patch #41002
+	bash-2.05b-jobs.patch
+	bash-2.05b-fix-job-warning.patch
+	bash-3.1-dev-fd-buffer-overflow.patch #431850
 )
+_BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 

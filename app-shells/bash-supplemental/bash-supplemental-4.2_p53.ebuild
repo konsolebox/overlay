@@ -5,12 +5,13 @@ EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
 _BASH_BUILD_PATCHES=(
-	"${FILESDIR}"/bash-4.2-execute-job-control.patch #383237
-	"${FILESDIR}"/bash-4.2-parallel-build.patch
-	"${FILESDIR}"/bash-4.2-no-readline.patch
-	"${FILESDIR}"/bash-4.2-read-retry.patch #447810
-	"${FILESDIR}"/bash-4.2-speed-up-read-N.patch
+	bash-4.2-execute-job-control.patch #383237
+	bash-4.2-parallel-build.patch
+	bash-4.2-no-readline.patch
+	bash-4.2-read-retry.patch #447810
+	bash-4.2-speed-up-read-N.patch
 )
+_BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 

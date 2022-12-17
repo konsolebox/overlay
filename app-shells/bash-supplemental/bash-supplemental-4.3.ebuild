@@ -5,11 +5,12 @@ EAPI=7
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
 _BASH_BUILD_PATCHES=(
-	"${FILESDIR}"/bash-4.3-mapfile-improper-array-name-validation.patch
-	"${FILESDIR}"/bash-4.3-arrayfunc.patch
-	"${FILESDIR}"/bash-4.3-protos.patch
-	"${FILESDIR}"/bash-4.4-popd-offset-overflow.patch #600174
+	bash-4.3-mapfile-improper-array-name-validation.patch
+	bash-4.3-arrayfunc.patch
+	bash-4.3-protos.patch
+	bash-4.4-popd-offset-overflow.patch #600174
 )
+_BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 
