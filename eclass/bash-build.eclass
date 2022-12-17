@@ -276,7 +276,7 @@ bash-build_src_compile() {
 	[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables all others
 }
 
-# @FUNCTION: bash-build_src_compile
+# @FUNCTION: bash-build_src_install
 # @DESCRIPTION:
 # Implements src_install
 bash-build_src_install() {
