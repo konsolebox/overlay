@@ -16,7 +16,7 @@ S=${WORKDIR}/${MY_PF}
 LICENSE="BSD GPL-2"
 SLOT=0
 KEYWORDS="~amd64 ~arm ~x86"
-IUSE="-bufferevents chroot scrypt seccomp selinux stats systemd test tor-hardening transparent-proxy web"
+IUSE="bufferevents chroot scrypt seccomp selinux stats systemd test tor-hardening transparent-proxy web"
 
 DEPEND="
 	app-text/asciidoc
