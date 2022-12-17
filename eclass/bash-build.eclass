@@ -145,7 +145,7 @@ DEPEND="
 	!sys-libs/libtermcap-compat
 "
 
-BDEPEND="virtual/yacc"
+BDEPEND="|| ( app-alternatives/yacc virtual/yacc )"
 
 [[ ${SLOT} != 0 && ${PN} != bash ]] && RDEPEND+="!app-shells/bash:${SLOT}"
 
