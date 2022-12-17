@@ -11,19 +11,19 @@
 # @DESCRIPTION:
 # This eclass contains unified code for installing konsolebox's scripts
 
-# @ECLASS-VARIABLE: KONSOLEBOX_SCRIPTS_GIT_BRANCH
+# @ECLASS_VARIABLE: KONSOLEBOX_SCRIPTS_GIT_BRANCH
 # @DESCRIPTION:
 # Git branch to checkout when PV == 9999*.  Default is 'testing' if
 # PV == 99999, or 'master' otherwise.
 : ${KONSOLEBOX_SCRIPTS_GIT_BRANCH=}
 
-# @ECLASS-VARIABLE: KONSOLEBOX_SCRIPTS_COMMIT
+# @ECLASS_VARIABLE: KONSOLEBOX_SCRIPTS_COMMIT
 # @DEFAULT_UNSET
 # @DESCRIPTION:
 # Commit version that contain the script when PV != 9999
 : ${KONSOLEBOX_SCRIPTS_COMMIT=}
 
-# @ECLASS-VARIABLE: KONSOLEBOX_SCRIPTS_EXT
+# @ECLASS_VARIABLE: KONSOLEBOX_SCRIPTS_EXT
 # @DESCRIPTION:
 # Extension name of the script
 # @REQUIRED
