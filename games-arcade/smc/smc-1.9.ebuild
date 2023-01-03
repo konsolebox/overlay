@@ -1,8 +1,8 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
-inherit autotools eutils flag-o-matic
+inherit autotools desktop
 
 MUSIC_P=SMC_Music_4.1_high
 DESCRIPTION="Secret Maryo Chronicles"
@@ -37,7 +37,9 @@ src_unpack() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}/${P}-boost150.patch" "${FILESDIR}/${P}-underlink.patch"
+	eapply -p0 "${FILESDIR}/${P}-boost150.patch"
+	eapply -p1 "${FILESDIR}/${P}-underlink.patch"
+	eapply_user
 	eautoreconf
 }
 
