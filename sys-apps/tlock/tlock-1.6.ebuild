@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -16,8 +16,8 @@ RDEPEND=${BDEPEND}
 PATCHES=("${FILESDIR}/tlock-1.6-include-crypt-h.patch")
 
 pkg_setup() {
-	local __=$(pkg-config --libs ncurses)
-	export LDFLAGS="$__ ${LDFLAGS-}" LIBS="$__ ${LIBS-}"
+	local args=$(pkg-config --libs ncurses)
+	export LDFLAGS="${args} ${LDFLAGS-}" LIBS="${args} ${LIBS-}"
 }
 
 multilib_src_configure() {
