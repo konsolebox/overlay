@@ -7,7 +7,9 @@
 		<description>author</description>
 	</maintainer>
 	<longdescription>
-		A KangarooTwelve library for Ruby that works on top of Digest::Base
+		A KangarooTwelve library that utilizes the XKCP package and can be optionally optimized
+		during compile-time based on a target. It produces implementation classes that work on top
+		of Digest::Base and conform with how Digest classes work.
 	</longdescription>
 	<upstream>
 		<remote-id type="github">konsolebox/digest-kangarootwelve-ruby</remote-id>
