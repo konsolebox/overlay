@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -13,7 +13,6 @@ SLOT="0"
 KEYWORDS="~amd64 ~x86"
 RESTRICT="strip"
 RDEPEND="|| (
-	app-emulation/wine-any[abi_x86_32]
 	app-emulation/wine-d3d9
 	app-emulation/wine-staging[abi_x86_32]
 	app-emulation/wine-vanilla[abi_x86_32]
