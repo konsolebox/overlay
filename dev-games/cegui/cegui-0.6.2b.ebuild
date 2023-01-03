@@ -1,8 +1,8 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
-inherit autotools eutils
+inherit autotools
 
 MY_P=CEGUI-${PV%b}
 DESCRIPTION="Crazy Eddie's GUI System"
@@ -28,11 +28,11 @@ DEPEND="${RDEPEND}
 S=${WORKDIR}/${MY_P}
 
 src_prepare() {
-	epatch \
-		"${FILESDIR}"/${P}-gcc43.patch \
-		"${FILESDIR}"/${P}-dups.patch \
+	eapply -p0 "${FILESDIR}"/${P}-gcc43.patch
+	eapply -p1 "${FILESDIR}"/${P}-dups.patch \
 		"${FILESDIR}"/${P}-gcc46.patch \
 		"${FILESDIR}"/${P}-pointer-comparison-fix.patch
+	eapply_user
 	sed -i \
 		-e 's/ILvoid/void/g' \
 		ImageCodecModules/DevILImageCodec/CEGUIDevILImageCodec.cpp || die
@@ -64,4 +64,9 @@ src_configure() {
 		--disable-silly \
 		--without-gtk2 \
 		--without-ogre-renderer
+}
+
+src_install() {
+	default
+	find "${D}" -name '*.la' -delete || die
 }
