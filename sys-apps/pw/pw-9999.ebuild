@@ -1,9 +1,9 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
-inherit git-r3 toolchain-funcs
+inherit git-r3
 
 DESCRIPTION="Pipe Watch: monitor recent lines of output from pipe"
 HOMEPAGE="https://www.kylheku.com/cgit/pw/"
