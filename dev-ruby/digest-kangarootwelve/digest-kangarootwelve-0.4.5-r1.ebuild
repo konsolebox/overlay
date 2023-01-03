@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -33,19 +33,17 @@ each_ruby_prepare() {
 		die "Failed to strip ext files from spec.files."
 }
 
-_digest_kangarootwelve_get_selected_target() {
-	local t
+each_ruby_compile() {
+	local t selected_target=
 
 	for t in ${TARGET_FLAGS}; do
-		use "$t" && __=${t#target_} && return
+		use "$t" && selected_target=${t#target_} && break
 	done
 
-	die "Failed to get selected target."
-}
+	[[ ${selected_target} ]] || die "Failed to get selected target."
 
-each_ruby_compile() {
-	_digest_kangarootwelve_get_selected_target
-	${RUBY} -S rake compile -- --with-target="$__" --enable-verbose-mode || die "Failed to compile extension."
+	${RUBY} -S rake compile -- --with-target="${selected_target}" --enable-verbose-mode || \
+			die "Failed to compile extension."
 
 	if use doc; then
 		rdoc --quiet --ri --output=ri ${RUBY_FAKEGEM_DOC_SOURCES} || die
