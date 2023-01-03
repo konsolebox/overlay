@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -23,8 +23,10 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
-	for __ in xxh32sum xxh64sum xxh128sum; do
-		ln -sf /usr/bin/xxhsum "${ED}/usr/bin/$__" || die
-		ln -sf /usr/share/man/man1/xxhsum.1.bz2 "${ED}/usr/share/man/man1/$__.1.bz2" || die
+	local bin
+
+	for bin in xxh{32,64,128}sum; do
+		ln -sf /usr/bin/xxhsum "${ED}/usr/bin/$bin" || die
+		ln -sf /usr/share/man/man1/xxhsum.1.bz2 "${ED}/usr/share/man/man1/$bin.1.bz2" || die
 	done
 }
