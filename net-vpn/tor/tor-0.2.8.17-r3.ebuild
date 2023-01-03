@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -17,6 +17,7 @@ LICENSE="BSD GPL-2"
 SLOT=0
 KEYWORDS="~amd64 ~arm ~x86"
 IUSE="bufferevents chroot scrypt seccomp selinux stats systemd test tor-hardening transparent-proxy web"
+RESTRICT="!test? ( test )"
 
 DEPEND="
 	app-text/asciidoc
