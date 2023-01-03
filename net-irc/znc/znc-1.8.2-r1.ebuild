@@ -1,11 +1,9 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
-PYTHON_COMPAT=( python3_{4,5,6,7,8,9} )
-
-inherit cmake-utils python-single-r1 readme.gentoo-r1 systemd user
+inherit cmake-utils readme.gentoo-r1 systemd user
 
 GTEST_VER="1.8.1"
 GTEST_URL="https://github.com/google/googletest/archive/${GTEST_VER}.tar.gz -> gtest-${GTEST_VER}.tar.gz"
@@ -35,13 +33,10 @@ LICENSE="Apache-2.0"
 IUSE="+ipv6 +icu nls perl python +ssl sasl tcl test +zlib"
 RESTRICT="!test? ( test )"
 
-REQUIRED_USE="python? ( ${PYTHON_REQUIRED_USE} icu )"
-
 DEPEND="
 	icu? ( dev-libs/icu:= )
 	nls? ( dev-libs/boost:=[nls] )
 	perl? ( >=dev-lang/perl-5.10:= )
-	python? ( ${PYTHON_DEPS} )
 	sasl? ( >=dev-libs/cyrus-sasl-2 )
 	ssl? ( dev-libs/openssl:0= )
 	tcl? ( dev-lang/tcl:0= )
@@ -55,10 +50,6 @@ BDEPEND="
 		>=dev-lang/swig-3.0.0
 		>=dev-lang/perl-5.10
 	)
-	python? (
-		>=dev-lang/swig-3.0.0
-		>=dev-lang/perl-5.10
-	)
 	test? (
 		${PYTHON_DEPS}
 		dev-qt/qtnetwork:5
@@ -68,9 +59,7 @@ BDEPEND="
 PATCHES=( "${FILESDIR}"/${PN}-1.7.1-inttest-dir.patch )
 
 pkg_setup() {
-	if use python; then
-		python-single-r1_pkg_setup
-	fi
+	use python && die "This package dropped python support. Use another."
 
 	enewgroup "${PN}"
 	enewuser "${PN}" -1 -1 "/var/lib/${PN}" "${PN}"
@@ -101,7 +90,6 @@ src_configure() {
 		-DWANT_IPV6="$(usex ipv6)"
 		-DWANT_I18N="$(usex nls)"
 		-DWANT_PERL="$(usex perl)"
-		-DWANT_PYTHON="$(usex python)"
 		-DWANT_CYRUS="$(usex sasl)"
 		-DWANT_OPENSSL="$(usex ssl)"
 		-DWANT_TCL="$(usex tcl)"
@@ -122,9 +110,6 @@ src_test() {
 	local filter='-'
 	if ! use perl; then
 		filter="${filter}:ZNCTest.Modperl*"
-	fi
-	if ! use python; then
-		filter="${filter}:ZNCTest.Modpython*"
 	fi
 	# CMAKE_PREFIX_PATH and CXXFLAGS are needed for znc-buildmod
 	# invocations from inside the test
