@@ -34,10 +34,9 @@ S=${WORKDIR}/mcomix3-${GIT_PV}
 src_prepare() {
 	default
 
-	for file in mcomix/mcomix/messages/*/LC_MESSAGES/*po
-	do
-		msgfmt ${file} -o ${file/po/mo} || die
-		rm ${file} || die
+	for file in mcomix/mcomix/messages/*/LC_MESSAGES/*.po; do
+		msgfmt "${file}" -o "${file%.po}.mo" || die
+		rm "${file}" || die
 	done
 }
 
@@ -46,12 +45,11 @@ src_install() {
 	python_foreach_impl python_newscript mcomix/mcomixstarter.py mcomix
 	use comicthumb && python_foreach_impl python_newscript mcomix/comicthumb.py comicthumb
 
-	for size in 16 22 24 32 48
-	do
-		doicon -s ${size} \
-			mime/icons/${size}x${size}/*png \
-			mcomix/mcomix/images/${size}x${size}/mcomix.png
+	for size in 16 22 24 32 48; do
+		doicon -s "${size}" "mime/icons/${size}x${size}/"*.png \
+				"mcomix/mcomix/images/${size}x${size}/mcomix.png"
 	done
+
 	doicon mcomix/mcomix/images/mcomix.png
 	domenu mime/mcomix.desktop
 	doman man/mcomix.1

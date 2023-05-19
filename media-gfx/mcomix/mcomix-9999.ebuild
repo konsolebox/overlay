@@ -30,9 +30,9 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}
 src_prepare() {
 	default
 
-	for file in mcomix/messages/*/LC_MESSAGES/*po; do
-		msgfmt ${file} -o ${file/po/mo} || die
-		rm ${file} || die
+	for file in mcomix/messages/*/LC_MESSAGES/*.po; do
+		msgfmt "${file}" -o "${file%.po}.mo" || die
+		rm "${file}" || die
 	done
 
 	use comicthumb && eapply "${FILESDIR}/comicthumb-mcomix3-f8679cf.patch"
