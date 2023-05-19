@@ -1,0 +1,21 @@
+diff --git a/mcomix/image_tools.py b/mcomix/image_tools.py
+index 7148f0f..418a78e 100755
+--- a/mcomix/image_tools.py
++++ b/mcomix/image_tools.py
+@@ -690,11 +690,11 @@ def get_supported_formats():
+         supported_formats_gdk = {}
+         for format in GdkPixbuf.Pixbuf.get_formats():
+             name = format.get_name().upper()
+-            assert name not in supported_formats_gdk
+-            supported_formats_gdk[name] = (
+-                format.get_mime_types(),
+-                format.get_extensions(),
+-            )
++            if name not in supported_formats_gdk:
++                supported_formats_gdk[name] = (
++                    format.get_mime_types(),
++                    format.get_extensions(),
++                )
+ 
+         # Step 3: merge format collections
+         supported_formats = {}

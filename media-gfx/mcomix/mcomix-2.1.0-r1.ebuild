@@ -27,16 +27,12 @@ BDEPEND="sys-devel/gettext
 REQUIRED_USE="${PYTHON_REQUIRED_USE}
 	thumbnailer? ( comicthumb )"
 
+PATCHES=("${FILESDIR}/mcomix-2.1.0-repeated-format-fix.patch")
+
 S=${WORKDIR}/${P}
 
 src_prepare() {
 	default
-
-	for file in mcomix/messages/*/LC_MESSAGES/*po; do
-		msgfmt ${file} -o ${file/po/mo} || die
-		rm ${file} || die
-	done
-
 	use comicthumb && eapply "${FILESDIR}/comicthumb-mcomix3-f8679cf.patch"
 	gunzip mcomix.1.gz || die
 }
