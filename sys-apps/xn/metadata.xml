@@ -7,7 +7,7 @@
 		<description>Author of xn</description>
 	</maintainer>
 	<longdescription>
-		Renames files and directories based on their 160-bit KangarooTwelve checksum while avoiding 
+		Renames files and directories based on their 160-bit KangarooTwelve checksum while avoiding
 		conflict on files with different content
 	</longdescription>
 	<upstream>
