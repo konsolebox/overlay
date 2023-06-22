@@ -52,7 +52,7 @@ MY_PV=${PV/_p*}
 MY_PV=${MY_PV/_/-}
 MY_PV_PARTS=(${MY_PV//[.-]/ })
 
-IUSE="afs bundled-readline mem-scramble +net nls +readline static vanilla"
+IUSE="afs bundled-readline mem-scramble +net nls pgo +readline static vanilla"
 
 if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
 	SLOT=0
@@ -153,7 +153,10 @@ DEPEND="
 	!sys-libs/libtermcap-compat
 "
 
-BDEPEND="|| ( app-alternatives/yacc virtual/yacc )"
+BDEPEND="
+	|| ( app-alternatives/yacc virtual/yacc )
+	pgo? ( dev-util/gperf )
+"
 
 [[ ${SLOT} != 0 && ${PN} != bash ]] && RDEPEND+="!app-shells/bash:${SLOT}"
 
@@ -287,8 +290,24 @@ bash-build_src_configure() {
 # @DESCRIPTION:
 # Implements src_compile
 bash-build_src_compile() {
-	emake || die "emake failed"
-	[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables all others
+	if use pgo; then
+		# Build Bash and run its tests to generate profile data.
+		emake CFLAGS="${CFLAGS} -fprofile-generate=${T}/pgo -fprofile-dir=${T}/pgo"
+		unset A # Used in test suite
+		emake CFLAGS="${CFLAGS} -fprofile-generate=${T}/pgo -fprofile-dir=${T}/pgo" -k check
+
+		if tc-is-clang; then
+			llvm-profdata merge "${T}"/pgo --output="${T}"/pgo/default.profdata || die
+		fi
+
+		# Rebuild Bash using the genarated profiling data.
+		emake clean
+		emake CFLAGS="${CFLAGS} -fprofile-use=${T}/pgo -fprofile-dir=${T}/pgo"
+		[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables CFLAGS="${CFLAGS} -fprofile-use=${T}/pgo -fprofile-dir=${T}/pgo" all others
+	else
+		emake
+		[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables all others
+	fi
 }
 
 # @FUNCTION: bash-build_src_install
