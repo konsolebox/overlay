@@ -30,7 +30,7 @@ HOMEPAGE="https://github.com/savonrb/nori"
 LICENSE=MIT
 
 SLOT=0
-KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x64-solaris"
 SRC_URI="https://github.com/savonrb/${PN}/archive/refs/tags/v${MY_PV}.tar.gz -> ${PN}-${MY_PV}.tar.gz"
 PATCHES=("${FILESDIR}/nori-2.6.0-p20211008.patch")
 RUBY_S=${PN}-${MY_PV}
