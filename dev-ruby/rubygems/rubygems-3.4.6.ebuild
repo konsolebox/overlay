@@ -1,21 +1,22 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-USE_RUBY="ruby22 ruby23 ruby24 ruby25 ruby26 ruby27 ruby30 ruby31"
+USE_RUBY="ruby27 ruby30 ruby31 ruby32"
 
 inherit ruby-ng prefix
 
 DESCRIPTION="Centralized Ruby extension management system"
 HOMEPAGE="https://rubygems.org/"
-LICENSE="GPL-2 || ( Ruby MIT )"
+LICENSE="|| ( Ruby MIT )"
 
 SRC_URI="https://github.com/rubygems/rubygems/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
 SLOT="0"
 IUSE="konsolebox server test"
+
 RESTRICT="!test? ( test )"
 
 PDEPEND="server? ( =dev-ruby/builder-3* )"
@@ -35,12 +36,10 @@ all_ruby_prepare() {
 	# Remove unpackaged automatiek from Rakefile which stops it from working
 	sed -i -e '/automatiek/ s:^:#:' -e '/Automatiek/,/^end/ s:^:#:' Rakefile || die
 
-	mkdir -p lib/rubygems/defaults || die
-
 	local defaults_file=gentoo-defaults-5.rb
 	use konsolebox && defaults_file=gentoo-defaults-konsolebox.rb
+	mkdir -p lib/rubygems/defaults || die
 	cp "${FILESDIR}/${defaults_file}" lib/rubygems/defaults/operating_system.rb || die
-
 	eprefixify lib/rubygems/defaults/operating_system.rb
 
 	# Disable broken tests when changing default values:
@@ -51,6 +50,9 @@ all_ruby_prepare() {
 
 	# Avoid test that requires additional utility scripts
 	rm -f test/test_changelog_generator.rb || die
+
+	# Avoid tests that require a network connection (for crates.io)
+	rm -f test/rubygems/test_gem_ext_cargo_builder.rb || die
 
 	# Update manifest after changing files to avoid a test failure
 	if use test; then
@@ -108,6 +110,6 @@ pkg_postinst() {
 
 	ewarn
 	ewarn "To switch between available Ruby profiles, execute as root:"
-	ewarn "\teselect ruby set ruby(25|26|...)"
+	ewarn "\teselect ruby set ruby(30|31|...)"
 	ewarn
 }
