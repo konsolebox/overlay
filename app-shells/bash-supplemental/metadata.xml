@@ -15,6 +15,7 @@
 			Build with custom malloc/free overwriting allocated/freed memory
 		</flag>
 		<flag name="net">Enable /dev/tcp/host/port redirection</flag>
+		<flag name="pgo">Optimize the build using Profile Guided Optimization (PGO)</flag>
 		<flag name="vanilla">Only use release patches</flag>
 	</use>
 	<upstream>
