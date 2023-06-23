@@ -6,9 +6,6 @@
 		<name>konsolebox</name>
 		<description>Author of tail-follow-grep</description>
 	</maintainer>
-	<longdescription>
-		Basically a wrapper for 'tail -f' and 'grep --line-buffered'
-	</longdescription>
 	<use>
 		<flag name="nounset">Inject '[[ BASH_VERSINFO -ge 5 ]] &amp;&amp; set -u' to script</flag>
 	</use>
