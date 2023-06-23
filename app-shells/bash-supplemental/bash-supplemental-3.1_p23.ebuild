@@ -3,8 +3,8 @@
 
 EAPI=7
 
-_BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_PATCHES=(
+BASH_BUILD_INSTALL_TYPE=supplemental
+BASH_BUILD_PATCHES=(
 	autoconf-mktime-2.53.patch #220040
 	bash-2.05b-parallel-build.patch #41002
 	bash-3.1-protos.patch
@@ -15,7 +15,7 @@ _BASH_BUILD_PATCHES=(
 	bash-3.1-dev-fd-test-as-user.patch #131875
 	bash-3.1-dev-fd-buffer-overflow.patch #431850
 )
-_BASH_BUILD_USE_ARCHIVED_PATCHES=true
+BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 

@@ -3,15 +3,15 @@
 
 EAPI=7
 
-_BASH_BUILD_INSTALL_TYPE=system
-_BASH_BUILD_READLINE_VER=6.3
-_BASH_BUILD_PATCHES=(
+BASH_BUILD_INSTALL_TYPE=system
+BASH_BUILD_READLINE_VER=6.3
+BASH_BUILD_PATCHES=(
 	bash-4.3-mapfile-improper-array-name-validation.patch
 	bash-4.3-arrayfunc.patch
 	bash-4.3-protos.patch
 	bash-4.4-popd-offset-overflow.patch #600174
 )
-_BASH_BUILD_USE_ARCHIVED_PATCHES=true
+BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 

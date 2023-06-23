@@ -3,13 +3,13 @@
 
 EAPI=7
 
-_BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_PATCHES=(
+BASH_BUILD_INSTALL_TYPE=supplemental
+BASH_BUILD_PATCHES=(
 	bash-4.1-fbsd-eaccess.patch #303411
 	bash-4.1-parallel-build.patch
 	bash-4.2-dev-fd-buffer-overflow.patch #431850
 )
-_BASH_BUILD_USE_ARCHIVED_PATCHES=true
+BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 

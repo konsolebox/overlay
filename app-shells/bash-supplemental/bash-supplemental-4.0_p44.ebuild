@@ -3,8 +3,8 @@
 
 EAPI=7
 
-_BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_PATCHES=(
+BASH_BUILD_INSTALL_TYPE=supplemental
+BASH_BUILD_PATCHES=(
 	bash-4.0-configure.patch #304901
 	bash-4.x-deferred-heredocs.patch
 	bash-2.05b-parallel-build.patch #41002
@@ -13,7 +13,7 @@ _BASH_BUILD_PATCHES=(
 	bash-4.0-parallel-build.patch #267613
 	bash-4.2-dev-fd-buffer-overflow.patch #431850
 )
-_BASH_BUILD_USE_ARCHIVED_PATCHES=true
+BASH_BUILD_USE_ARCHIVED_PATCHES=true
 
 inherit bash-build
 

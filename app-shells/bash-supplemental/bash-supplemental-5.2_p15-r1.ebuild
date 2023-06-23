@@ -3,15 +3,15 @@
 
 EAPI=7
 
-_BASH_BUILD_INSTALL_TYPE=supplemental
-_BASH_BUILD_READLINE_VER=8.2
-_BASH_BUILD_PATCHES=(
+BASH_BUILD_INSTALL_TYPE=supplemental
+BASH_BUILD_READLINE_VER=8.2
+BASH_BUILD_PATCHES=(
 	bash-5.0-syslog-history-extern.patch
 	bash-5.2_p15-random-ub.patch
 	bash-5.2_p15-configure-clang16.patch
 )
-_BASH_BUILD_PATCH_OPTIONS=(-p0)
-_BASH_BUILD_USE_ARCHIVED_PATCHES=false
+BASH_BUILD_PATCH_OPTIONS=(-p0)
+BASH_BUILD_USE_ARCHIVED_PATCHES=false
 
 inherit bash-build
 
