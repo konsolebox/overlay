@@ -6,9 +6,6 @@
 		<name>konsolebox</name>
 		<description>author</description>
 	</maintainer>
-	<longdescription>
-		An XXHash library for Ruby that complies with Digest::Instance's functional design
-	</longdescription>
 	<upstream>
 		<remote-id type="github">konsolebox/digest-xxhash-ruby</remote-id>
 		<bugs-to>https://github.com/konsolebox/digest-xxhash-ruby/issues</bugs-to>
