@@ -1,0 +1,74 @@
+#!/bin/bash
+
+set -f && shopt -s extglob || exit
+
+function get_common_prefix {
+	local a b i IFS=/
+	a=($1) b=($2) i=0
+
+	for (( ; i < ${#a[@]}; ++i )); do
+		[[ ${a[i]} == "${b[i]}" ]] || break
+	done
+
+	__=${a[*]:0:i}
+}
+
+function get_common_prefix_multi {
+	__=${1%/*}
+
+	while shift; [[ ${1+.} ]]; do
+		get_common_prefix "$__" "${1%/*}"
+	done
+}
+
+function main {
+	local commit_msg_file=$1 content files_to_commit common_prefix has_non_comment=false __
+	readarray -t content < "${commit_msg_file}" || exit
+
+	for __ in "${content[@]}"; do
+		if [[ $__ != *([[:blank:]])'#'* && $__ == *[![:blank:]]* ]]; then
+			has_non_comment=true
+			break
+		fi
+	done
+
+	readarray -t files_to_commit < <(git status --porcelain |
+			awk '/^[AMD]/ { print substr($0, 4) }')
+
+	get_common_prefix_multi "${files_to_commit[@]}"
+	common_prefix=$__
+
+	if [[ ${has_non_comment} == false ]]; then
+		local prefix=
+
+		case ${common_prefix} in
+		+([!/-])-+([!/-]))
+			prefix=${common_prefix}
+			;;
+		+([!/-])-+([!/-])/*)
+			prefix=${common_prefix##+([!/])/+([!/])}
+			prefix=${common_prefix:0:${#common_prefix} - ${#prefix}}
+			;;
+		eclass|eclass/*)
+			if [[ ${#files_to_commit[@]} -eq 1 ]]; then
+				prefix=${files_to_commit#eclass/}
+			else
+				prefix=${common_prefix}
+			fi
+			;;
+		esac
+
+		if [[ ${prefix} ]]; then
+			set -- "${content[@]}"
+
+			while [[ $# -gt 0 && $1 != *[![:blank:]]* ]]; do
+				shift
+			done
+
+			printf '%s\n' "${prefix%/}: " '' "$@" > "${commit_msg_file}" || exit
+		fi
+	fi
+}
+
+main "$@"
+

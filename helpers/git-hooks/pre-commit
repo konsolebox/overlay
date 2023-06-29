@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -f && shopt -s extglob || exit
+
+function get_common_prefix {
+	local a b i IFS=/
+	a=($1) b=($2) i=0
+
+	for (( ; i < ${#a[@]}; ++i )); do
+		[[ ${a[i]} == "${b[i]}" ]] || break
+	done
+
+	__=${a[*]:0:i}
+}
+
+function get_common_prefix_multi {
+	__=${1%/*}
+
+	while shift; [[ ${1+.} ]]; do
+		get_common_prefix "$__" "${1%/*}"
+	done
+}
+
+function main {
+	local files_to_commit test_dir= __
+
+	readarray -t files_to_commit < <(git status --porcelain |
+			awk '/^[AMD]/ { print substr($0, 4) }')
+
+	if [[ ${#files_to_commit[@]} -gt 0 ]]; then
+		get_common_prefix_multi "${files_to_commit[@]}"
+
+		if [[ -z $__ || $__ == +([!/-])-+([!/-]) || $__ == +([!/-])-+([!/-])/* ]]; then
+			if [[ $__ ]]; then
+				local IFS=/
+				set -- $__
+				test_dir="${*:1:2}"
+			fi
+
+			if type -P repoman >/dev/null; then
+				echo Repoman:
+				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && repoman ) || exit 1
+				echo
+			fi
+
+			if type -P pkgcheck >/dev/null; then
+				echo "Pkgcheck scan:"
+				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && pkgcheck scan ) || exit 1
+				echo
+			fi
+		fi
+	fi
+}
+
+main
