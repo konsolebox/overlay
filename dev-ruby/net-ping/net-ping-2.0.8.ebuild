@@ -14,7 +14,7 @@ RUBY_FAKEGEM_EXTRADOC="README.md doc/ping.txt"
 RUBY_FAKEGEM_RECIPE_TEST=
 RUBY_FAKEGEM_TASK_TEST=
 
-inherit ruby-fakegem
+inherit ruby-fakegem-compat
 
 DESCRIPTION="A collection of classes that provide different ways to ping computers"
 HOMEPAGE="https://github.com/eitoball/net-ping"

@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -10,7 +10,7 @@ RUBY_FAKEGEM_RECIPE_TEST="rspec3"
 RUBY_FAKEGEM_EXTRADOC="README.md CHANGELOG.md"
 RUBY_FAKEGEM_GEMSPEC=${PN}.gemspec
 
-inherit ruby-fakegem
+inherit ruby-fakegem-compat
 
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3

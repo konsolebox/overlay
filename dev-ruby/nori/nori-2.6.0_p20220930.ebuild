@@ -22,7 +22,7 @@ RUBY_FAKEGEM_RECIPE_DOC=rdoc
 RUBY_FAKEGEM_RECIPE_TEST=none # Test requires strict rake and rspec versions, and .git
 RUBY_FAKEGEM_VERSION=${MY_PV}
 
-inherit ruby-fakegem
+inherit ruby-fakegem-compat
 
 DESCRIPTION="XML to Hash translator"
 HOMEPAGE="https://github.com/savonrb/nori"

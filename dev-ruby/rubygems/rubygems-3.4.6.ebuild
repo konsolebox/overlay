@@ -5,7 +5,7 @@ EAPI=8
 
 USE_RUBY="ruby27 ruby30 ruby31 ruby32"
 
-inherit ruby-ng prefix
+inherit ruby-ng-compat prefix
 
 DESCRIPTION="Centralized Ruby extension management system"
 HOMEPAGE="https://rubygems.org/"

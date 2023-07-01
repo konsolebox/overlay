@@ -8,7 +8,7 @@ RUBY_FAKEGEM_RECIPE_DOC=rdoc
 RUBY_FAKEGEM_RECIPE_TEST=rake
 RUBY_FAKEGEM_EXTRADOC="README.md"
 
-inherit ruby-utils-compat ruby-fakegem flag-o-matic toolchain-funcs
+inherit ruby-fakegem-compat flag-o-matic toolchain-funcs
 
 DESCRIPTION="KangarooTwelve for Ruby"
 HOMEPAGE="https://github.com/konsolebox/digest-kangarootwelve-ruby"
