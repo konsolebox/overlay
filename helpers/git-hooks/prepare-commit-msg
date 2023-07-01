@@ -22,10 +22,14 @@ function get_common_prefix_multi {
 }
 
 function main {
-	local commit_msg_file=$1 content files_to_commit common_prefix has_non_comment=false __
+	local commit_msg_file=$1 common_prefix content contents_changed=false files_to_commit \
+			has_non_comment=false prefix= warning temp __
+
 	readarray -t content < "${commit_msg_file}" || exit
 
 	for __ in "${content[@]}"; do
+		[[ $__ == "# ----"* ]] && break
+
 		if [[ $__ != *([[:blank:]])'#'* && $__ == *[![:blank:]]* ]]; then
 			has_non_comment=true
 			break
@@ -39,10 +43,8 @@ function main {
 	common_prefix=$__
 
 	if [[ ${has_non_comment} == false ]]; then
-		local prefix=
-
 		case ${common_prefix} in
-		+([!/-])-+([!/-]))
+		+([!/-])-+([!/-])|helpers/git-hooks)
 			prefix=${common_prefix}
 			;;
 		+([!/-])-+([!/-])/*)
@@ -59,16 +61,59 @@ function main {
 		esac
 
 		if [[ ${prefix} ]]; then
-			set -- "${content[@]}"
-
-			while [[ $# -gt 0 && $1 != *[![:blank:]]* ]]; do
-				shift
+			for (( i = 0; i < ${#content[@]}; ++i )); do
+				if [[ $1 == *[![:blank:]]* ]]; then
+					unset 'content[i]'
+				else
+					break
+				fi
 			done
 
-			printf '%s\n' "${prefix%/}: " '' "$@" > "${commit_msg_file}" || exit
+			content=("${prefix%/}: " "" "${content[@]}")
+			contents_changed=true
 		fi
 	fi
+
+	readarray -t excluded < <(exec git status "${common_prefix:-.}" --porcelain |
+			awk '/^[\? ]/ { print $2 }')
+
+	if [[ ${#excluded[@]} -gt 0 ]]; then
+		warning=(
+			"# WARNING: The following files are untracked or not being committed:"
+			"# "
+		)
+
+		for __ in "${excluded[@]}"; do
+			warning+=("# $__")
+		done
+
+		warning+=("")
+
+		for (( i = 0; i < ${#content[@]}; ++i )); do
+			if [[ ${content[i]} == '#'* ]]; then
+				content=("${content[@]:0:i}" "${warning[@]}" "${content[@]:i}")
+				warning=()
+				break
+			fi
+		done
+
+		[[ ${#warning[@]} -gt 0 ]] && content+=("${warning[@]}")
+		contents_changed=true
+	fi
+
+	for (( i = 0; i < ${#content[@]}; ++i )); do
+		if [[ ${content[i]} == '#'* ]]; then
+			if [[ i -lt 2 ]]; then
+				temp=("${content[@]:0:i}" "" "")
+				content=("${temp[@]:0:2}" "${content[@]:i}")
+				contents_changed=true
+			fi
+
+			break
+		fi
+	done
+
+	[[ ${contents_changed} == false ]] || printf '%s\n' "${content[@]}" > "${commit_msg_file}"
 }
 
 main "$@"
-
