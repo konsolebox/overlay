@@ -18,7 +18,6 @@ if [[ ${PV} == *9999* ]]; then
 	EGIT_BRANCH=master
 	EGIT_CHECKOUT_DIR=${WORKDIR}/all/${P}
 	SRC_URI=
-	KEYWORDS=
 else
 	SRC_URI="https://github.com/pry/pry/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
