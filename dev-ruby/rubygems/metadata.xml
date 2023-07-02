@@ -13,4 +13,7 @@
 		<flag name="server">Install support for the rubygems server</flag>
 		<flag name="konsolebox">Use konsolebox's defaults</flag>
 	</use>
+	<upstream>
+		<remote-id type="github">rubygems/rubygems</remote-id>
+	</upstream>
 </pkgmetadata>
