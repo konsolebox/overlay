@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -f && shopt -s extglob || exit
+set -f +o posix && shopt -s extglob || exit
 
 function get_common_prefix {
 	local a b i IFS=/
@@ -53,8 +53,15 @@ function main {
 			fi
 
 			if [[ ${GIT_PRE_COMMIT_SKIP_PKGCHECK_SCAN-} != @(true|1) ]] && type -P pkgcheck >/dev/null; then
+				local pkgcheck=(pkgcheck scan --exit=error)
+
+				if [[ -e helpers/profiles.mask ]]; then
+					readarray -t profiles < helpers/profiles.mask || return 1
+					IFS=, eval 'pkgcheck+=("--profiles=${profiles[*]/#/-}")'
+				fi
+
 				echo "Pkgcheck scan:"
-				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && pkgcheck scan --exit=error ) || return 1
+				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && "${pkgcheck[@]}" ) || return 1
 				echo
 			fi
 		fi
