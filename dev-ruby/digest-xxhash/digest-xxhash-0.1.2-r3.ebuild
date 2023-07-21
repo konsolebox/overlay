@@ -47,6 +47,7 @@ each_ruby_compile() {
 
 each_ruby_install() {
 	each_fakegem_install
+	ruby_fakegem_extensions_installed
 
 	if use doc; then
 		insinto "$(ruby_fakegem_gemsdir)/doc/${RUBY_FAKEGEM_NAME}-${RUBY_FAKEGEM_VERSION}"
