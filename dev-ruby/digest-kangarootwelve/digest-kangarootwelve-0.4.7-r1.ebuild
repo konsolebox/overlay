@@ -14,7 +14,7 @@ DESCRIPTION="KangarooTwelve for Ruby"
 HOMEPAGE="https://github.com/konsolebox/digest-kangarootwelve-ruby"
 LICENSE=MIT
 
-TARGET_FLAGS="target_armv6m target_armv7a target_armv7m target_armv8a target_asmx86-64 target_asmx86-64shld target_avr8 target_bulldozer target_compact target_generic32 target_generic32lc target_generic64 target_generic64lc target_haswell target_nehalem target_reference target_reference32bits target_sandybridge"
+TARGET_FLAGS="target_armv6 target_armv6m target_armv7a target_armv7m target_armv8a target_avr8 target_avx target_avx2 target_avx2noasm target_avx512 target_avx512noasm target_compact target_generic32 target_generic32lc target_generic64 target_generic64lc target_reference target_reference32bits target_ssse3 target_xop"
 IUSE="${IUSE-} ${TARGET_FLAGS/target_compact/+target_compact}"
 REQUIRED_USE="${REQUIRED_USE-} ^^ ( ${TARGET_FLAGS} ) !target_compact? ( test )"
 
@@ -61,6 +61,7 @@ each_ruby_compile() {
 
 each_ruby_install() {
 	each_fakegem_install
+	ruby_fakegem_extensions_installed
 
 	if use doc; then
 		insinto "$(ruby_fakegem_gemsdir)/doc/${RUBY_FAKEGEM_NAME}-${RUBY_FAKEGEM_VERSION}"

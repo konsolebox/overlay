@@ -8,15 +8,11 @@ RUBY_FAKEGEM_RECIPE_DOC=rdoc
 RUBY_FAKEGEM_RECIPE_TEST=rake
 RUBY_FAKEGEM_EXTRADOC="README.md"
 
-inherit ruby-fakegem-compat flag-o-matic toolchain-funcs
+inherit ruby-fakegem-compat toolchain-funcs
 
 DESCRIPTION="KangarooTwelve for Ruby"
 HOMEPAGE="https://github.com/konsolebox/digest-kangarootwelve-ruby"
 LICENSE=MIT
-
-TARGET_FLAGS="target_armv6 target_armv6m target_armv7a target_armv7m target_armv8a target_avr8 target_avx target_avx2 target_avx2noasm target_avx512 target_avx512noasm target_compact target_generic32 target_generic32lc target_generic64 target_generic64lc target_reference target_reference32bits target_ssse3 target_xop"
-IUSE="${IUSE-} ${TARGET_FLAGS/target_compact/+target_compact}"
-REQUIRED_USE="${REQUIRED_USE-} ^^ ( ${TARGET_FLAGS} ) !target_compact? ( test )"
 
 SLOT=0
 KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x64-solaris"
@@ -34,17 +30,7 @@ each_ruby_prepare() {
 }
 
 each_ruby_configure() {
-	local selected_target t
-
-	for t in ${TARGET_FLAGS}; do
-		use "$t" && selected_target=${t#target_} && break
-	done
-
-	[[ ${selected_target} ]] || die "Failed to get selected target."
-	append-flags -Wa,--noexecstack
-
-	CC=$(tc-getCC) ${RUBY} -C ext/digest/kangarootwelve extconf.rb \
-			--with-target="${selected_target}" --with-cflags="${CFLAGS}" \
+	CC=$(tc-getCC) ${RUBY} -C ext/digest/kangarootwelve extconf.rb --with-cflags="${CFLAGS}" \
 			--with-ldflags="${LDFLAGS}" --enable-verbose-mode || die
 }
 
@@ -61,6 +47,7 @@ each_ruby_compile() {
 
 each_ruby_install() {
 	each_fakegem_install
+	ruby_fakegem_extensions_installed
 
 	if use doc; then
 		insinto "$(ruby_fakegem_gemsdir)/doc/${RUBY_FAKEGEM_NAME}-${RUBY_FAKEGEM_VERSION}"
