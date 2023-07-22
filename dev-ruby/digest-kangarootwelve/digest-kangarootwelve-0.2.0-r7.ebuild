@@ -22,20 +22,15 @@ ruby_add_bdepend "test? ( >=dev-ruby/minitest-5.8 )"
 each_ruby_prepare() {
 	sed -i '/spec\.files.*\"ext\".*/d' digest-kangarootwelve.gemspec || \
 		die "Failed to exclude ext files from spec.files."
-
-	if use test; then
-		printf '%s\n' > Rakefile.test "require 'rake/testtask'" \
-			"Rake::TestTask.new{ |t| t.test_files = FileList['test/test.rb']; t.verbose = true }"
-	fi
 }
 
 each_ruby_configure() {
-	CC=$(tc-getCC) ${RUBY} -C ext/digest/kangarootwelve extconf.rb --with-cflags="${CFLAGS}" \
+	${RUBY} -C ext/digest/kangarootwelve extconf.rb --with-cflags="${CFLAGS}" \
 			--with-ldflags="${LDFLAGS}" --enable-verbose-mode || die
 }
 
 each_ruby_compile() {
-	emake V=1 -C ext/digest/kangarootwelve
+	emake CC="$(tc-getCC)" V=1 -C ext/digest/kangarootwelve
 	mkdir -p lib/digest/kangarootwelve || die
 	cp ext/digest/kangarootwelve/kangarootwelve.so lib/digest/ || die
 
@@ -56,5 +51,5 @@ each_ruby_install() {
 }
 
 each_ruby_test() {
-	${RUBY} -S rake -f Rakefile.test test || die "Test failed."
+	${RUBY} -S rake -f "${FILESDIR}/Rakefile.test" test || die "Test failed."
 }
