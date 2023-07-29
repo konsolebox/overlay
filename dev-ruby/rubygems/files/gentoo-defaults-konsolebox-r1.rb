@@ -27,6 +27,10 @@ module Gem
       { 'custom_shebang' => '/usr/bin/env ruby' }
     end
 
+    def default_specifications_dir
+      @default_specifications_dir ||= File.join(orig_default_dir, "specifications", "default")
+    end
+
   private
     def gentoo_dir
       @gentoo_dir ||= RbConfig::CONFIG['sitelibdir'].gsub('site_ruby', 'gems')
@@ -37,12 +41,19 @@ module Gem
     end
 
     def gentoo_user_dir
-      @gentoo_user_dir ||= Process.euid.zero? ? gentoo_local_dir :
-          method(:user_dir).super_method.call
+      @gentoo_user_dir ||= Process.euid.zero? ? gentoo_local_dir : orig_user_dir
     end
 
     def gentoo_user_bindir
       @gentoo_user_bindir ||= Process.euid.zero? ? '/usr/local/bin' : File.join(user_home, 'bin')
+    end
+
+    def orig_default_dir
+      method(:default_dir).super_method.call
+    end
+
+    def orig_user_dir
+      method(:user_dir).super_method.call
     end
   end
 
