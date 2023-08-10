@@ -3,7 +3,8 @@
 
 EAPI=7
 
-PYTHON_COMPAT=( pypy3 python3_{9..11} )
+DISTUTILS_EXT=1
+PYTHON_COMPAT=( pypy3 python3_{10..11} )
 PYTHON_REQ_USE='bzip2(+),threads(+)'
 TMPFILES_OPTIONAL=1
 
@@ -44,6 +45,7 @@ RDEPEND="
 	app-arch/zstd
 	>=app-arch/tar-1.27
 	dev-lang/python-exec:2
+	>=sys-apps/baselayout-2.9
 	>=sys-apps/findutils-4.4
 	!build? (
 		>=sys-apps/sed-4.0.5
@@ -108,7 +110,7 @@ python_prepare_all() {
 			die "failed to patch create_depgraph_params.py"
 
 		einfo "Enabling additional FEATURES for gentoo-dev..."
-		echo 'FEATURES="${FEATURES} ipc-sandbox network-sandbox strict-keepdir"' \
+		echo 'FEATURES="${FEATURES} ipc-sandbox network-sandbox strict-keepdir warn-on-large-env"' \
 			>> cnf/make.globals || die
 	fi
 
@@ -163,10 +165,6 @@ python_prepare_all() {
 				-e "s|^\(sync-uri = \).*|\\1rsync://rsync.prefix.bitzolder.nl/gentoo-portage-prefix|" \
 				-i cnf/repos.conf || die "sed failed"
 		fi
-
-		einfo "Adding FEATURES=force-prefix to make.globals ..."
-		echo -e '\nFEATURES="${FEATURES} force-prefix"' >> cnf/make.globals \
-			|| die "failed to append to make.globals"
 	fi
 
 	cd "${S}/cnf" || die
