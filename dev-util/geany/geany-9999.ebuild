@@ -18,9 +18,10 @@ RDEPEND=">=dev-libs/glib-2.28:2
 	>=x11-libs/gtk+-2.24:2
 	vte? ( x11-libs/vte:0 )"
 DEPEND="${RDEPEND}
-	virtual/pkgconfig
 	dev-util/intltool
-	sys-devel/gettext"
+	konsolebox? ( dev-util/glib-utils )
+	sys-devel/gettext
+	virtual/pkgconfig"
 
 pkg_setup() {
 	strip-linguas ${LANGS}
