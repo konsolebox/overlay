@@ -3,7 +3,7 @@
 
 EAPI=8
 
-USE_RUBY="ruby27 ruby30 ruby31 ruby32"
+USE_RUBY="ruby26 ruby27 ruby30 ruby31"
 
 inherit ruby-ng-compat prefix
 
@@ -13,7 +13,7 @@ LICENSE="|| ( Ruby MIT )"
 
 SRC_URI="https://github.com/rubygems/rubygems/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x64-solaris"
 SLOT="0"
 IUSE="konsolebox server test"
 
@@ -37,7 +37,7 @@ all_ruby_prepare() {
 	sed -i -e '/automatiek/ s:^:#:' -e '/Automatiek/,/^end/ s:^:#:' Rakefile || die
 
 	local defaults_file=gentoo-defaults-5.rb
-	use konsolebox && defaults_file=gentoo-defaults-konsolebox-r1.rb
+	use konsolebox && defaults_file=gentoo-defaults-konsolebox-r2.rb
 	mkdir -p lib/rubygems/defaults || die
 	cp "${FILESDIR}/${defaults_file}" lib/rubygems/defaults/operating_system.rb || die
 	eprefixify lib/rubygems/defaults/operating_system.rb

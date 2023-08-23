@@ -37,7 +37,7 @@ all_ruby_prepare() {
 	sed -i -e '/automatiek/ s:^:#:' -e '/Automatiek/,/^end/ s:^:#:' Rakefile || die
 
 	local defaults_file=gentoo-defaults-5.rb
-	use konsolebox && defaults_file=gentoo-defaults-konsolebox-r1.rb
+	use konsolebox && defaults_file=gentoo-defaults-konsolebox-r2.rb
 	mkdir -p lib/rubygems/defaults || die
 	cp "${FILESDIR}/${defaults_file}" lib/rubygems/defaults/operating_system.rb || die
 	eprefixify lib/rubygems/defaults/operating_system.rb
