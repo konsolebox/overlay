@@ -26,8 +26,17 @@
 # Extension name of the script
 # @REQUIRED
 
+# @ECLASS_VARIABLE: KONSOLEBOX_SCRIPTS_RUBY_SINGLE_TARGETS
+# @DESCRIPTION:
+# Ruby targets a Ruby script can be installed for
+
+# @ECLASS_VARIABLE: KONSOLEBOX_SCRIPTS_RUBY_DEPENDENCIES
+# @DESCRIPTION:
+# Dependencies of a Ruby script
+
 [[ ${EAPI} == [5678] ]] || die "EAPI needs to be 5, 6, 7 or 8."
 [[ ${PV} == 9999* ]] && inherit git-r3
+[[ ${KONSOLEBOX_SCRIPTS_EXT} == rb ]] && inherit ruby-utils-compat
 inherit call
 
 # @FUNCTION: _konsolebox-scripts_set_globals
@@ -48,6 +57,31 @@ _konsolebox-scripts_set_globals() {
 
 	HOMEPAGE="https://github.com/konsolebox/scripts"
 	SLOT=${SLOT-0}
+
+	if [[ ${KONSOLEBOX_SCRIPTS_EXT} == rb ]]; then
+		local deps impl_dep target valid_flags=
+
+		for target in "${KONSOLEBOX_SCRIPTS_RUBY_SINGLE_TARGETS[@]}"; do
+			if [[ " ${RUBY_TARGETS_PREFERENCE} " == *" ${target} "* ]]; then
+				impl_dep=$(_ruby_implementation_depend "${target}") && [[ ${impl_dep} ]] || die
+				valid_flags+=" ruby_single_target_${target}"
+
+				if [[ ${#KONSOLEBOX_SCRIPTS_RUBY_DEPENDENCIES[@]} -gt 0 ]]; then
+					printf -v deps 'dev-ruby/%s[FLAG] ' "${KONSOLEBOX_SCRIPTS_RUBY_DEPENDENCIES[@]}"
+					deps=${deps//FLAG/ruby_targets_${target}}
+					RDEPEND+=" ruby_single_target_${target}? ( ${impl_dep}${deps:+ }${deps% } )"
+				fi
+			fi
+		done
+
+		[[ -z ${valid_flags} ]] && die "No supported Ruby implementation."
+		IUSE="${IUSE+ }${valid_flags# }"
+		REQUIRED_USE="^^ ( ${valid_flags} )"
+	fi
+
+	if [[ ${KONSOLEBOX_SCRIPTS_EXT} != bash ]] && has nounset ${IUSE//+}; then
+		die "Nounset use flag is only valid in bash scripts."
+	fi
 }
 
 # @FUNCTION: konsolebox-scripts_src_unpack()
@@ -68,11 +102,19 @@ konsolebox-scripts_src_compile() {
 	call cp -- "${PN}.${KONSOLEBOX_SCRIPTS_EXT}" "${PN}" || die
 
 	if [[ ${KONSOLEBOX_SCRIPTS_EXT} == rb ]]; then
-		call sed -i -e '1s|.*|#!/usr/bin/ruby|' "${PN}" || die
+		local ruby=${EPREFIX}/usr/bin/ruby use
+
+		for use in ${IUSE}; do
+			if [[ ${use} == ruby_single_target_* ]] && use "${use}"; then
+				ruby=${EPREFIX}/usr/bin/${use#ruby_single_target_}
+				break
+			fi
+		done
+
+		call sed -i -e "1s|.*|#!${ruby}|" "${PN}" || die
 	fi
 
 	if has nounset ${IUSE//+} && use nounset; then
-		[[ ${KONSOLEBOX_SCRIPTS_EXT} == bash ]] || die "Nounset is only valid in bash scripts."
 		call sed -i -e '1s|.*|&\n\n\[\[ BASH_VERSINFO -ge 5 \]\] \&\& set -u|' "${PN}" || die
 	fi
 }
