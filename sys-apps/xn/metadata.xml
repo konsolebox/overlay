@@ -10,6 +10,11 @@
 		Renames files and directories based on their 160-bit KangarooTwelve checksum while avoiding
 		conflict on files with different content
 	</longdescription>
+	<use>
+		<flag name="ruby_single_target_ruby30">Use Ruby 3.0 as runtime</flag>
+		<flag name="ruby_single_target_ruby31">Use Ruby 3.1 as runtime</flag>
+		<flag name="ruby_single_target_ruby32">Use Ruby 3.2 as runtime</flag>
+	</use>
 	<upstream>
 		<remote-id type="github">konsolebox/scripts</remote-id>
 		<bugs-to>https://github.com/konsolebox/scripts/issues</bugs-to>
