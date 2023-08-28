@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+	</maintainer>
+	<longdescription>
+		Elvish is an expressive programming language and a versatile interactive shell, combined
+		into one seamless package. It runs on Linux, BSDs, macOS and Windows.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">elves/elvish</remote-id>
+	</upstream>
+</pkgmetadata>
