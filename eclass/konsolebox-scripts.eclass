@@ -51,7 +51,7 @@ _konsolebox-scripts_set_globals() {
 		[[ -z ${EGIT_BRANCH} ]] && EGIT_BRANCH=master
 	else
 		[[ -z ${KONSOLEBOX_SCRIPTS_COMMIT-} ]] && die "Commit version not specified."
-		SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${KONSOLEBOX_SCRIPTS_COMMIT}/${PN}.${KONSOLEBOX_SCRIPTS_EXT} -> ${PN}-${PV}.${KONSOLEBOX_SCRIPTS_EXT}"
+		SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${KONSOLEBOX_SCRIPTS_COMMIT}/${PN}.${KONSOLEBOX_SCRIPTS_EXT} -> ${PN}-${PV}-${KONSOLEBOX_SCRIPTS_COMMIT:0:8}.${KONSOLEBOX_SCRIPTS_EXT}"
 		S=${WORKDIR}
 	fi
 
