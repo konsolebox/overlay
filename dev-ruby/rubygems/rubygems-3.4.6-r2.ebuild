@@ -40,7 +40,7 @@ all_ruby_prepare() {
 	use konsolebox && defaults_file=gentoo-defaults-konsoleboxf-r3.rb
 	mkdir -p lib/rubygems/defaults || die
 	cp "${FILESDIR}/${defaults_file}" lib/rubygems/defaults/operating_system.rb || die
-	eprefixify lib/rubygems/defaults/operating_system.rb
+	use konsolebox || eprefixify lib/rubygems/defaults/operating_system.rb
 
 	# Disable broken tests when changing default values:
 	sed -i -e '/test_default_path/,/^  end/ s:^:#:' test/rubygems/test_gem.rb || die
