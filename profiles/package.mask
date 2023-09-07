@@ -11,4 +11,5 @@
 app-portage/repoman
 dev-ruby/net-ping
 dev-ruby/rubygems
+dev-util/geany
 net-irc/znc
