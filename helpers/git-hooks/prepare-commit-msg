@@ -62,7 +62,7 @@ function main {
 
 		if [[ ${prefix} ]]; then
 			for (( i = 0; i < ${#content[@]}; ++i )); do
-				if [[ $1 == *[![:blank:]]* ]]; then
+				if [[ ${content[i]} == *([[:blank:]]) ]]; then
 					unset 'content[i]'
 				else
 					break

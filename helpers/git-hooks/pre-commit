@@ -21,14 +21,44 @@ function get_common_prefix_multi {
 	done
 }
 
+function check_commit_cleanup {
+	local value
+
+	if ! value=$(git config commit.cleanup); then
+		echo "WARNING: Failed to get value of 'commit.cleanup'."
+		echo
+	elif [[ ${value} != strip ]]; then
+		echo "WARNING: Git's config variable 'commit.cleanup' is not set to 'strip'."
+		echo
+	fi
+}
+
+function call {
+	local x q m=
+
+	for x do
+		printf -v q %q "$x"
+
+		if [[ $q == "$x" ]]; then
+			m+=" $x"
+		elif [[ $x == *\'* ]]; then
+			m+=" $q"
+		else
+			m+=" '$x'"
+		fi
+	done
+
+	printf '%s\n' "${m# }"
+	command "$@"
+}
+
 function main {
-	local files_to_commit test_dir= ebuilds __
+	local files test_dir= ebuilds value __
+	check_commit_cleanup
+	readarray -t files < <(git status --porcelain | awk '/^[AM]/ { print substr($0, 4) }')
 
-	readarray -t files_to_commit < <(git status --porcelain |
-			awk '/^[AMD]/ { print substr($0, 4) }')
-
-	if [[ ${#files_to_commit[@]} -gt 0 ]]; then
-		get_common_prefix_multi "${files_to_commit[@]}"
+	if [[ ${#files[@]} -gt 0 ]]; then
+		get_common_prefix_multi "${files[@]}"
 
 		if [[ -z $__ || $__ == +([!/-])-+([!/-]) || $__ == +([!/-])-+([!/-])/* ]]; then
 			if [[ $__ ]]; then
@@ -37,7 +67,7 @@ function main {
 				test_dir="${*:1:2}"
 			fi
 
-			readarray -t ebuilds < <(find "${test_dir}" -name '*.ebuild' -exec grep -Ple \
+			readarray -t ebuilds < <(find "${test_dir:-.}" -name '*.ebuild' -exec grep -Ple \
 					"KEYWORDS=.*[ \"'=][[:lower:]][[:alnum:]-]+" -- '{}' +)
 
 			if [[ ${#ebuilds[@]} -gt 0 ]]; then
@@ -48,6 +78,7 @@ function main {
 
 			if [[ ${GIT_PRE_COMMIT_SKIP_REPOMAN-} != @(true|1) ]] && type -P repoman >/dev/null; then
 				echo Repoman:
+				echo "Set GIT_PRE_COMMIT_SKIP_REPOMAN to 'true' to disable."
 				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && repoman ) || return 1
 				echo
 			fi
@@ -61,7 +92,8 @@ function main {
 				fi
 
 				echo "Pkgcheck scan:"
-				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && "${pkgcheck[@]}" ) || return 1
+				echo "Set GIT_PRE_COMMIT_SKIP_PKGCHECK_SCAN to 'true' to disable."
+				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && call "${pkgcheck[@]}" ) || return 1
 				echo
 			fi
 		fi
