@@ -1,3 +1,4 @@
+# Mask devel and testing versions by default
 =app-shells/bash-99999
 =app-shells/bash-supplemental-99999
 =app-text/trim-trailing-spaces-99999
@@ -8,8 +9,19 @@
 =sys-apps/rcopy-99999
 =sys-apps/tail-follow-grep-99999
 =sys-apps/xn-99999
+
+# Mask by default
 app-portage/repoman
+
+# Mask by default
 dev-ruby/net-ping
-dev-ruby/rubygems
+
+# Unmask this package and enable the 'konsolebox' use flag
+# to use this version of the editor.
 dev-util/geany
+
+# Mask by default
+dev-ruby/rubygems
+
+# Mask by default
 net-irc/znc
