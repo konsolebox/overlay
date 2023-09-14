@@ -1,24 +1,25 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
 inherit strip-linguas xdg-utils
 
-LANGS='ar ast be bg ca cs de el en_GB es et eu fa fi fr gl he hi hu id it ja kk ko lb lt mn nl nn pl pt pt_BR ro ru sk sl sr sv tr uk vi zh_CN ZH_TW'
-NOSHORTLANGS='en_GB zh_CN zh_TW'
+LANGS="ar ast be bg ca cs de el en_GB es et eu fa fi fr gl he hi hu id it ja kk ko lb lt mn nl nn pl pt pt_BR ro ru sk sl sr sv tr uk vi zh_CN ZH_TW"
+NOSHORTLANGS="en_GB zh_CN zh_TW"
 
-DESCRIPTION='GTK+ based fast and lightweight IDE'
-HOMEPAGE='http://www.geany.org'
+DESCRIPTION="GTK+ based fast and lightweight IDE"
+HOMEPAGE="http://www.geany.org"
 LICENSE="GPL-2+ HPND"
 
-PATCH_VER=${PV}-konsolebox-20161128
-SRC_URI="http://download.geany.org/${P}.tar.bz2
+PATCH_VER=${PV%_*}-konsolebox-20161128
+SRC_URI="http://download.geany.org/${P%_*}.tar.bz2
 	https://github.com/konsolebox/geany-patches/releases/download/${PATCH_VER}/geany-${PATCH_VER}-patch.tar.gz"
 
 SLOT=0
 KEYWORDS="~amd64 ~arm ~x86"
 IUSE="doc konsolebox +vte"
+REQUIRED_USE="konsolebox"
 
 RDEPEND=">=dev-libs/glib-2.28:2
 	>=x11-libs/gtk+-2.24:2
@@ -28,13 +29,15 @@ DEPEND="${RDEPEND}
 	dev-util/intltool
 	sys-devel/gettext"
 
+S=${WORKDIR}/geany-${PV%_*}
+
 pkg_setup() {
 	strip-linguas ${LANGS}
 }
 
 src_prepare() {
 	default
-	use konsolebox && eapply "${WORKDIR}/geany-${PATCH_VER}-patch/geany-${PATCH_VER}.patch"
+	eapply "${WORKDIR}/geany-${PATCH_VER}-patch/geany-${PATCH_VER}.patch"
 
 	# Syntax highlighting for Portage
 	sed -i -e 's:*.sh;:*.sh;*.ebuild;*.eclass;:' data/filetype_extensions.conf || die

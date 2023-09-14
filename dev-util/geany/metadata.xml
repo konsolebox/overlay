@@ -25,4 +25,10 @@
 		</flag>
 		<flag name="vte">Enable Terminal support (<pkg>x11-libs/vte</pkg>)</flag>
 	</use>
+	<upstream>
+		<remote-id type="github">geany/geany</remote-id>
+		<remote-id type="github">konsolebox/geany</remote-id>
+		<remote-id type="github">ScintillaOrg/lexilla</remote-id>
+		<bugs-to>https://github.com/konsolebox/geany/issues</bugs-to>
+	</upstream>
 </pkgmetadata>
