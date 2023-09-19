@@ -1,0 +1,304 @@
+diff --git a/libpam_misc/misc_conv.c b/libpam_misc/misc_conv.c
+index dbcd6aec..eacee733 100644
+--- a/libpam_misc/misc_conv.c
++++ b/libpam_misc/misc_conv.c
+@@ -20,8 +20,8 @@
+ #include "pam_inline.h"
+ 
+ #define INPUTSIZE PAM_MISC_CONV_BUFSIZE      /* maximum length of input+1 */
+-#define CONV_ECHO_ON  1                            /* types of echo state */
+-#define CONV_ECHO_OFF 0
++#define CONV_MASK_MODE_ON  1
++#define CONV_MASK_MODE_OFF 0
+ 
+ /*
+  * external timeout definitions - these can be overridden by the
+@@ -125,30 +125,51 @@ static int get_delay(void)
+ 	return 0;
+ }
+ 
+-/* read a line of input string, giving prompt when appropriate */
+-static int read_string(int echo, const char *prompt, char **retstr)
++/* Copied from bash's shtty.c
++ * Copyright (C) 1999 Free Software Foundation, Inc.
++ * Licensed under GPL v2 or later version */
++static void tt_setonechar(struct termios *ttp)
++{
++    ttp->c_lflag &= ~ICANON;
++    ttp->c_lflag |= ISIG;
++    ttp->c_lflag |= IEXTEN;
++    ttp->c_iflag |= ICRNL;
++    ttp->c_iflag &= ~INLCR;
++    ttp->c_oflag |= OPOST;
++    ttp->c_oflag |= ONLCR;
++    ttp->c_oflag &= ~OCRNL;
++    ttp->c_oflag &= ~ONOCR;
++    ttp->c_oflag &= ~ONLRET;
++    ttp->c_cc[VMIN] = 1;
++    ttp->c_cc[VTIME] = 0;
++}
++
++static int read_string(int mask, const char *prompt, char **retstr)
+ {
+     struct termios term_before, term_tmp;
+     char line[INPUTSIZE];
+     struct sigaction old_sig;
+-    int delay, nc = -1, have_term = 0;
++    int delay, have_term, eol;
++    ssize_t nc, r;
+     sigset_t oset, nset;
++    const char *p;
+ 
+-    D(("called with echo='%s', prompt='%s'.", echo ? "ON":"OFF" , prompt));
++    D(("called with mask='%s', prompt='%s'.", mask ? "ON" : "OFF" , prompt));
++    have_term = isatty(STDIN_FILENO);
+ 
+-    if (isatty(STDIN_FILENO)) {                      /* terminal state */
+-
+-	/* is a terminal so record settings and flush it */
+-	if ( tcgetattr(STDIN_FILENO, &term_before) != 0 ) {
++    if (have_term) {
++	if (tcgetattr(STDIN_FILENO, &term_before) != 0) {
+ 	    D(("<error: failed to get terminal settings>"));
+ 	    *retstr = NULL;
+ 	    return -1;
+ 	}
++
+ 	memcpy(&term_tmp, &term_before, sizeof(term_tmp));
+-	if (!echo) {
++
++	if (mask) {
++	    tt_setonechar(&term_tmp);
+ 	    term_tmp.c_lflag &= ~(ECHO);
+ 	}
+-	have_term = 1;
+ 
+ 	/*
+ 	 * We make a simple attempt to block TTY signals from suspending
+@@ -158,98 +179,140 @@ static int read_string(int echo, const char *prompt, char **retstr)
+ 	sigemptyset(&nset);
+ 	sigaddset(&nset, SIGTSTP);
+ 	(void) sigprocmask(SIG_BLOCK, &nset, &oset);
+-
+-    } else if (!echo) {
+-	D(("<warning: cannot turn echo off>"));
++    } else if (mask) {
++	D(("<error: input needs to be a terminal for masking>"));
++	*retstr = NULL;
++	return -1;
+     }
+ 
+-    /* set up the signal handling */
+-    delay = get_delay();
++    nc = 0;
+ 
+-    /* reading the line */
+-    while (delay >= 0) {
+-	/* this may, or may not set echo off -- drop pending input */
+-	if (have_term)
+-	    (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term_tmp);
++    do {
++	delay = get_delay();
++
++	if (delay < 0) {
++	    D(("the timer appears to have expired"));
++	    nc = -2;
++	    break;
++	}
+ 
+ 	fprintf(stderr, "%s", prompt);
+ 
+-	if ( delay > 0 && set_alarm(delay, &old_sig) ) {
++	if (delay > 0 && set_alarm(delay, &old_sig)) {
+ 	    D(("<failed to set alarm>"));
++	    nc = -2;
+ 	    break;
+-	} else {
+-	    if (have_term)
+-		nc = read(STDIN_FILENO, line, INPUTSIZE-1);
+-	    else                             /* we must read one line only */
+-		for (nc = 0; nc < INPUTSIZE-1 && (nc?line[nc-1]:0) != '\n';
+-		     nc++) {
+-		    int rv;
+-		    if ((rv=read(STDIN_FILENO, line+nc, 1)) != 1) {
+-			if (rv < 0) {
+-			    pam_overwrite_n(line, (unsigned int) nc);
+-			    nc = rv;
++	}
++
++	if (nc > 0)
++	    pam_overwrite_n(line, nc);
++
++	if (mask) {
++	    for (nc = 0, eol = 0; nc < INPUTSIZE - 1 && !eol; ) {
++		(void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term_tmp);
++		r = read(STDIN_FILENO, line + nc, INPUTSIZE - 1 - nc);
++
++		if (r == -1) {
++		    nc = -1;
++		    break;
++		}
++
++		if (r == 0)
++		    break;
++
++		(void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
++
++		for (p = line + nc; r > 0 && nc < INPUTSIZE - 1 && !eol; --r,
++			++p) {
++		    switch (*p) {
++		    case '\n':
++			line[nc++] = '\n';
++		    case '\0':
++			eol = 1;
++			break;
++		    case '\b':
++		    case CERASE:
++			if (nc > 0) {
++			    --nc;
++			    if (write(STDERR_FILENO, "\b \b", 3) == -1) {
++				nc = -3;
++				goto exit;
++			    }
+ 			}
+ 			break;
+-		    }
++		    default:
++			line[nc++] = *p;
++			if (write(STDERR_FILENO, "*", 1) == -1) {
++			    nc = -3;
++			    goto exit;
++			}
++		    };
+ 		}
+-	    if (have_term) {
+-		(void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
+-		if (!echo || expired)             /* do we need a newline? */
+-		    fprintf(stderr, "\n");
+-	    }
+-	    if ( delay > 0 ) {
+-		reset_alarm(&old_sig);
+ 	    }
+-	    if (expired) {
+-		delay = get_delay();
+-	    } else if (nc > 0) {                 /* we got some user input */
+-		D(("we got some user input"));
+-
+-		if (line[nc-1] == '\n') {     /* <NUL> terminate */
+-		    line[--nc] = '\0';
+-		} else {
+-		    if (echo) {
+-			fprintf(stderr, "\n");
+-		    }
+-		    line[nc] = '\0';
+-		}
+-		*retstr = strdup(line);
+-		pam_overwrite_array(line);
+-		if (!*retstr) {
+-		    D(("no memory for response string"));
+-		    nc = -1;
++	} else if (have_term) {
++	    (void) tcsetattr(STDIN_FILENO, TCSAFLUSH, &term_tmp);
++	    nc = read(STDIN_FILENO, line, INPUTSIZE - 1);
++	} else {
++	    for (nc = 0, eol = 0; nc < INPUTSIZE - 1 && !eol; ++nc) {
++		r = read(STDIN_FILENO, line + nc, 1);
++
++		if (r != 1) {
++		    if (r != 0)
++			nc = -1;
++		    break;
+ 		}
++		if (line[nc] == '\n')
++		    eol = 1;
++	    }
++	}
+ 
+-		goto cleanexit;                /* return malloc()ed string */
++	if (delay > 0)
++	    reset_alarm(&old_sig);
+ 
+-	    } else if (nc == 0) {                                /* Ctrl-D */
+-		D(("user did not want to type anything"));
++	if (mask || (have_term && expired) || (have_term && nc == 0) ||
++		(have_term && nc > 0 && line[nc - 1] != '\n')) {
++	    (void) tcsetattr(STDIN_FILENO, TCSADRAIN, &term_before);
+ 
+-		*retstr = NULL;
+-		if (echo) {
+-		    fprintf(stderr, "\n");
+-		}
+-		goto cleanexit;                /* return malloc()ed "" */
+-	    } else if (nc == -1) {
+-		/* Don't loop forever if read() returns -1. */
+-		D(("error reading input from the user: %m"));
+-		if (echo) {
+-		    fprintf(stderr, "\n");
+-		}
+-		*retstr = NULL;
+-		goto cleanexit;                /* return NULL */
++	    if (write(STDERR_FILENO, "\n", 1) == -1) {
++		nc = -3;
++		break;
+ 	    }
+ 	}
+-    }
++    } while (expired);
+ 
+-    /* getting here implies that the timer expired */
++exit:
++    if (nc > 0) {
++	D(("we got some user input"));
+ 
+-    D(("the timer appears to have expired"));
++	if (line[nc - 1] == '\n')
++	    line[--nc] = '\0';
++	else
++	    line[nc] = '\0';
+ 
+-    *retstr = NULL;
+-    pam_overwrite_array(line);
++	*retstr = strdup(line);
++	pam_overwrite_array(line);
+ 
+- cleanexit:
++	if (!*retstr) {
++	    D(("no memory for response string"));
++	    nc = -1;
++	}
++    } else if (nc == 0) {	/* Ctrl-D */
++	D(("user did not want to type anything"));
++	*retstr = NULL;
++    } else {
++	switch (nc) {
++	case -1:
++	    D(("error reading input from the user: %m"));
++	    break;
++	case -3:
++	    D(("<error: failed to write output to stderr>"));
++	default:
++	    nc = -1;
++	}
++
++	*retstr = NULL;
++	pam_overwrite_array(line);
++    }
+ 
+     if (have_term) {
+ 	(void) sigprocmask(SIG_SETMASK, &oset, NULL);
+@@ -300,13 +363,13 @@ int misc_conv(int num_msg, const struct pam_message **msgm,
+ 
+ 	switch (msgm[count]->msg_style) {
+ 	case PAM_PROMPT_ECHO_OFF:
+-	    nc = read_string(CONV_ECHO_OFF,msgm[count]->msg, &string);
++	    nc = read_string(CONV_MASK_MODE_ON,msgm[count]->msg, &string);
+ 	    if (nc < 0) {
+ 		goto failed_conversation;
+ 	    }
+ 	    break;
+ 	case PAM_PROMPT_ECHO_ON:
+-	    nc = read_string(CONV_ECHO_ON,msgm[count]->msg, &string);
++	    nc = read_string(CONV_MASK_MODE_OFF,msgm[count]->msg, &string);
+ 	    if (nc < 0) {
+ 		goto failed_conversation;
+ 	    }
