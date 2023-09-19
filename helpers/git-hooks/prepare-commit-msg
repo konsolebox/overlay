@@ -21,17 +21,28 @@ function get_common_prefix_multi {
 	done
 }
 
+function is_message {
+	[[ $1 != *([[:blank:]])'#'* && $1 == *[![:blank:]]* ]]
+}
+
 function main {
 	local commit_msg_file=$1 common_prefix content contents_changed=false files_to_commit \
-			has_non_comment=false prefix= warning temp __
+			first_message_index= has_multiple_first_message_lines=false prefix= warning temp i __
+
+	local PREFIX_PATTERN='+([![:blank:]]):*'
 
 	readarray -t content < "${commit_msg_file}" || exit
 
-	for __ in "${content[@]}"; do
-		[[ $__ == "# ----"* ]] && break
+	for (( i = 0; i < ${#content[@]}; ++i )); do
+		if [[ ${content[i]} == "# ----"* ]]; then
+			break
+		elif is_message "${content[i]}"; then
+			first_message_index=$i
 
-		if [[ $__ != *([[:blank:]])'#'* && $__ == *[![:blank:]]* ]]; then
-			has_non_comment=true
+			if (( ++i < ${#content[@]} )) && is_message "${content[i]}"; then
+				has_multiple_first_message_lines=true
+			fi
+
 			break
 		fi
 	done
@@ -42,7 +53,8 @@ function main {
 	get_common_prefix_multi "${files_to_commit[@]}"
 	common_prefix=$__
 
-	if [[ ${has_non_comment} == false ]]; then
+	if [[ -z ${first_message_index} || ${has_multiple_first_message_lines} == false && \
+			${content[first_message_index]} != ${PREFIX_PATTERN} ]]; then
 		case ${common_prefix} in
 		+([!/-])-+([!/-])|helpers/git-hooks)
 			prefix=${common_prefix}
@@ -61,15 +73,21 @@ function main {
 		esac
 
 		if [[ ${prefix} ]]; then
-			for (( i = 0; i < ${#content[@]}; ++i )); do
-				if [[ ${content[i]} == *([[:blank:]]) ]]; then
-					unset 'content[i]'
-				else
-					break
-				fi
-			done
+			if [[ ${first_message_index} ]]; then
+				i=${first_message_index}
+				content[i]="${prefix%/}: ${content[i]##+([[:blank:]])}"
+			else
+				for (( i = 0; i < ${#content[@]}; ++i )); do
+					if [[ ${content[i]} == *([[:blank:]]) ]]; then
+						unset 'content[i]'
+					else
+						break
+					fi
+				done
 
-			content=("${prefix%/}: " "" "${content[@]}")
+				content=("${prefix%/}: " "" "${content[@]}")
+			fi
+
 			contents_changed=true
 		fi
 	fi
