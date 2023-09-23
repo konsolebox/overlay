@@ -12,7 +12,7 @@ DESCRIPTION="GTK+ based fast and lightweight IDE"
 HOMEPAGE="http://www.geany.org"
 LICENSE="GPL-2+ HPND"
 SLOT=0
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~x86-linux"
 IUSE="doc konsolebox +vte"
 REQUIRED_USE="konsolebox"
 
