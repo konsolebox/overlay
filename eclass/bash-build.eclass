@@ -1,9 +1,10 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 [[ ${EAPI} == 7 ]] || die "EAPI needs to be 7."
 
 inherit flag-o-matic toolchain-funcs multilib prefix
+
 [[ ${PV} == *9999* ]] && inherit autotools git-r3
 
 # @ECLASS: bash-build.eclass
@@ -17,27 +18,40 @@ inherit flag-o-matic toolchain-funcs multilib prefix
 # @DESCRIPTION:
 # This eclass contains unified code for building bash.
 
-# @ECLASS_VARIABLE: BASH_BUILD_INSTALL_TYPE
+# @ECLASS_VARIABLE: _BASH_BUILD_INSTALL_TYPE
 # @DESCRIPTION:
 # Indicates whether the installation type is 'system' or 'supplemental'
 # @REQUIRED
 
-# @ECLASS_VARIABLE: BASH_BUILD_READLINE_VER
+# @ECLASS_VARIABLE: _BASH_BUILD_READLINE_VER
 # @DESCRIPTION:
 # Declares the required version of Readline.
 # This doesn't have to be specified in *9999* ebuilds.
 
-# @ECLASS_VARIABLE: BASH_BUILD_PATCHES
+# @ECLASS_VARIABLE: _BASH_BUILD_PATCHES
 # @DESCRIPTION:
 # Specifies the non-official patches
 
-# @ECLASS_VARIABLE: BASH_BUILD_PATCH_OPTIONS
+# @ECLASS_VARIABLE: _BASH_BUILD_PATCH_OPTIONS
 # @DESCRIPTION:
 # Specifies the options for epatch
 
-# @ECLASS_VARIABLE: BASH_BUILD_USE_ARCHIVED_PATCHES
+# @ECLASS_VARIABLE: _BASH_BUILD_USE_ARCHIVED_PATCHES
 # @DESCRIPTION:
 # Whether to use patches from github.com/konsolebox/gentoo-bash-patches
+
+# @ECLASS_VARIABLE: _BASH_BUILD_REQUIRE_BISON
+# @DESCRIPTION:
+# Whether to specify Bison as a build-time dependency or not
+
+# @ECLASS_VARIABLE: _BASH_BUILD_VERIFY_SIG
+# @DESCRIPTION:
+# Whether to provide the 'verify-sig' flag and allow verification of signatures
+
+if [[ ${_BASH_BUILD_VERIFY_SIG-} == true ]]; then
+	VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/chetramey.asc
+	inherit verify-sig
+fi
 
 # @ECLASS_VARIABLE: _BASH_BUILD_PV
 # @DESCRIPTION:
@@ -108,8 +122,9 @@ _bash-build_set_globals() {
 	fi
 
 	IUSE="afs bundled-readline mem-scramble +net nls pgo +readline static vanilla"
+	[[ ${_BASH_BUILD_VERIFY_SIG-} == true ]] && IUSE+=" verify-sig"
 
-	if [[ ${BASH_BUILD_INSTALL_TYPE} == system ]]; then
+	if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
 		SLOT=0
 		IUSE+=" bashlogger examples plugins"
 
@@ -117,10 +132,10 @@ _bash-build_set_globals() {
 				_BASH_BUILD_PV_PARTS[1] -lt 3) ]]; then
 			die "System bash must at least be version 4.3."
 		fi
-	elif [[ ${BASH_BUILD_INSTALL_TYPE} == supplemental ]]; then
+	elif [[ ${_BASH_BUILD_INSTALL_TYPE} == supplemental ]]; then
 		SLOT=${PV/_p/.} SLOT=${SLOT//_/-}
 	else
-		die "Invalid install type: ${BASH_BUILD_INSTALL_TYPE}"
+		die "Invalid install type: ${_BASH_BUILD_INSTALL_TYPE}"
 	fi
 
 	local may_use_system_readline=false _patches
@@ -135,26 +150,36 @@ _bash-build_set_globals() {
 		else
 			die "Invalid *9999* version"
 		fi
+
+		[[ ${_BASH_BUILD_VERIFY_SIG-} == true ]] && die "Verify-sig can't be enabled in *9999* versions"
 	elif [[ ${PV} == *_alpha* || ${PV} == *_beta* || ${PV} == *_rc* ]]; then
 		SRC_URI="mirror://gnu/bash/bash-${_BASH_BUILD_PV}.tar.gz ftp://ftp.cwru.edu/pub/bash/bash-${_BASH_BUILD_PV}.tar.gz"
+		[[ ${_BASH_BUILD_VERIFY_SIG-} == true ]] && SRC_URI+=" verify-sig? ( ${SRC_URI//.gz/.gz.sig} )"
 		S=${WORKDIR}/bash-${_BASH_BUILD_PV}
 	else
 		[[ ${SLOT} == 0 ]] && may_use_system_readline=true
 		SRC_URI="mirror://gnu/bash/bash-${_BASH_BUILD_PV}.tar.gz"
+		[[ ${_BASH_BUILD_VERIFY_SIG-} == true ]] && SRC_URI+=" verify-sig? ( ${SRC_URI}.sig )"
 		[[ ${PV} == *_p* ]] && _BASH_BUILD_PLEVEL=${PV##*_p}
-		[[ _BASH_BUILD_PLEVEL -gt 0 ]] && _bash-build_get_patches && SRC_URI+=" ${_patches[*]}"
+
+		if [[ _BASH_BUILD_PLEVEL -gt 0 ]]; then
+			_bash-build_get_patches || die
+			SRC_URI+=" ${_patches[*]}"
+			[[ ${_BASH_BUILD_VERIFY_SIG-} == true ]] && SRC_URI+=" verify-sig? ( ${_patches[*]/%/.sig} )"
+		fi
+
 		S=${WORKDIR}/bash-${_BASH_BUILD_PV}
 	fi
 
-	[[ ${#BASH_BUILD_PATCHES[@]} -gt 0 && ${BASH_BUILD_USE_ARCHIVED_PATCHES} == true ]] && \
+	[[ ${#_BASH_BUILD_PATCHES[@]} -gt 0 && ${_BASH_BUILD_USE_ARCHIVED_PATCHES-} == true ]] && \
 		SRC_URI+=" https://github.com/konsolebox/gentoo-bash-patches/archive/${_BASH_BUILD_PATCH_COMMIT}.tar.gz -> gentoo-bash-patches-${_BASH_BUILD_PATCH_COMMIT}.tar.gz"
 
 	local static_readline_dep= non_static_readline_dep=
 
 	if [[ ${may_use_system_readline} == true ]]; then
-		[[ -z ${BASH_BUILD_READLINE_VER-} ]] && die "Readline version needs to be provided."
-		non_static_readline_dep="readline? ( !bundled-readline? ( >=sys-libs/readline-${BASH_BUILD_READLINE_VER}:0= ) )"
-		static_readline_dep="readline? ( !bundled-readline? ( >=sys-libs/readline-${BASH_BUILD_READLINE_VER}[static-libs(+)] ) )"
+		[[ -z ${_BASH_BUILD_READLINE_VER-} ]] && die "Readline version needs to be provided."
+		non_static_readline_dep="readline? ( !bundled-readline? ( >=sys-libs/readline-${_BASH_BUILD_READLINE_VER}:0= ) )"
+		static_readline_dep="readline? ( !bundled-readline? ( >=sys-libs/readline-${_BASH_BUILD_READLINE_VER}[static-libs(+)] ) )"
 	else
 		REQUIRED_USE="readline? ( bundled-readline )"
 	fi
@@ -177,11 +202,8 @@ _bash-build_set_globals() {
 		!sys-libs/libtermcap-compat
 	"
 
-	BDEPEND="
-		|| ( app-alternatives/yacc virtual/yacc )
-		pgo? ( dev-util/gperf )
-	"
-
+	BDEPEND="pgo? ( dev-util/gperf )"
+	[[ ${_BASH_BUILD_REQUIRE_BISON-} == true ]] && BDEPEND+=" sys-devel/bison"
 	[[ ${SLOT} != 0 && ${PN} != bash ]] && RDEPEND+="!app-shells/bash:${SLOT}"
 }
 
@@ -208,10 +230,23 @@ bash-build_src_unpack() {
 	if [[ ${PV} == *9999* ]]; then
 		git-r3_src_unpack
 	else
+		if [[ ${_BASH_BUILD_VERIFY_SIG-} == true ]] && use verify-sig; then
+			verify-sig_verify_detached "${DISTDIR}/bash-${_BASH_BUILD_PV}.tar.gz"{,.sig}
+
+			if [[ _BASH_BUILD_PLEVEL -gt 0 ]]; then
+				local patch
+				_bash-build_get_patches -s || die
+
+				for patch in "${_patches[@]}" ; do
+					verify-sig_verify_detached "${patch}"{,.sig}
+				done
+			fi
+		fi
+
 		unpack "bash-${_BASH_BUILD_PV}.tar.gz"
 	fi
 
-	[[ ${#BASH_BUILD_PATCHES[@]} -gt 0 && ${BASH_BUILD_USE_ARCHIVED_PATCHES} == true ]] && \
+	[[ ${#_BASH_BUILD_PATCHES[@]} -gt 0 && ${_BASH_BUILD_USE_ARCHIVED_PATCHES-} == true ]] && \
 		! use vanilla && \
 			unpack "gentoo-bash-patches-${_BASH_BUILD_PATCH_COMMIT}.tar.gz"
 }
@@ -223,7 +258,10 @@ bash-build_src_prepare() {
 	local _patches
 
 	# Include official patches
-	[[ _BASH_BUILD_PLEVEL -gt 0 ]] && _bash-build_get_patches -s && eapply -p0 "${_patches[@]}"
+	if [[ _BASH_BUILD_PLEVEL -gt 0 ]]; then
+		_bash-build_get_patches -s || die
+		eapply -p0 "${_patches[@]}"
+	fi
 
 	if ! use bundled-readline; then
 		# Clean out local libs so we know we use system ones
@@ -239,11 +277,11 @@ bash-build_src_prepare() {
 	sed -i -r '/^(HS|RL)USER/s:=.*:=:' doc/Makefile.in || die
 	touch -r . doc/*
 
-	if [[ ${#BASH_BUILD_PATCHES[@]} -gt 0 ]] && ! use vanilla; then
+	if [[ ${#_BASH_BUILD_PATCHES[@]} -gt 0 ]] && ! use vanilla; then
 		local prefix=${FILESDIR%/}/
-		[[ ${BASH_BUILD_USE_ARCHIVED_PATCHES} == true ]] && \
+		[[ ${_BASH_BUILD_USE_ARCHIVED_PATCHES-} == true ]] && \
 			prefix=${WORKDIR}/gentoo-bash-patches-${_BASH_BUILD_PATCH_COMMIT}/patches/
-		eapply "${BASH_BUILD_PATCH_OPTIONS[@]}" "${BASH_BUILD_PATCHES[@]/#/${prefix}}"
+		eapply "${_BASH_BUILD_PATCH_OPTIONS[@]}" "${_BASH_BUILD_PATCHES[@]/#/${prefix}}"
 	fi
 
 	eapply_user
@@ -306,10 +344,18 @@ bash-build_src_configure() {
 
 	if ! use bundled-readline; then
 		conf+=( --with-installed-readline=. )
-		export ac_cv_rl_version=${BASH_BUILD_READLINE_VER%%_*}
+		export ac_cv_rl_version=${_BASH_BUILD_READLINE_VER%%_*}
 	fi
 
 	tc-export AR #444070
+
+	# Upstream only test with Bison and require GNUisms like YYEOF and
+	# YYERRCODE. The former at least may be in POSIX soon:
+	# https://www.austingroupbugs.net/view.php?id=1269.
+	# configure warns on use of non-Bison but doesn't abort. The result
+	# may misbehave at runtime.
+	unset YACC
+
 	econf "${conf[@]}"
 }
 
@@ -318,10 +364,16 @@ bash-build_src_configure() {
 # Implements src_compile
 bash-build_src_compile() {
 	if use pgo; then
+		# -fprofile-partial-training because upstream note the test suite isn't super comprehensive
+		# See https://documentation.suse.com/sbp/all/html/SBP-GCC-10/index.html#sec-gcc10-pgo
+		local fprofile_partial_training=$(test-flags-CC -fprofile-partial-training)
+		local pgo_generate_flags="-fprofile-update=atomic -fprofile-dir=${T}/pgo -fprofile-generate=${T}/pgo ${fprofile_partial_training}"
+		local pgo_use_flags="-fprofile-use=${T}/pgo -fprofile-dir=${T}/pgo ${fprofile_partial_training}"
+
 		# Build Bash and run its tests to generate profile data.
-		emake CFLAGS="${CFLAGS} -fprofile-generate=${T}/pgo -fprofile-dir=${T}/pgo"
+		emake CFLAGS="${CFLAGS} ${pgo_generate_flags}"
 		unset A # Used in test suite
-		emake CFLAGS="${CFLAGS} -fprofile-generate=${T}/pgo -fprofile-dir=${T}/pgo" -k check
+		emake CFLAGS="${CFLAGS} ${pgo_generate_flags}" -k check
 
 		if tc-is-clang; then
 			llvm-profdata merge "${T}"/pgo --output="${T}"/pgo/default.profdata || die
@@ -329,9 +381,9 @@ bash-build_src_compile() {
 
 		# Rebuild Bash using the genarated profiling data.
 		emake clean
-		emake CFLAGS="${CFLAGS} -fprofile-use=${T}/pgo -fprofile-dir=${T}/pgo"
-		[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables CFLAGS="${CFLAGS} \
-				-fprofile-use=${T}/pgo -fprofile-dir=${T}/pgo" all others
+		emake CFLAGS="${CFLAGS} ${pgo_use_flags}"
+		[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables \
+				CFLAGS="${CFLAGS} ${pgo_use_flags}" all others
 	else
 		emake
 		[[ ${SLOT} == 0 ]] && use plugins && emake -C examples/loadables all others
@@ -389,14 +441,16 @@ bash-build_src_install() {
 			done
 		fi
 
-		doman doc/*.1
+		emake -C doc DESTDIR="${D}" install_builtins
+		sed 's:bash\.1:man1/&:' doc/rbash.1 > "${T}"/rbash.1 || die
+		doman "${T}"/rbash.1
 		newdoc CWRU/changelog ChangeLog
 		dosym bash.info /usr/share/info/bashref.info
 	else
 		into /
 		newbin bash "bash-${SLOT}"
 		newman doc/bash.1 "bash-${SLOT}.1"
-		newman doc/builtins.1 "builtins-${SLOT}.1"
+		newman doc/builtins.1 "bash_builtins-${SLOT}.1"
 		insinto /usr/share/info
 		newins doc/bashref.info "bash-${SLOT}.info"
 		dosym "bash-${SLOT}.info" "/usr/share/info/bashref-${SLOT}.info"
