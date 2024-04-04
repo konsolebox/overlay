@@ -310,6 +310,10 @@ bash-build_src_configure() {
 		# Force pgrp synchronization
 		# https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=81653
 		export bash_cv_pgrp_pipe=yes
+
+		# Disable LTO in older versions
+		# https://gitweb.gentoo.org/repo/gentoo.git/commit/app-shells/bash?id=6eea46091ef4e2f853c746f4544858bc79f63a73
+		declare -f filter-lto >/dev/null && filter-lto
 	fi
 
 	# For descriptions of these, see config-top.h
