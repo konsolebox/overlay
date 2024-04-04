@@ -3,7 +3,7 @@
 
 EAPI="6"
 
-inherit gnome2
+inherit gnome2 flag-o-matic
 
 DESCRIPTION="GNOME terminal widget"
 HOMEPAGE="https://wiki.gnome.org/Apps/Terminal/VTE"
@@ -50,6 +50,8 @@ PATCHES=(
 DOCS="AUTHORS ChangeLog HACKING NEWS README"
 
 src_configure() {
+	declare -f filter-lto >/dev/null && filter-lto
+
 	local myconf=""
 
 	if [[ ${CHOST} == *-interix* ]]; then
