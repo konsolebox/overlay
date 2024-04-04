@@ -211,10 +211,8 @@ _bash-build_set_globals() {
 # @DESCRIPTION:
 # Implements pkg_setup
 bash-build_pkg_setup() {
-	if is-flag -malign-double ; then #7332
-		eerror "Detected bad CFLAGS '-malign-double'.  Do not use this"
-		eerror "as it breaks LFS (struct stat64) on x86."
-		die "remove -malign-double from your CFLAGS mr ricer"
+	if is-flag -malign-double; then #7332
+		die "CFLAGS '-malign-double' breaks LFS (struct stat64) on x86."
 	fi
 
 	if [[ ${SLOT} == 0 ]] && use bashlogger; then
