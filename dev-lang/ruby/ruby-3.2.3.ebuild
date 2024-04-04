@@ -1,4 +1,4 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -17,7 +17,7 @@ HOMEPAGE="https://www.ruby-lang.org/"
 SRC_URI="https://cache.ruby-lang.org/pub/ruby/${SLOT}/${MY_P}.tar.xz"
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x64-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
 IUSE="berkdb debug doc examples gdbm ipv6 jemalloc jit socks5 +ssl static-libs systemtap tk valgrind xemacs"
 
 RDEPEND="
@@ -29,7 +29,7 @@ RDEPEND="
 		dev-libs/openssl:0=
 	)
 	socks5? ( >=net-proxy/dante-1.1.13 )
-	systemtap? ( dev-util/systemtap )
+	systemtap? ( || ( dev-util/systemtap dev-debug/systemtap ) )
 	tk? (
 		dev-lang/tcl:0=[threads]
 		dev-lang/tk:0=[threads]
@@ -39,16 +39,17 @@ RDEPEND="
 	sys-libs/readline:0=
 	sys-libs/zlib
 	virtual/libcrypt:=
-	>=app-eselect/eselect-ruby-20221225
+	>=app-eselect/eselect-ruby-20231008
 "
 
 DEPEND="
 	${RDEPEND}
-	valgrind? ( dev-util/valgrind )
+	valgrind? ( || ( dev-util/valgrind dev-debug/valgrind ) )
 "
 
 BUNDLED_GEMS="
 	>=dev-ruby/debug-1.7.1[ruby_targets_ruby32(-)]
+	>=dev-ruby/irb-1.6.2[ruby_targets_ruby32(-)]
 	>=dev-ruby/matrix-0.4.2[ruby_targets_ruby32(-)]
 	>=dev-ruby/minitest-5.16.3[ruby_targets_ruby32(-)]
 	>=dev-ruby/net-ftp-0.2.0[ruby_targets_ruby32(-)]
@@ -77,6 +78,7 @@ PDEPEND="
 
 src_prepare() {
 	eapply "${FILESDIR}"/"${SLOT}"/010*.patch
+	eapply "${FILESDIR}"/"${SLOT}"/011*.patch
 	eapply "${FILESDIR}"/"${SLOT}"/902*.patch
 
 	if use elibc_musl ; then
@@ -95,8 +97,7 @@ src_prepare() {
 
 	# Remove tests that are known to fail or require a network connection
 	rm -f test/ruby/test_process.rb test/rubygems/test_gem{,_path_support}.rb || die
-	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb \
-			spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
+	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
 
 	# Remove webrick tests because setting LD_LIBRARY_PATH does not work for them.
 	rm -rf tool/test/webrick || die
@@ -110,6 +111,9 @@ src_prepare() {
 	# Avoid tests that require gem downloads
 	sed -i -e '/^test-syntax-suggest/ s/\$(TEST_RUNNABLE)/no/' common.mk || die
 	sed -i -e '/^check:/ s/\$(TEST_RUNNABLE)-\$(PREPARE_SYNTAX_SUGGEST) test-syntax-suggest//' common.mk || die
+
+	# Avoid test that fails intermittently
+	sed -i -e '/test_gem_exec_gem_uninstall/aomit "Fails intermittently"' test/rubygems/test_gem_commands_exec_command.rb || die
 
 	if use prefix ; then
 		# Fix hardcoded SHELL var in mkmf library
@@ -220,12 +224,12 @@ src_configure() {
 }
 
 src_compile() {
-	export LD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
+	local -x LD_LIBRARY_PATH="${S}${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
 	emake V=1 EXTLDFLAGS="${LDFLAGS}" MJIT_CFLAGS="${CFLAGS}" MJIT_OPTFLAGS="" MJIT_DEBUGFLAGS=""
 }
 
 src_test() {
-	export LD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
+	local -x LD_LIBRARY_PATH="${S}${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
 	emake V=1 check
 }
 
@@ -241,18 +245,16 @@ src_install() {
 
 	local MINIRUBY=$(echo -e 'include Makefile\ngetminiruby:\n\t@echo $(MINIRUBY)'|make -f - getminiruby)
 
-	LD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
+	local -x LD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
 
 	if [[ ${CHOST} == *darwin* ]] ; then
-		DYLD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${DYLD_LIBRARY_PATH+:}${DYLD_LIBRARY_PATH}"
-		export DYLD_LIBRARY_PATH
+		local -x DYLD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${DYLD_LIBRARY_PATH+:}${DYLD_LIBRARY_PATH}"
 	fi
 
-	RUBYLIB="${S}:${ED}/usr/$(get_libdir)/ruby/${RUBYVERSION}"
+	local -x RUBYLIB="${S}:${ED}/usr/$(get_libdir)/ruby/${RUBYVERSION}"
 	for d in $(find "${S}/ext" -type d) ; do
 		RUBYLIB="${RUBYLIB}:$d"
 	done
-	export LD_LIBRARY_PATH RUBYLIB
 
 	# Create directory for the default gems
 	local gem_home="${EPREFIX}/usr/$(get_libdir)/ruby/gems/${RUBYVERSION}"
