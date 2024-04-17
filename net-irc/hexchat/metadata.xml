@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+	</maintainer>
+	<use>
+		<flag name="konsolebox">
+			Use https://github.com/konsolebox/hexchat.git as source
+		</flag>
+		<flag name="libcanberra">Enable sound event support using
+			<pkg>media-libs/libcanberra</pkg>
+		</flag>
+		<flag name="plugin-checksum">
+			Build Checksum plugin (needs plugins)
+		</flag>
+		<flag name="plugin-fishlim">
+			Build FiSHLiM plugin (needs plugins)
+		</flag>
+		<flag name="plugin-sysinfo">
+			Build SysInfo plugin (needs plugins)
+		</flag>
+		<flag name="theme-manager">Build the theme manager (mono)</flag>
+	</use>
+	<upstream>
+		<bugs-to>https://github.com/hexchat/hexchat/issues</bugs-to>
+		<doc lang="en">https://hexchat.readthedocs.io/en/latest</doc>
+		<remote-id type="github">hexchat/hexchat</remote-id>
+	</upstream>
+</pkgmetadata>
