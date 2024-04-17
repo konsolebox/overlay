@@ -5,7 +5,8 @@ EAPI=7
 
 inherit autotools strip-linguas xdg-utils
 
-LANGS="ar ast be bg ca cs de el en_GB es et eu fa fi fr gl he hi hu id it ja kk ko lb lt mn nl nn pl pt pt_BR ro ru sk sl sr sv tr uk vi zh_CN ZH_TW"
+LANGS="ar ast be bg ca cs de el en_GB es et eu fa fi fr gl he hi hu id it ja kk ko lb lt mn nl nn
+		pl pt pt_BR ro ru sk sl sr sv tr uk vi zh_CN ZH_TW"
 NOSHORTLANGS="en_GB zh_CN zh_TW"
 
 DESCRIPTION="GTK+ based fast and lightweight IDE"
@@ -16,10 +17,11 @@ KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~riscv 
 IUSE="doc konsolebox +vte"
 REQUIRED_USE="konsolebox"
 
-COMMIT=4fa432cca220f4260b11f454813e6306fb6655a5
+COMMIT=c8c6e1d9149deb01a57437b3fbec25457feb8565
 LEXILLA_VERSION=5.3.1
+LEXILLA_TAG=rel-${LEXILLA_VERSION//./-}
 SRC_URI="https://github.com/konsolebox/geany/archive/${COMMIT}.tar.gz -> ${P%_*}-konsolebox-${PV#*_p}-${COMMIT:0:8}.tar.gz
-		https://github.com/ScintillaOrg/lexilla/archive/refs/tags/rel-${LEXILLA_VERSION//./-}.tar.gz -> lexilla-${LEXILLA_VERSION}.tar.gz"
+	https://github.com/ScintillaOrg/lexilla/archive/refs/tags/${LEXILLA_TAG}.tar.gz -> lexilla-${LEXILLA_VERSION}.tar.gz"
 
 RDEPEND=">=dev-libs/glib-2.28:2
 	>=x11-libs/gtk+-2.24:2
@@ -39,7 +41,7 @@ pkg_setup() {
 
 src_prepare() {
 	rmdir "${S}/lexilla" || die
-	mv "${WORKDIR}/lexilla-rel-${LEXILLA_VERSION//./-}" "${S}/lexilla" || die
+	mv "${WORKDIR}/lexilla-${LEXILLA_TAG}" "${S}/lexilla" || die
 	default
 
 	# Syntax highlighting for Portage
