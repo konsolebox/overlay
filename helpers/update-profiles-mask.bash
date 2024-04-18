@@ -9,8 +9,7 @@ function die {
 }
 
 function main {
-	local pkgcheck=(pkgcheck scan --exit=error) profiles
-	local desc_file=/var/db/repos/gentoo/profiles/profiles.desc
+	local desc_file=/var/db/repos/gentoo/profiles/profiles.desc profiles
 
 	# Extract new profiles
 	awk '{ $0 = "" $2 } /^default\// && /\/musl(\/|$)/' "${desc_file}" | \
