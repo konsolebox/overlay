@@ -252,9 +252,19 @@ EVCS_STORE_DIRS=()
 # @ECLASS_VARIABLE: EGIT_NO_FETCH
 # @DEFAULT_UNSET
 # @DESCRIPTION:
-# Don't fetch data from remote repository
+# Don't fetch main repo data from remote repository
+#
+# Enabling this will still allow fetching of submodule data from the repository
+# unless *NO_FETCH_SUBMODULES is enabled as well.
 #
 # EGIT_NO_FETCH=1|yes|true
+
+# @ECLASS_VARIABLE: EGIT_NO_FETCH_SUBMODULES
+# @DEFAULT_UNSET
+# @DESCRIPTION:
+# Don't fetch submodule data from remote repository
+#
+# EGIT_NO_FETCH_SUBMODULES=1|yes|true
 
 # @FUNCTION: _git-r3_env_setup
 # @INTERNAL
@@ -616,6 +626,7 @@ git-r3_fetch() {
 	local commit_id=${2:-${EGIT_COMMIT}}
 	local commit_date=${4:-${EGIT_COMMIT_DATE}}
 	local no_fetch=${EGIT_NO_FETCH}
+	local no_fetch_submodules=${EGIT_NO_FETCH_SUBMODULES}
 
 	# get the name and do some more processing:
 	# 1) kill .git suffix,
@@ -633,6 +644,7 @@ git-r3_fetch() {
 		COMMIT:commit_id
 		COMMIT_DATE:commit_date
 		NO_FETCH:no_fetch
+		NO_FETCH_SUBMODULES:no_fetch_submodules
 	)
 
 	local localvar livevar live_warn= override_vars=()
@@ -868,7 +880,8 @@ git-r3_fetch() {
 	local EGIT_CLONE_TYPE=mirror
 
 	# recursively fetch submodules
-	if git cat-file -e "${local_ref}":.gitmodules &>/dev/null; then
+	if [[ :1:yes:true: != *:"${no_fetch_submodules}":* ]] && \
+			git cat-file -e "${local_ref}":.gitmodules &>/dev/null; then
 		local submodules
 		_git-r3_set_submodules "${_GIT_SUBMODULE_PATH}" \
 			"$(git cat-file -p "${local_ref}":.gitmodules || die)"
