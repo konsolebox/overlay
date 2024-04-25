@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+	</maintainer>
+	<use>
+		<flag name="konsolebox">
+			Use https://github.com/konsolebox/notification-daemon.git as source
+			or use patches from it
+		</flag>
+		<flag name="auto-remove-old-notifications">
+			Enable automatic removal of old notifications
+		</flag>
+		<flag name="max-notifications-99">
+			Enable maximum number of notifications set to 99
+		</flag>
+	</use>
+	<upstream>
+		<remote-id type="gnome-gitlab">Archive/notification-daemon</remote-id>
+		<remote-id type="github">konsolebox/notification-daemon</remote-id>
+	</upstream>
+</pkgmetadata>
