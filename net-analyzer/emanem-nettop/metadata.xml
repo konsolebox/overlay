@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<longdescription>
+		Utility to show network traffic (both TCP and UDP v4 and v6) split by process and remote
+		host
+	</longdescription>
+	<upstream>
+		<remote-id type="github">Emanem/nettop</remote-id>
+		<bugs-to>https://github.com/Emanem/nettop/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
