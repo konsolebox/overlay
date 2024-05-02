@@ -54,7 +54,8 @@ function main {
 	common_prefix=$__
 
 	if [[ -z ${first_message_index} || ${has_multiple_first_message_lines} == false && \
-			${content[first_message_index]} != ${PREFIX_PATTERN} ]]; then
+			${content[first_message_index]} != ${PREFIX_PATTERN} && \
+			${content[first_message_index]} != @(squash|fixup|ammend)"! "* ]]; then
 		case ${common_prefix} in
 		+([!/-])-+([!/-])|helpers/git-hooks)
 			prefix=${common_prefix}
