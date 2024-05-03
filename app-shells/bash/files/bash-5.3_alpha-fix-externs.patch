@@ -1,0 +1,26 @@
+diff --git externs.h externs.h
+index a7c41928..214d112d 100644
+--- externs.h
++++ externs.h
+@@ -537,7 +537,7 @@ extern size_t utf8_mbstrlen (const char *);
+ 
+ /* declarations for functions defined in lib/sh/wcsnwidth.c */
+ #if defined (HANDLE_MULTIBYTE)
+-extern int wcsnwidth (const wchar_t *, size_t, int);
++extern int wcsnwidth (const wchar_t *, size_t, size_t);
+ #endif
+ 
+ /* declarations for functions defined in lib/sh/winsize.c */
+diff --git lib/sh/casemod.c lib/sh/casemod.c
+index 8529db3e..6bef4586 100644
+--- lib/sh/casemod.c
++++ lib/sh/casemod.c
+@@ -67,7 +67,7 @@
+ 
+ #define CASE_USEWORDS	0x1000		/* modify behavior to act on words in passed string */
+ 
+-extern char *substring (char *, int, int);
++extern char *substring (char *, size_t, size_t);
+ 
+ #ifndef UCHAR_MAX
+ #  define UCHAR_MAX	TYPE_MAXIMUM(unsigned char)
