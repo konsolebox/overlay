@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+		<description>Author of rubyexec</description>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">konsolebox/rubyexec</remote-id>
+		<bugs-to>https://github.com/konsolebox/rubyexec/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
