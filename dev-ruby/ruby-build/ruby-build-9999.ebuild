@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -13,6 +13,10 @@ SLOT=0
 EGIT_REPO_URI="https://github.com/rbenv/ruby-build.git"
 EGIT_BRANCH=master
 
+src_compile() {
+	:
+}
+
 src_install() {
 	dobin bin/ruby-build
 	exeinto /usr/libexec/rbenv
@@ -20,5 +24,6 @@ src_install() {
 	doexe bin/rbenv-uninstall
 	insinto /usr/share/ruby-build
 	doins share/ruby-build/*
+	doman share/man/man1/*.1
 	dodoc README.md
 }
