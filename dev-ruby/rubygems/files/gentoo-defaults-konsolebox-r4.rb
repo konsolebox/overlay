@@ -19,7 +19,12 @@ module Gem
       path << gentoo_user_dir unless gentoo_local_dir == gentoo_user_dir
       path << gentoo_local_dir
       path << gentoo_dir
-      path << vendor_dir if vendor_dir && File.directory?(vendor_dir)
+
+      if vendor_dir && File.directory?(vendor_dir)
+        path << vendor_dir # Last as it should be.
+        path << gentoo_dir # Workaround so fakegem wrappers get this intead of vendor_dir
+      end
+
       path
     end
 

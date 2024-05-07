@@ -1,9 +1,9 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-USE_RUBY="ruby27 ruby30 ruby31 ruby32"
+USE_RUBY="ruby30 ruby31 ruby32"
 
 inherit ruby-ng-compat prefix
 
@@ -37,7 +37,7 @@ all_ruby_prepare() {
 	sed -i -e '/automatiek/ s:^:#:' -e '/Automatiek/,/^end/ s:^:#:' Rakefile || die
 
 	local defaults_file=gentoo-defaults-5.rb
-	use konsolebox && defaults_file=gentoo-defaults-konsoleboxf-r3.rb
+	use konsolebox && defaults_file=gentoo-defaults-konsolebox-r4.rb
 	mkdir -p lib/rubygems/defaults || die
 	cp "${FILESDIR}/${defaults_file}" lib/rubygems/defaults/operating_system.rb || die
 	use konsolebox || eprefixify lib/rubygems/defaults/operating_system.rb
