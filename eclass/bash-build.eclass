@@ -460,6 +460,14 @@ bash-build_src_install() {
 	fi
 }
 
+# @FUNCTION: bash-build_src_test
+# @DESCRIPTION:
+# Implements src_test
+bash-build_src_test() {
+	unset A # Used in test suite
+	default
+}
+
 # @FUNCTION: bash-build_pkg_preinst
 # @DESCRIPTION:
 # Implements pkg_preinst
@@ -485,4 +493,4 @@ bash-build_pkg_postinst() {
 _bash-build_set_globals
 
 EXPORT_FUNCTIONS pkg_setup src_unpack src_prepare src_configure src_compile src_install \
-		pkg_preinst pkg_postinst
+		src_test pkg_preinst pkg_postinst
