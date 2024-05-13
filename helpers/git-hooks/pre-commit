@@ -2,6 +2,11 @@
 
 set -f +o posix && shopt -s extglob || exit
 
+function die {
+	printf '%s\n' "$1"
+	exit "${2-1}"
+}
+
 function get_common_prefix {
 	local a b i IFS=/
 	a=($1) b=($2) i=0
@@ -52,10 +57,38 @@ function call {
 	command "$@"
 }
 
+function all_files_deleted {
+	local dir=$1
+	[[ -z $(git ls-files --cached -- "${dir}") ]] # Simple solution discovered and shared by osse
+}
+
 function main {
-	local files test_dir= ebuilds value __
+	local copyright_year current_year ebuilds files status test_dir= value __
+
 	check_commit_cleanup
-	readarray -t files < <(git status --porcelain | awk '/^[AM]/ { print substr($0, 4) }')
+	status=$(git status --porcelain)
+
+	# Check copyright year in ebuilds.
+	#
+	# Ignore pure renames.
+
+	readarray -t files < <(printf '%s' "${status}" --find-renames="100%" | \
+			gawk 'match($0, /^[ACMT]. (.* -> )?(.*\.ebuild)$/, a) { print a[2] }')
+	printf -v current_year '%(%Y)T'
+
+	for f in "${files[@]}"; do
+		copyright_year=$(git show ":./$f" | gawk 'match($0,
+				/^# Copyright ([[:digit:]]+-)?([[:digit:]]+) /, a) { print a[2]; exit }')
+		[[ ${copyright_year} != "${current_year}" ]] && \
+			die "Copyright year of '$f' is invalid: ${copyright_year}"
+	done
+
+	# Following tests are worktree based.
+	#
+	# The first step is to get the common prefix.-
+
+	readarray -t files < <(printf '%s' "${status}" | \
+			gawk 'match($0, /^[ACDMRT]. (.* -> )?(.*)/, a) { print a[2] }')
 
 	if [[ ${#files[@]} -gt 0 ]]; then
 		get_common_prefix_multi "${files[@]}"
@@ -67,34 +100,65 @@ function main {
 				test_dir="${*:1:2}"
 			fi
 
-			readarray -t ebuilds < <(find "${test_dir:-.}" -name '*.ebuild' -exec grep -Ple \
-					"KEYWORDS=.*[ \"'=][[:lower:]][[:alnum:]-]+" -- '{}' +)
+			# We can't allow unindexed modifications in "${test_dir}" because tests will affect it.
+			#
+			# The "not all files deleted yet worktree directory doesn't exist" test below might be
+			# shadowed because of this but we'll still keep it anyway for the sake of consistency.
+			#
+			# Two tests also make it more reliable.
 
-			if [[ ${#ebuilds[@]} -gt 0 ]]; then
-				echo "The following ebuilds have stable keywords: "
-				printf '%s\n' "${ebuilds[@]}"
-				return 1
+			readarray -t unindexed < <(git status --porcelain -- "${test_dir:-.}" | \
+					gawk '!/^. / && !/^\?\?.*\/$/ && !/^!!/')
+
+			if [[ ${#unindexed[@]} -gt 0 ]]; then
+				local IFS=$'\n' __
+				printf -v __ 'Unindexed modifications found: \n\n%s\n' "${unindexed[*]/#/  }"
+				die "$__"
 			fi
 
-			if [[ ${GIT_PRE_COMMIT_SKIP_REPOMAN-} != @(true|1) ]] && type -P repoman >/dev/null; then
-				echo Repoman:
-				echo "Set GIT_PRE_COMMIT_SKIP_REPOMAN to 'true' to disable."
-				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && repoman ) || return 1
-				echo
-			fi
+			# Test directory not existing means whole category or package was deleted.
+			#
+			# It can also be another non-category/non-package directory but its parent
+			# directory doesn't need to be tested for it.
 
-			if [[ ${GIT_PRE_COMMIT_SKIP_PKGCHECK_SCAN-} != @(true|1) ]] && type -P pkgcheck >/dev/null; then
-				local pkgcheck=(pkgcheck scan --exit=error)
+			if [[ -z ${test_dir} ]] || ! all_files_deleted "${test_dir}"; then
+				[[ -z ${test_dir} || -e ${test_dir} ]] || \
+					die "Not all files are deleted yet directory doesn't exist in worktree: ${test_dir}"
+				[[ -z ${test_dir} || -d ${test_dir} ]] || \
+					die "Unexpectedly not a directory: ${test_dir}"
 
-				if [[ -e helpers/profiles.mask ]]; then
-					readarray -t profiles < helpers/profiles.mask || return 1
-					IFS=, eval 'pkgcheck+=("--profiles=${profiles[*]/#/-}")'
+				readarray -t ebuilds < <(find "${test_dir:-.}" -name '*.ebuild' -exec grep -Ple \
+						"KEYWORDS=.*[ \"'=][[:lower:]][[:alnum:]-]+" -- '{}' +)
+
+				if [[ ${#ebuilds[@]} -gt 0 ]]; then
+					echo "The following ebuilds have stable keywords: "
+					printf '%s\n' "${ebuilds[@]}"
+					return 1
 				fi
 
-				echo "Pkgcheck scan:"
-				echo "Set GIT_PRE_COMMIT_SKIP_PKGCHECK_SCAN to 'true' to disable."
-				( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && call "${pkgcheck[@]}" ) || return 1
-				echo
+				if [[ ${GIT_PRE_COMMIT_SKIP_REPOMAN-} != @(true|1) ]] &&
+						type -P repoman >/dev/null; then
+					echo Repoman:
+					echo "Set GIT_PRE_COMMIT_SKIP_REPOMAN to 'true' to disable."
+					( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && repoman ) || return 1
+					echo
+				fi
+
+				if [[ ${GIT_PRE_COMMIT_SKIP_PKGCHECK_SCAN-} != @(true|1) ]] &&
+						type -P pkgcheck >/dev/null; then
+					local pkgcheck=(pkgcheck scan --exit=error)
+
+					if [[ -e helpers/profiles.mask ]]; then
+						readarray -t profiles < helpers/profiles.mask || return 1
+						IFS=, eval 'pkgcheck+=("--profiles=${profiles[*]/#/-}")'
+					fi
+
+					echo "Pkgcheck scan:"
+					echo "Set GIT_PRE_COMMIT_SKIP_PKGCHECK_SCAN to 'true' to disable."
+					( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && call "${pkgcheck[@]}" ) || \
+						return 1
+					echo
+				fi
 			fi
 		fi
 	fi
