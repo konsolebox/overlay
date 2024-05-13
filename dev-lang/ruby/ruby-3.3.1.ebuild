@@ -18,7 +18,7 @@ SRC_URI="https://cache.ruby-lang.org/pub/ruby/${SLOT}/${MY_P}.tar.xz"
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
-IUSE="berkdb debug doc examples gdbm ipv6 jemalloc jit socks5 +ssl static-libs systemtap tk valgrind xemacs"
+IUSE="berkdb debug doc examples gdbm jemalloc jit socks5 +ssl static-libs systemtap tk valgrind xemacs"
 
 RDEPEND="
 	berkdb? ( sys-libs/db:= )
@@ -29,56 +29,55 @@ RDEPEND="
 		dev-libs/openssl:0=
 	)
 	socks5? ( >=net-proxy/dante-1.1.13 )
-	systemtap? ( || ( dev-util/systemtap dev-debug/systemtap ) )
+	systemtap? ( dev-debug/systemtap )
 	tk? (
 		dev-lang/tcl:0=[threads]
 		dev-lang/tk:0=[threads]
 	)
 	dev-libs/libyaml
 	dev-libs/libffi:=
-	sys-libs/readline:0=
 	sys-libs/zlib
 	virtual/libcrypt:=
-	>=app-eselect/eselect-ruby-20231008
+	>=app-eselect/eselect-ruby-20231226
 "
 
 DEPEND="
 	${RDEPEND}
-	valgrind? ( || ( dev-util/valgrind dev-debug/valgrind ) )
+	valgrind? ( dev-debug/valgrind )
 "
 
 BUNDLED_GEMS="
-	>=dev-ruby/debug-1.7.1[ruby_targets_ruby32(-)]
-	>=dev-ruby/irb-1.6.2[ruby_targets_ruby32(-)]
-	>=dev-ruby/matrix-0.4.2[ruby_targets_ruby32(-)]
-	>=dev-ruby/minitest-5.16.3[ruby_targets_ruby32(-)]
-	>=dev-ruby/net-ftp-0.2.0[ruby_targets_ruby32(-)]
-	>=dev-ruby/net-imap-0.3.4[ruby_targets_ruby32(-)]
-	>=dev-ruby/net-pop-0.1.2[ruby_targets_ruby32(-)]
-	>=dev-ruby/net-smtp-0.3.3[ruby_targets_ruby32(-)]
-	>=dev-ruby/power_assert-2.0.3[ruby_targets_ruby32(-)]
-	>=dev-ruby/prime-0.1.2[ruby_targets_ruby32(-)]
-	>=dev-ruby/rake-13.0.6-r2[ruby_targets_ruby32(-)]
-	>=dev-ruby/rbs-2.8.2[ruby_targets_ruby32(-)]
-	>=dev-ruby/rexml-3.2.5[ruby_targets_ruby32(-)]
-	>=dev-ruby/rss-0.2.9[ruby_targets_ruby32(-)]
-	>=dev-ruby/test-unit-3.5.7[ruby_targets_ruby32(-)]
-	>=dev-ruby/typeprof-0.21.3[ruby_targets_ruby32(-)]
+	>=dev-ruby/debug-1.9.1[ruby_targets_ruby33(-)]
+	>=dev-ruby/irb-1.11.0[ruby_targets_ruby33(-)]
+	>=dev-ruby/matrix-0.4.2[ruby_targets_ruby33(-)]
+	>=dev-ruby/minitest-5.20.0[ruby_targets_ruby33(-)]
+	>=dev-ruby/net-ftp-0.3.3[ruby_targets_ruby33(-)]
+	>=dev-ruby/net-imap-0.4.9[ruby_targets_ruby33(-)]
+	>=dev-ruby/net-pop-0.1.2[ruby_targets_ruby33(-)]
+	>=dev-ruby/net-smtp-0.4.0[ruby_targets_ruby33(-)]
+	>=dev-ruby/power_assert-2.0.3[ruby_targets_ruby33(-)]
+	>=dev-ruby/prime-0.1.2[ruby_targets_ruby33(-)]
+	>=dev-ruby/racc-1.7.3[ruby_targets_ruby33(-)]
+	>=dev-ruby/rake-13.1.0[ruby_targets_ruby33(-)]
+	>=dev-ruby/rbs-3.4.0[ruby_targets_ruby33(-)]
+	>=dev-ruby/rexml-3.2.6[ruby_targets_ruby33(-)]
+	>=dev-ruby/rss-0.3.0[ruby_targets_ruby33(-)]
+	>=dev-ruby/test-unit-3.6.1[ruby_targets_ruby33(-)]
+	>=dev-ruby/typeprof-0.21.9[ruby_targets_ruby33(-)]
 "
 
 PDEPEND="
 	${BUNDLED_GEMS}
-	virtual/rubygems[ruby_targets_ruby32(-)]
-	>=dev-ruby/bundler-2.3.3[ruby_targets_ruby32(-)]
-	>=dev-ruby/did_you_mean-1.6.1[ruby_targets_ruby32(-)]
-	>=dev-ruby/json-2.6.1[ruby_targets_ruby32(-)]
-	>=dev-ruby/rdoc-6.3.3[ruby_targets_ruby32(-)]
+	virtual/rubygems[ruby_targets_ruby33(-)]
+	>=dev-ruby/bundler-2.5.3[ruby_targets_ruby33(-)]
+	>=dev-ruby/did_you_mean-1.6.3[ruby_targets_ruby33(-)]
+	>=dev-ruby/json-2.7.1[ruby_targets_ruby33(-)]
+	>=dev-ruby/rdoc-6.6.2[ruby_targets_ruby33(-)]
 	xemacs? ( app-xemacs/ruby-modes )
 "
 
 src_prepare() {
 	eapply "${FILESDIR}"/"${SLOT}"/010*.patch
-	eapply "${FILESDIR}"/"${SLOT}"/011*.patch
 	eapply "${FILESDIR}"/"${SLOT}"/902*.patch
 
 	if use elibc_musl ; then
@@ -91,13 +90,15 @@ src_prepare() {
 	# 539700.
 	rm -fr gems/* || die
 	touch gems/bundled_gems || die
-	# Don't install CLI tools since they will clash with the gem
-	rm -f bin/{racc,racc2y,y2racc} || die
-	sed -i -e '/executables/ s:^:#:' lib/racc/racc.gemspec || die
+
+	# Avoid the irb default gemspec since we will install the normal gem
+	# instead. This avoids a file collision with dev-ruby/irb.
+	rm lib/irb/irb.gemspec || die
 
 	# Remove tests that are known to fail or require a network connection
 	rm -f test/ruby/test_process.rb test/rubygems/test_gem{,_path_support}.rb || die
-	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
+	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb \
+	   spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
 
 	# Remove webrick tests because setting LD_LIBRARY_PATH does not work for them.
 	rm -rf tool/test/webrick || die
@@ -109,11 +110,12 @@ src_prepare() {
 	sed -i -e '/def blockdev/a@blockdev = nil' test/ruby/test_file_exhaustive.rb || die
 
 	# Avoid tests that require gem downloads
-	sed -i -e '/^test-syntax-suggest/ s/\$(TEST_RUNNABLE)/no/' common.mk || die
-	sed -i -e '/^check:/ s/\$(TEST_RUNNABLE)-\$(PREPARE_SYNTAX_SUGGEST) test-syntax-suggest//' common.mk || die
+	sed -e '/^\(test-syntax-suggest\|PREPARE_SYNTAX_SUGGEST\)/ s/\$(TEST_RUNNABLE)/no/' \
+		-i common.mk
 
 	# Avoid test that fails intermittently
-	sed -i -e '/test_gem_exec_gem_uninstall/aomit "Fails intermittently"' test/rubygems/test_gem_commands_exec_command.rb || die
+	sed -e '/test_gem_exec_gem_uninstall/aomit "Fails intermittently"' \
+		-i test/rubygems/test_gem_commands_exec_command.rb || die
 
 	if use prefix ; then
 		# Fix hardcoded SHELL var in mkmf library
@@ -173,9 +175,6 @@ src_configure() {
 		append-flags "-DGC_MALLOC_LIMIT=${RUBY_GC_MALLOC_LIMIT}"
 	fi
 
-	# ipv6 hack, bug 168939. Needs --enable-ipv6.
-	use ipv6 || myconf="${myconf} --with-lookup-order-hack=INET"
-
 	# Determine which modules *not* to build depending in the USE flags.
 	if ! use berkdb ; then
 		modules="${modules},dbm"
@@ -196,7 +195,6 @@ src_configure() {
 	INSTALL="${EPREFIX}/usr/bin/install -c" LIBPATHENV="" econf \
 		--program-suffix=${MY_SUFFIX} \
 		--with-soname=ruby${MY_SUFFIX} \
-		--with-readline-dir="${EPREFIX}"/usr \
 		--enable-shared \
 		--enable-pthread \
 		--disable-rpath \
@@ -210,7 +208,6 @@ src_configure() {
 		$(use_enable socks5 socks) \
 		$(use_enable systemtap dtrace) \
 		$(use_enable doc install-doc) \
-		--enable-ipv6 \
 		$(use_enable static-libs static) \
 		$(use_enable static-libs install-static-library) \
 		$(use_with static-libs static-linked-ext) \
