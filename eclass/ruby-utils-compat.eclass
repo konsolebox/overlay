@@ -5,7 +5,7 @@ if declare -pf _ruby_implementation_depend &>/dev/null; then
 		local rubypn= rubyslot=
 
 		case $1 in
-		ruby1[89]|ruby2[0-7]|ruby3[0-2])
+		ruby1[89]|ruby2[0-7]|ruby3[0-3])
 			rubypn="dev-lang/ruby"
 			rubyslot=":${1:4:1}.${1:5}"
 			;;
