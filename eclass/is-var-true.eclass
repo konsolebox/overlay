@@ -6,7 +6,8 @@
 # konsolebox <konsolebox@gmail.com>
 # @AUTHOR:
 # konsolebox <konsolebox@gmail.com>
-# @SUPPORTED_EAPIS: *
+# @SUPPORTED_EAPIS: 5 6 7 8
+# @BLURB: Provides is_var_true()
 # @DESCRIPTION:
 # This eclass provides is_var_true().
 
