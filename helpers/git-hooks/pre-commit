@@ -66,13 +66,11 @@ function main {
 	local copyright_year current_year ebuilds files status test_dir= value __
 
 	check_commit_cleanup
-	status=$(git status --porcelain)
+	status=$(git status --porcelain --find-renames="100%")
 
-	# Check copyright year in ebuilds.
-	#
-	# Ignore pure renames.
+	# Check copyright year in ebuilds; ignore pure renames.
 
-	readarray -t files < <(printf '%s' "${status}" --find-renames="100%" | \
+	readarray -t files < <(printf '%s' "${status}" | \
 			gawk 'match($0, /^[ACMT]. (.* -> )?(.*\.ebuild)$/, a) { print a[2] }')
 	printf -v current_year '%(%Y)T'
 
@@ -85,7 +83,7 @@ function main {
 
 	# Following tests are worktree based.
 	#
-	# The first step is to get the common prefix.-
+	# The first step is to get the common prefix.
 
 	readarray -t files < <(printf '%s' "${status}" | \
 			gawk 'match($0, /^[ACDMRT]. (.* -> )?(.*)/, a) { print a[2] }')
