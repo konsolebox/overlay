@@ -7,13 +7,14 @@
 # @AUTHOR:
 # konsolebox <konsolebox@gmail.com>
 # @SUPPORTED_EAPIS: 5 6 7 8
+# @BLURB: Rubyexec-based installation helper
 # @DESCRIPTION:
 # This eclass provides helper functions for installing gem binaries
 # with rubyexec as their ruby implementation selector.
 
 [[ ${EAPI} == [5678] ]] || die "EAPI needs to be 5, 6, 7 or 8."
 
-inherit is-var-true
+inherit is-var-true ruby-fakegem
 
 # @ECLASS_VARIABLE: RUBYEXEC_SKIP_RUBYEXEC_IF_ONE_IMPL
 # @DESCRIPTION:
@@ -39,6 +40,7 @@ _rubyexec-all_files_the_same() {
 }
 
 # @FUNCTION: _rubyexec-priority_sort_impls
+# @USAGE: <impl> ...
 # @DESCRIPTION:
 # Prioritizes newer ruby?? implementations
 # @INTERNAL
@@ -52,7 +54,7 @@ _rubyexec-priority_sort_impls() {
 			for i in "${!_sorted_impls[@]}"; do
 				if [[ ${_sorted_impls[i]} != ruby[0-9][0-9] ||
 						${impl} > "${_sorted_impls[i]}" ]]; then
-					_sorted_impls=("${impl}" "${_sorted_impls[@]}")
+					_sorted_impls=("${_sorted_impls[@]:0:i}" "${impl}" "${_sorted_impls[@]:i}")
 					continue 2
 				fi
 			done
@@ -65,9 +67,13 @@ _rubyexec-priority_sort_impls() {
 # @FUNCTION: rubyexec-install_fakegem_binaries
 # @DESCRIPTION:
 # This either copies raw binary files to /usr/bin with their #! header
-# modified or use ruby_fakegem_binwrapper to create a wrapper binary and
-# modify that binary's header depending on whether all versions of raw
-# binaries are the same or not.
+# modified or create a wrapper similar to the ones created by
+# ruby_fakegem_binwrapper depending on whether the binaries are similar
+# or not.
+#
+# Rubyexec may also be skipped if there's only one effective
+# implementationand and RUBYEXEC_SKIP_RUBYEXEC_IF_ONE_IMPL is set to
+# "true'.
 #
 # The all_fakegem_install function still has to be called before or
 # after calling this function and RUBY_FAKEGEM_BINWRAP needs to be set
@@ -150,8 +156,6 @@ ${new_header}
 
 load RbConfig::CONFIG['sitelibdir'].gsub('site_ruby', 'gems') + "/${relative_bindir}/${gem_base}"
 EOF
-
-			ruby_fakegem_binwrapper "${gem_base}"
 		fi
 
 		exeinto /usr/bin
