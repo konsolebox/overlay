@@ -1,4 +1,4 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -7,7 +7,7 @@ inherit autotools
 MY_P=CEGUI-${PV%b}
 DESCRIPTION="Crazy Eddie's GUI System"
 HOMEPAGE="http://www.cegui.org.uk/"
-SRC_URI="mirror://sourceforge/crayzedsgui/${MY_P}b.tar.gz"
+SRC_URI="https://downloads.sourceforge.net/crayzedsgui/CEGUI%20Mk-2/0.6.2/CEGUI-0.6.2b.tar.gz"
 
 LICENSE="MIT"
 SLOT="0"
