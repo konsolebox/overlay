@@ -1,0 +1,15 @@
+diff --git a/modules/pam_pwhistory/opasswd.c b/modules/pam_pwhistory/opasswd.c
+index 859b3da..7fbdc0a 100644
+--- a/modules/pam_pwhistory/opasswd.c
++++ b/modules/pam_pwhistory/opasswd.c
+@@ -128,9 +128,9 @@ static int
+ compare_password(const char *newpass, const char *oldpass)
+ {
+   char *outval;
++  int retval;
+ #ifdef HAVE_CRYPT_R
+   struct crypt_data output;
+-  int retval;
+ 
+   output.initialized = 0;
+ 

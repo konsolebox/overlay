@@ -1,4 +1,4 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -47,6 +47,7 @@ PDEPEND=">=sys-auth/pambase-20200616"
 
 PATCHES=(
 	"${FILESDIR}/${PN}-1.5.3-termios.patch"
+	"${FILESDIR}/${PN}-1.5.3-retval-fix.patch"
 )
 
 src_prepare() {
