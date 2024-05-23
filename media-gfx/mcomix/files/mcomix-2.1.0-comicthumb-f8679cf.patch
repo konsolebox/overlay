@@ -1,3 +1,5 @@
+Reference: https://github.com/multiSnow/mcomix3/blob/f8679cf1b14104557ac7ad5135e603ddb8b379a5/mcomix/comicthumb.py
+
 diff --git a/mime/comicthumb b/mime/comicthumb
 index c30e208..7175af8 100755
 --- a/mime/comicthumb
