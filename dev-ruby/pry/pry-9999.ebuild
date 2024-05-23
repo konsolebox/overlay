@@ -9,8 +9,9 @@ RUBY_FAKEGEM_RECIPE_DOC="yard"
 RUBY_FAKEGEM_RECIPE_TEST="rspec3"
 RUBY_FAKEGEM_EXTRADOC="README.md CHANGELOG.md"
 RUBY_FAKEGEM_GEMSPEC=${PN}.gemspec
+IUSE="rubyexec"
 
-inherit ruby-fakegem-compat
+inherit ruby-fakegem-compat rubyexec
 
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
@@ -26,7 +27,6 @@ fi
 DESCRIPTION="Pry is a powerful alternative to the standard IRB shell for Ruby"
 HOMEPAGE="https://github.com/pry/pry/wiki"
 LICENSE="MIT"
-IUSE=
 SLOT=0
 
 ruby_add_rdepend "
@@ -54,4 +54,13 @@ all_ruby_prepare() {
 	if [[ ${PV} == *9999* ]]; then
 		sed -i "s|VERSION.*|VERSION = '${PV}'.freeze|" lib/pry/version.rb || die
 	fi
+}
+
+all_ruby_install() {
+	if use rubyexec; then
+		rubyexec-install_fakegem_binaries
+		RUBY_FAKEGEM_BINWRAP=
+	fi
+
+	all_fakegem_install
 }
