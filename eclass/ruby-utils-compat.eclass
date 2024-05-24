@@ -1,3 +1,15 @@
+# Copyright 1999-2024 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# @ECLASS: ruby-utils-compat.eclass
+# @MAINTAINER:
+# konsolebox <konsolebox@gmail.com>
+# @AUTHOR:
+# konsolebox <konsolebox@gmail.com>
+# @SUPPORTED_EAPIS: 5 6 7 8
+# @PROVIDES: ruby-utils
+# @BLURB: Modifies _ruby_implementation_depend so it allows old Rubies
+
 inherit ruby-utils
 
 if declare -pf _ruby_implementation_depend &>/dev/null; then
