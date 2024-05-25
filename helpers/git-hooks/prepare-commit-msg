@@ -26,8 +26,11 @@ function is_message {
 }
 
 function main {
-	local commit_msg_file=$1 common_prefix content contents_changed=false files_to_commit \
-			first_message_index= has_multiple_first_message_lines=false prefix= warning temp i __
+	local commit_msg_file=$1 type=$2 object_id=$3 common_prefix content contents_changed=false \
+			files_to_commit first_message_index= has_multiple_first_message_lines=false prefix= \
+			warning temp i __
+
+	[[ ${type} == merge || ${type} == commit && ${object_id} ]] && return
 
 	local PREFIX_PATTERN='+([![:blank:]]):*'
 
