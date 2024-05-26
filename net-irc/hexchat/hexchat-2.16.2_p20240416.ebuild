@@ -4,7 +4,7 @@
 EAPI=7
 
 LUA_COMPAT=( lua5-{1..5} luajit )
-PYTHON_COMPAT=( python3_{10..12} )
+PYTHON_COMPAT=( python3_{10..13} )
 
 inherit lua-single meson mono-env python-single-r1 xdg
 
@@ -22,8 +22,8 @@ S=${WORKDIR}/${MY_P}
 
 LICENSE="GPL-2 plugin-fishlim? ( MIT )"
 SLOT="0"
-IUSE="dbus debug konsolebox +gtk libcanberra lua perl plugin-checksum plugin-fishlim plugin-sysinfo python ssl theme-manager"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~ppc ~ppc64 ~riscv ~sparc ~x86"
+IUSE="dbus debug konsolebox +gtk libcanberra lua perl plugin-checksum plugin-fishlim plugin-sysinfo python ssl theme-manager"
 REQUIRED_USE="konsolebox
 	lua? ( ${LUA_REQUIRED_USE} )
 	plugin-fishlim? ( ssl )

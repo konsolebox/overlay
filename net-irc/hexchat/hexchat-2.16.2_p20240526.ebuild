@@ -6,18 +6,26 @@ EAPI=7
 LUA_COMPAT=( lua5-{1..5} luajit )
 PYTHON_COMPAT=( python3_{10..13} )
 
-inherit git-r3 lua-single meson mono-env python-single-r1 xdg
+inherit lua-single meson mono-env python-single-r1 xdg
 
 DESCRIPTION="Graphical IRC client based on XChat"
 HOMEPAGE="https://hexchat.github.io/"
 
-SRC_URI="" # Empty SRC_URI so mono-env doesn't break the live ebuild
-EGIT_REPO_URI="https://github.com/${PN}/${PN}.git"
+MY_P=${P%_*} MY_PV=${PV%_*}
+BASE_COMMIT="c7e241d1de35b05cef931e1981403d8f5c11a9d3"
+PATCH_COMMIT="5ba3131fcd4afb625933c3f1d03ec56ffc0388d0"
+PATCH_FILENAME="${MY_P}-konsolebox-${PV#*_p}-${PATCH_COMMIT:0:8}.patch"
+SRC_URI="https://github.com/${PN}/${PN}/releases/download/v${MY_PV}/${MY_P}.tar.xz
+	https://github.com/konsolebox/hexchat/compare/${BASE_COMMIT}...${PATCH_COMMIT}.patch -> ${PATCH_FILENAME}"
+PATCHES=("${DISTDIR}/${PATCH_FILENAME}")
+S=${WORKDIR}/${MY_P}
 
 LICENSE="GPL-2 plugin-fishlim? ( MIT )"
 SLOT="0"
-IUSE="dbus debug +gtk konsolebox libcanberra lua perl plugin-checksum plugin-fishlim plugin-sysinfo python ssl theme-manager"
-REQUIRED_USE="lua? ( ${LUA_REQUIRED_USE} )
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~ppc ~ppc64 ~riscv ~sparc ~x86"
+IUSE="dbus debug konsolebox +gtk libcanberra lua perl plugin-checksum plugin-fishlim plugin-sysinfo python ssl theme-manager"
+REQUIRED_USE="konsolebox
+	lua? ( ${LUA_REQUIRED_USE} )
 	plugin-fishlim? ( ssl )
 	python? ( ${PYTHON_REQUIRED_USE} )"
 
@@ -67,11 +75,6 @@ pkg_setup() {
 		mono-env_pkg_setup
 		export XDG_CACHE_HOME="${T}/.cache"
 	fi
-}
-
-src_unpack() {
-	use konsolebox && EGIT_REPO_URI="https://github.com/konsolebox/${PN}.git"
-	git-r3_src_unpack
 }
 
 src_configure() {
