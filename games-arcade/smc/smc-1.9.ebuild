@@ -49,5 +49,6 @@ src_install() {
 	make_desktop_entry "${PN}" "Secret Maryo Chronicles"
 	doman makefiles/unix/man/smc.6
 	dodoc docs/*.txt
-	dohtml docs/{*.css,*.html}
+	docinto html
+	dodoc docs/*.{css,html}
 }
