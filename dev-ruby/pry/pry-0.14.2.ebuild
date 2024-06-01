@@ -9,7 +9,7 @@ RUBY_FAKEGEM_RECIPE_DOC="yard"
 RUBY_FAKEGEM_RECIPE_TEST="rspec3"
 RUBY_FAKEGEM_EXTRADOC="README.md CHANGELOG.md"
 RUBY_FAKEGEM_GEMSPEC=${PN}.gemspec
-IUSE="rubyexec"
+IUSE="rubyexec test"
 
 inherit ruby-fakegem-compat rubyexec
 
