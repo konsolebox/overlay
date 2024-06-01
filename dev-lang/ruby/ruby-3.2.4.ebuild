@@ -95,6 +95,10 @@ src_prepare() {
 	rm -f bin/{racc,racc2y,y2racc} || die
 	sed -i -e '/executables/ s:^:#:' lib/racc/racc.gemspec || die
 
+	# Remove all irb-related files.
+	rm -fr benchmark/irb_color.yml benchmark/irb_exec.yml doc/irb* libexec/irb lib/irb* man/irb.1 \
+		spec/ruby/core/binding/fixtures/irb* spec/ruby/core/binding/irb_spec.rb test/irb || die
+
 	# Remove tests that are known to fail or require a network connection
 	rm -f test/ruby/test_process.rb test/rubygems/test_gem{,_path_support}.rb || die
 	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb \

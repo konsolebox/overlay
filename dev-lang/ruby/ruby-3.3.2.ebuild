@@ -91,14 +91,14 @@ src_prepare() {
 	rm -fr gems/* || die
 	touch gems/bundled_gems || die
 
-	# Avoid the irb default gemspec since we will install the normal gem
-	# instead. This avoids a file collision with dev-ruby/irb.
-	rm lib/irb/irb.gemspec || die
+	# Remove all irb-related files.
+	rm -fr benchmark/irb_color.yml benchmark/irb_exec.yml doc/irb* libexec/irb lib/irb* man/irb.1 \
+		spec/ruby/core/binding/fixtures/irb* spec/ruby/core/binding/irb_spec.rb test/irb || die
 
 	# Remove tests that are known to fail or require a network connection
 	rm -f test/ruby/test_process.rb test/rubygems/test_gem{,_path_support}.rb || die
 	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb \
-	   spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
+		spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
 
 	# Remove webrick tests because setting LD_LIBRARY_PATH does not work for them.
 	rm -rf tool/test/webrick || die

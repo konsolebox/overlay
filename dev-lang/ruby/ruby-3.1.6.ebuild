@@ -87,11 +87,15 @@ src_prepare() {
 	rm -f bin/{racc,racc2y,y2racc} || die
 	sed -i -e '/executables/ s:^:#:' lib/racc/racc.gemspec || die
 
+	# Remove all irb-related files.
+	rm -fr benchmark/irb_color.yml benchmark/irb_exec.yml doc/irb* libexec/irb lib/irb* man/irb.1 \
+		spec/ruby/core/binding/fixtures/irb* spec/ruby/core/binding/irb_spec.rb test/irb || die
+
 	einfo "Removing bundled libraries..."
 	rm -fr ext/fiddle/libffi-3.2.1 || die
 
 	# Remove webrick tests because setting LD_LIBRARY_PATH does not work for them.
-	rm -rf tool/test/webrick || die
+	# rm -rf tool/test/webrick || die
 
 	# Remove tests that are known to fail or require a network connection
 	rm -f test/ruby/test_process.rb test/rubygems/test_gem{,_path_support}.rb || die
@@ -101,6 +105,11 @@ src_prepare() {
 
 	# MJIT is broken and removed in later ruby versions.
 	rm -f test/ruby/test_jit.rb || die
+
+	# This test calls out to the system ruby which is not being tested
+	# and may not be the same version.
+	sed -e '/test_without_tty/aomit "Calls system ruby"' \
+		-i test/readline/test_readline.rb || die
 
 	if use prefix ; then
 		# Fix hardcoded SHELL var in mkmf library
