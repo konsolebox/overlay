@@ -22,6 +22,8 @@ LICENSE="GPL-3"
 SLOT="0"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
+PATCHES=("${FILESDIR}/${PN}-4.1.0-remove-autostart-enabler.patch")
+
 RDEPEND="${PYTHON_DEPS}
 	$(python_gen_cond_dep '>=dev-python/dbus-python-1.2.18[${PYTHON_USEDEP}]
 			>=dev-python/manimpango-0.4.3[${PYTHON_USEDEP}]
@@ -36,4 +38,5 @@ src_install() {
 	meson_src_install
 	python_fix_shebang "${ED}/usr/bin/emote"
 	rm -f "${ED}/usr/share/emote/static/"{com.tomjwatson.Emote.desktop,meson.build,prepare-launch} || die
+	dosym ../../usr/share/applications/com.tomjwatson.Emote.desktop /etc/autostart/com.tomjwatson.Emote.desktop
 }
