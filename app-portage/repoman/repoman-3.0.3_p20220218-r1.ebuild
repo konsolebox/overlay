@@ -1,18 +1,21 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
-PYTHON_COMPAT=( python3_{8..11} pypy3 )
+PYTHON_COMPAT=( python3_{8..12} )
 PYTHON_REQ_USE='bzip2(+)'
 
 inherit distutils-r1
 
 if [[ ${PV} == *9999 ]]; then
 	inherit git-r3
-	EGIT_REPO_URI="https://anongit.gentoo.org/git/proj/portage.git"
+	EGIT_REPO_URI="https://github.com/gentoo/portage.git"
+	S=${WORKDIR}/${P}/repoman
 else
-	SRC_URI="https://dev.gentoo.org/~zmedico/portage/archives/${P}.tar.bz2"
+	COMMIT=b88611567dc9345e6e09de32dc4bafe69719bc9c
+	SRC_URI="https://github.com/gentoo/portage/archive/${COMMIT}.tar.gz -> ${P}-${COMMIT:0:8}.tar.gz"
+	S=${WORKDIR}/portage-${COMMIT}/repoman
 	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 fi
 
@@ -29,6 +32,11 @@ RDEPEND="
 	dev-python/pyyaml[${PYTHON_USEDEP}]
 "
 DEPEND="${RDEPEND}"
+
+python_prepare_all() {
+	eapply -p2 "${FILESDIR}/${P}-shlex-split.patch"
+	distutils-r1_python_prepare_all
+}
 
 python_test() {
 	unset REPOMAN_DEFAULT_OPTS

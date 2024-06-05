@@ -1,0 +1,102 @@
+diff --git a/repoman/lib/repoman/_subprocess.py b/repoman/lib/repoman/_subprocess.py
+index 08ee9e748..14ca1bf03 100644
+--- a/repoman/lib/repoman/_subprocess.py
++++ b/repoman/lib/repoman/_subprocess.py
+@@ -2,6 +2,7 @@
+ 
+ 
+ import codecs
++import shlex
+ import subprocess
+ 
+ # import our initialized portage instance
+@@ -14,7 +15,7 @@ def repoman_getstatusoutput(cmd):
+     Implements an interface similar to getstatusoutput(), but with
+     customized unicode handling (see bug #310789) and without the shell.
+     """
+-    args = portage.util.shlex_split(cmd)
++    args = shlex.split(cmd)
+ 
+     encoding = _encodings["fs"]
+     args = [_unicode_encode(x, encoding=encoding, errors="strict") for x in args]
+@@ -37,7 +38,7 @@ class repoman_popen(portage.proxy.objectproxy.ObjectProxy):
+     __slots__ = ("_proc", "_stdout")
+ 
+     def __init__(self, cmd):
+-        args = portage.util.shlex_split(cmd)
++        args = shlex.split(cmd)
+ 
+         encoding = _encodings["fs"]
+         args = [_unicode_encode(x, encoding=encoding, errors="strict") for x in args]
+diff --git a/repoman/lib/repoman/argparser.py b/repoman/lib/repoman/argparser.py
+index 019c7381b..bd4bd91e4 100644
+--- a/repoman/lib/repoman/argparser.py
++++ b/repoman/lib/repoman/argparser.py
+@@ -6,6 +6,7 @@
+ 
+ import argparse
+ import logging
++import shlex
+ 
+ # import our initialized portage instance
+ from repoman._portage import portage
+@@ -340,7 +341,7 @@ def parse_args(argv, repoman_default_opts):
+     opts = parser.parse_args(argv[1:])
+ 
+     if not opts.ignore_default_opts:
+-        default_opts = util.shlex_split(repoman_default_opts)
++        default_opts = shlex.split(repoman_default_opts)
+         if default_opts:
+             opts = parser.parse_args(default_opts + argv[1:])
+ 
+diff --git a/repoman/lib/repoman/gpg.py b/repoman/lib/repoman/gpg.py
+index 10e884e52..5aca59dd5 100644
+--- a/repoman/lib/repoman/gpg.py
++++ b/repoman/lib/repoman/gpg.py
+@@ -2,6 +2,7 @@
+ 
+ import errno
+ import logging
++import shlex
+ import subprocess
+ 
+ import portage
+@@ -46,7 +47,7 @@ def gpgsign(filename, repoman_settings, options):
+         print("(" + gpgcmd + ")")
+     else:
+         # Encode unicode manually for bug #310789.
+-        gpgcmd = portage.util.shlex_split(gpgcmd)
++        gpgcmd = shlex.split(gpgcmd)
+ 
+         gpgcmd = [
+             _unicode_encode(arg, encoding=_encodings["fs"], errors="strict")
+diff --git a/repoman/lib/repoman/utilities.py b/repoman/lib/repoman/utilities.py
+index 6c5414470..4bb409248 100644
+--- a/repoman/lib/repoman/utilities.py
++++ b/repoman/lib/repoman/utilities.py
+@@ -27,6 +27,7 @@ import time
+ import textwrap
+ import difflib
+ import tempfile
++import shlex
+ 
+ # import our initialized portage instance
+ from repoman._portage import portage
+@@ -159,7 +160,7 @@ def editor_is_executable(editor):
+     @rtype: bool
+     @return: True if an executable is found, False otherwise.
+     """
+-    editor_split = util.shlex_split(editor)
++    editor_split = shlex.split(editor)
+     if not editor_split:
+         return False
+     filename = editor_split[0]
+@@ -281,7 +282,7 @@ def FindPortdir(settings):
+     if location[-1] != "/":
+         location += "/"
+ 
+-    for overlay in portage.util.shlex_split(settings["PORTDIR_OVERLAY"]):
++    for overlay in shlex.split(settings["PORTDIR_OVERLAY"]):
+         overlay = os.path.realpath(overlay)
+         try:
+             s = os.stat(overlay)
