@@ -3,7 +3,7 @@
 
 EAPI=6
 
-inherit eutils systemd user git-r3 autotools
+inherit autotools git-r3 systemd user
 
 DESCRIPTION="A tool for securing communications between a client and a DNS resolver"
 HOMEPAGE="http://dnscrypt.org/"
