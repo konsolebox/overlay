@@ -1,11 +1,11 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
 KONSOLEBOX_SCRIPTS_EXT=rb
-KONSOLEBOX_SCRIPTS_COMMIT=477a405477544fbfa71cb7289e08e335431024e6
-KONSOLEBOX_SCRIPTS_RUBY_SINGLE_TARGETS=(ruby2{6..7} ruby3{0..2})
+KONSOLEBOX_SCRIPTS_COMMIT=5bdce57de386c47906d528ea58b53a35fb41e7a6
+KONSOLEBOX_SCRIPTS_RUBY_SINGLE_TARGETS=(ruby2{2..7} ruby3{0..4})
 KONSOLEBOX_SCRIPTS_RUBY_DEPENDENCIES=(digest-kangarootwelve)
 
 inherit konsolebox-scripts

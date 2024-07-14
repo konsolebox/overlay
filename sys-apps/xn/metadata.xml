@@ -14,6 +14,8 @@
 		<flag name="ruby_single_target_ruby30">Use Ruby 3.0 as runtime</flag>
 		<flag name="ruby_single_target_ruby31">Use Ruby 3.1 as runtime</flag>
 		<flag name="ruby_single_target_ruby32">Use Ruby 3.2 as runtime</flag>
+		<flag name="ruby_single_target_ruby33">Use Ruby 3.3 as runtime</flag>
+		<flag name="ruby_single_target_ruby34">Use Ruby 3.4 as runtime</flag>
 	</use>
 	<upstream>
 		<remote-id type="github">konsolebox/scripts</remote-id>
