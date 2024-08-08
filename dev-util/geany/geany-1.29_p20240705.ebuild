@@ -17,7 +17,7 @@ KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~riscv 
 IUSE="doc konsolebox +vte"
 REQUIRED_USE="konsolebox"
 
-COMMIT=c8c6e1d9149deb01a57437b3fbec25457feb8565
+COMMIT=7ad2d2aeb04b70b9b92694f345ad407703f0a41c
 LEXILLA_VERSION=5.3.1
 LEXILLA_TAG=rel-${LEXILLA_VERSION//./-}
 SRC_URI="https://github.com/konsolebox/geany/archive/${COMMIT}.tar.gz -> ${P%_*}-konsolebox-${PV#*_p}-${COMMIT:0:8}.tar.gz
