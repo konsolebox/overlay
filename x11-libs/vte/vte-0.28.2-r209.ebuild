@@ -1,7 +1,7 @@
 # Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="6"
+EAPI="7"
 
 inherit gnome2 flag-o-matic
 
@@ -25,7 +25,7 @@ RDEPEND="
 	introspection? ( >=dev-libs/gobject-introspection-0.9.0:= )
 "
 DEPEND="${RDEPEND}
-	|| ( dev-util/gtk-doc-am dev-build/gtk-doc-am )
+	dev-build/gtk-doc-am
 	>=dev-util/intltool-0.35
 	virtual/pkgconfig
 	sys-devel/gettext
@@ -75,5 +75,5 @@ src_configure() {
 src_install() {
 	gnome2_src_install
 
-	rm -v "${ED}usr/libexec/gnome-pty-helper" || die
+	rm -v "${ED}/usr/libexec/gnome-pty-helper" || die
 }
