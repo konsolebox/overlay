@@ -25,6 +25,7 @@ HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Portage"
 LICENSE="GPL-2"
 SLOT="0"
 IUSE=""
+RESTRICT="mirror"
 
 RDEPEND="
 	>=sys-apps/portage-3.0.18[${PYTHON_USEDEP}]
