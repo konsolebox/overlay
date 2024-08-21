@@ -57,6 +57,7 @@ _konsolebox-scripts_set_globals() {
 
 	HOMEPAGE="https://github.com/konsolebox/scripts"
 	SLOT=${SLOT-0}
+	RESTRICT="mirror"
 
 	if [[ ${KONSOLEBOX_SCRIPTS_EXT} == rb ]]; then
 		local deps impl_dep target valid_flags=
