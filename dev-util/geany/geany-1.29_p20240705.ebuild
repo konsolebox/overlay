@@ -22,6 +22,7 @@ LEXILLA_VERSION=5.3.1
 LEXILLA_TAG=rel-${LEXILLA_VERSION//./-}
 SRC_URI="https://github.com/konsolebox/geany/archive/${COMMIT}.tar.gz -> ${P%_*}-konsolebox-${PV#*_p}-${COMMIT:0:8}.tar.gz
 	https://github.com/ScintillaOrg/lexilla/archive/refs/tags/${LEXILLA_TAG}.tar.gz -> lexilla-${LEXILLA_VERSION}.tar.gz"
+RESTRICT="mirror"
 
 RDEPEND=">=dev-libs/glib-2.28:2
 	>=x11-libs/gtk+-2.24:2
