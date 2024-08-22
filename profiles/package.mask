@@ -31,3 +31,6 @@ net-irc/znc
 
 # Mask by default
 x11-misc/notification-daemon
+
+# Mask by default
+media-video/pipewire
