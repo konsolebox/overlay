@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>konsolebox@gmail.com</email>
+		<name>konsolebox</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">niizam/vantage</remote-id>
+		<bugs-to>https://github.com/niizam/vantage/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
