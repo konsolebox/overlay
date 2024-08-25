@@ -1,4 +1,4 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -6,45 +6,48 @@ EAPI=7
 PLOCALES="ar bg ca cs da de el en en_US eo es fa fi fr he hi hr hu it ja ko lt ml nb_NO nl or pa pl pt_BR pt_PT rm ro ru sk sl sr_RS@cyrillic sr_RS@latin sv te th tr uk wa zh_CN zh_TW"
 PLOCALE_BACKUP="en"
 
-inherit autotools estack flag-o-matic multilib-minimal pax-utils plocale toolchain-funcs xdg-utils wrapper
+inherit autotools estack flag-o-matic multilib-minimal pax-utils plocale toolchain-funcs wrapper xdg-utils
+
+DESCRIPTION="Free implementation of Windows(tm) on Unix, with Gallium Nine patchset"
+HOMEPAGE="https://www.winehq.org/"
 
 MY_PN="${PN%%-*}"
 MY_P="${MY_PN}-${PV}"
 
-if [[ ${PV} == "9999" ]] ; then
+if [[ ${PV} == 9999 ]] ; then
 	EGIT_REPO_URI="https://source.winehq.org/git/wine.git"
 	EGIT_BRANCH="master"
 	inherit git-r3
-	SRC_URI=""
-	#KEYWORDS=""
 else
 	MAJOR_V=$(ver_cut 1)
 	SRC_URI="https://dl.winehq.org/wine/source/${MAJOR_V}.x/${MY_P}.tar.xz"
 	KEYWORDS="-* ~amd64 ~x86"
 fi
-S="${WORKDIR}/${MY_P}"
 
 D3D9_P="wine-d3d9-${PV}"
 D3D9_DIR="${WORKDIR}/wine-d3d9-patches-${D3D9_P}"
 GWP_V="20180120"
-PATCHDIR="${WORKDIR}/gentoo-wine-patches"
+PATCHDIR="${WORKDIR}/gentoo-wine-patches-${GWP_V}"
 
-DESCRIPTION="Free implementation of Windows(tm) on Unix, with Gallium Nine patchset"
-HOMEPAGE="https://www.winehq.org/"
-SRC_URI="${SRC_URI}
-	https://dev.gentoo.org/~np-hardass/distfiles/wine/gentoo-wine-patches-${GWP_V}.tar.xz
-"
+SRC_URI+=" https://github.com/konsolebox/gentoo-wine-patches/archive/refs/tags/${GWP_V}.tar.gz ->
+	gentoo-wine-patches-${GWP_V}-konsolebox-mirror.tar.gz"
 
-if [[ ${PV} == "9999" ]] ; then
+if [[ ${PV} == 9999 ]] ; then
 	D3D9_EGIT_REPO_URI="https://github.com/sarnex/wine-d3d9-patches.git"
 else
-	SRC_URI="${SRC_URI}
-	d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )"
+	SRC_URI+=" d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )"
 fi
+
+S="${WORKDIR}/${MY_P}"
+RESTRICT="mirror"
 
 LICENSE="LGPL-2.1"
 SLOT="${PV}"
-IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags d3d9 dos +fontconfig +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos +lcms ldap +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss +perl pcap +png pulseaudio +realtime +run-exes samba scanner sdl selinux +ssl test +threads +truetype udev +udisks v4l vkd3d vulkan +X +xcomposite xinerama +xml"
+IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags d3d9 dos elibc_glibc +fontconfig +gecko
+	gphoto2 gsm gssapi gstreamer +jpeg kerberos +lcms ldap +mono mp3 ncurses netapi nls odbc openal
+	opencl +opengl osmesa oss +perl pcap +png pulseaudio +realtime +run-exes samba scanner sdl
+	selinux +ssl test +threads +truetype udev +udisks v4l vkd3d vulkan +X +xcomposite xinerama
+	+xml"
 REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	X? ( truetype )
 	elibc_glibc? ( threads )
@@ -55,8 +58,6 @@ REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 # FIXME: the test suite is unsuitable for us; many tests require net access
 # or fail due to Xvfb's opengl limitations.
 RESTRICT="test"
-
-echo "$MULTILIB_USEDEP"
 
 COMMON_DEPEND="
 	X? (
@@ -87,7 +88,7 @@ COMMON_DEPEND="
 	jpeg? ( media-libs/libjpeg-turbo[${MULTILIB_USEDEP}] )
 	kerberos? ( virtual/krb5:0=[${MULTILIB_USEDEP}] )
 	lcms? ( media-libs/lcms:2=[${MULTILIB_USEDEP}] )
-	ldap? ( net-nds/openldap:=[${MULTILIB_USEDEP}] )
+	ldap? ( <net-nds/openldap-2.5:=[${MULTILIB_USEDEP}] )
 	mp3? ( >=media-sound/mpg123-1.5.0[${MULTILIB_USEDEP}] )
 	ncurses? ( >=sys-libs/ncurses-5.2:0=[${MULTILIB_USEDEP}] )
 	netapi? ( net-fs/samba[netapi(+),${MULTILIB_USEDEP}] )
@@ -142,7 +143,7 @@ DEPEND="${COMMON_DEPEND}
 	sys-devel/flex
 	>=sys-kernel/linux-headers-2.6
 	virtual/pkgconfig
-	|| ( virtual/yacc app-alternatives/yacc )
+	|| ( app-alternatives/yacc virtual/yacc )
 	X? ( x11-base/xorg-proto )
 	xinerama? ( x11-base/xorg-proto )"
 
@@ -158,6 +159,8 @@ PATCHES=(
 	"${PATCHDIR}/patches/${MY_PN}-1.9.5-multilib-portage.patch" #395615
 	"${PATCHDIR}/patches/${MY_PN}-1.6-memset-O3.patch" #480508
 	"${PATCHDIR}/patches/${MY_PN}-2.0-multislot-apploader.patch" #310611
+	"${FILESDIR}/${MY_PN}-d7645b67-autoconf-2-7-0-compat-fix.patch"
+	"${FILESDIR}/${MY_PN}-3.21-gcc-10-compat.patch"
 )
 PATCHES_BIN=()
 
@@ -169,13 +172,81 @@ fi
 wine_compiler_check() {
 	[[ ${MERGE_TYPE} = "binary" ]] && return 0
 
+	# GCC-specific bugs
+	if tc-is-gcc; then
+		# bug #549768
+		if use abi_x86_64 && [[ $(gcc-major-version) = 5 && $(gcc-minor-version) -le 2 ]]; then
+			ebegin "Checking for gcc-5 ms_abi compiler bug"
+			$(tc-getCC) -O2 "${PATCHDIR}/files/pr66838.c" -o "${T}"/pr66838 || die
+			# Run in subshell to prevent "Aborted" message
+			( "${T}"/pr66838 || false ) >/dev/null 2>&1
+			if ! eend $?; then
+				eerror "64-bit wine cannot be built with gcc-5.1 or initial patchset of 5.2.0"
+				eerror "due to compiler bugs; please re-emerge the latest gcc-5.2.x ebuild,"
+				eerror "or use gcc-config to select a different compiler version."
+				eerror "See https://bugs.gentoo.org/549768"
+				eerror
+				return 1
+			fi
+		fi
+		# bug #574044
+		if use abi_x86_64 && [[ $(gcc-major-version) = 5 && $(gcc-minor-version) = 3 ]]; then
+			ebegin "Checking for gcc-5-3 stack realignment compiler bug"
+			# Compile in subshell to prevent "Aborted" message
+			( $(tc-getCC) -O2 -mincoming-stack-boundary=3 "${PATCHDIR}/files/pr69140.c" -o "${T}"/pr69140 ) >/dev/null 2>&1
+			if ! eend $?; then
+				eerror "Wine cannot be built with this version of gcc-5.3"
+				eerror "due to compiler bugs; please re-emerge the latest gcc-5.3.x ebuild,"
+				eerror "or use gcc-config to select a different compiler version."
+				eerror "See https://bugs.gentoo.org/574044"
+				eerror
+				return 1
+			fi
+		fi
+	fi
+
 	# Ensure compiler support
-	# (No checks here as of 2022)
-	return 0
+	if use abi_x86_64; then
+		ebegin "Checking for 64-bit compiler with builtin_ms_va_list support"
+		# Compile in subshell to prevent "Aborted" message
+		( $(tc-getCC) -O2 "${PATCHDIR}/files/builtin_ms_va_list.c" -o "${T}"/builtin_ms_va_list >/dev/null 2>&1)
+		if ! eend $?; then
+			eerror "This version of $(tc-getCC) does not support builtin_ms_va_list, can't enable 64-bit wine"
+			eerror
+			eerror "You need gcc-4.4+ or clang 3.8+ to build 64-bit wine"
+			eerror
+			return 1
+		fi
+	fi
 }
 
 wine_build_environment_check() {
 	[[ ${MERGE_TYPE} = "binary" ]] && return 0
+
+	if use abi_x86_64; then
+		if tc-is-gcc && [[ $(gcc-major-version) -lt 4 || ( $(gcc-major-version) -eq 4 &&
+				$(gcc-minor-version) -lt 4 ) ]]; then
+			eerror "You need gcc-4.4+ to compile 64-bit wine"
+			die
+		elif tc-is-clang && [[ $(clang-major-version) -lt 3 || ( $(clang-major-version) -eq 3 &&
+				$(clang-minor-version) -lt 8 ) ]]; then
+			eerror "You need clang-3.8+ to compile 64-bit wine"
+			die
+		fi
+	fi
+	if tc-is-gcc && [[ $(gcc-major-version) -eq 5 && $(gcc-minor-version) -le 3 ]]; then
+		ewarn "GCC-5.0-5.3 suffered from compiler bugs and are no longer supported by"
+		ewarn "Gentoo's Toolchain Team. If your ebuild fails the compiler checks in"
+		ewarn "the configure phase, either update your compiler or switch to <5.0 || >=5.4"
+	fi
+	if tc-is-gcc && [[ $(gcc-major-version) -eq 5 && $(gcc-minor-version) -eq 4 ]]; then
+		if has "-march=i686" ${CFLAGS} && ! has "-mtune=generic" ${CFLAGS}; then
+			ewarn "Compilation can hang with CFLAGS=\"-march=i686\".  You can temporarily work"
+			ewarn "around this by adding \"-mtune=generic\" to your CFLAGS for wine."
+			ewarn "See package.env in man 5 portage for more information on how to do this."
+			ewarn "See https://bugs.gentoo.org/show_bug.cgi?id=613128 for more details"
+		fi
+	fi
 
 	if use abi_x86_32 && use opencl && [[ "$(eselect opencl show 2> /dev/null)" == "intel" ]]; then
 		eerror "You cannot build wine with USE=opencl because intel-ocl-sdk is 64-bit only."
@@ -211,16 +282,6 @@ wine_env_vcs_vars() {
 
 pkg_pretend() {
 	wine_build_environment_check || die
-
-	# Verify OSS support
-	if use oss && ! use kernel_FreeBSD; then
-		if ! has_version ">=media-sound/oss-4"; then
-			eerror "You cannot build wine with USE=oss without having support from a"
-			eerror "FreeBSD kernel or >=media-sound/oss-4 (only available through external repos)"
-			eerror
-			die
-		fi
-	fi
 }
 
 pkg_setup() {
@@ -241,7 +302,7 @@ pkg_setup() {
 }
 
 src_unpack() {
-	if [[ ${PV} == "9999" ]] ; then
+	if [[ ${PV} == 9999 ]] ; then
 		EGIT_CHECKOUT_DIR="${S}" git-r3_src_unpack
 		if use d3d9; then
 			EGIT_CHECKOUT_DIR="${D3D9_DIR}" EGIT_REPO_URI="${D3D9_EGIT_REPO_URI}" git-r3_src_unpack
@@ -267,6 +328,7 @@ src_prepare() {
 	if use d3d9; then
 		PATCHES+=( "${D3D9_DIR}/d3d9-helper.patch" )
 		PATCHES+=( "${D3D9_DIR}/wine-d3d9.patch" )
+		PATCHES+=( "${FILESDIR}/wine-d3d9-3.21-gcc-10-compat.patch" )
 	fi
 
 	default
