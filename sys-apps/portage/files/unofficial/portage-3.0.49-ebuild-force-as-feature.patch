@@ -1,0 +1,135 @@
+diff --git a/bin/ebuild b/bin/ebuild
+index 2fa4e7974..cfa5f15e5 100755
+--- a/bin/ebuild
++++ b/bin/ebuild
+@@ -75,7 +75,9 @@ try:
+         "When used together with the digest or manifest "
+         + "command, this option forces regeneration of digests for all "
+         + "distfiles associated with the current ebuild. Any distfiles "
+-        + "that do not already exist in ${DISTDIR} will be automatically fetched."
++        + "that do not already exist in ${DISTDIR} will be automatically fetched. "
++        + "When used with other commands, forces command execution even if phase "
++        + "has already ran.  Enabling force in FEATURES gives this same effect."
+     )
+ 
+     parser.add_argument("--force", help=force_help, action="store_true")
+@@ -113,7 +115,6 @@ try:
+         opts, pargs = parser.parse_known_args(default_opts + sys.argv[1:])
+ 
+     debug = opts.debug
+-    force = opts.force
+ 
+     if debug:
+         # Ensure that all config instances have this setting,
+@@ -364,6 +365,9 @@ try:
+     # portdb.porttrees in order to accomplish this).
+     tmpsettings.setcpv(pkg)
+ 
++    if opts.force:
++        tmpsettings.features.add("force")
++
+     def stale_env_warning():
+         if (
+             "clean" not in pargs
+@@ -401,7 +405,7 @@ try:
+                 stale_env_warning()
+                 checked_for_stale_env = True
+ 
+-            if arg in ("digest", "manifest") and force:
++            if arg in ("digest", "manifest") and "force" in tmpsettings.features:
+                 discard_digests(ebuild, tmpsettings, portage.portdb)
+             a = portage.doebuild(
+                 ebuild,
+diff --git a/bin/phase-functions.sh b/bin/phase-functions.sh
+index 071941ff7..de699604c 100644
+--- a/bin/phase-functions.sh
++++ b/bin/phase-functions.sh
+@@ -227,7 +227,7 @@ __ebuild_phase_with_hooks() {
+ }
+ 
+ __dyn_pretend() {
+-	if [[ -e ${PORTAGE_BUILDDIR}/.pretended ]] ; then
++	if [[ -e ${PORTAGE_BUILDDIR}/.pretended ]] && ! has force ${FEATURES} ; then
+ 		__vecho ">>> It appears that '${PF}' is already pretended; skipping."
+ 		__vecho ">>> Remove '${PORTAGE_BUILDDIR}/.pretended' to force pretend."
+ 		return 0
+@@ -241,7 +241,7 @@ __dyn_pretend() {
+ }
+ 
+ __dyn_setup() {
+-	if [[ -e ${PORTAGE_BUILDDIR}/.setuped ]] ; then
++	if [[ -e ${PORTAGE_BUILDDIR}/.setuped ]] && ! has force ${FEATURES} ; then
+ 		__vecho ">>> It appears that '${PF}' is already setup; skipping."
+ 		__vecho ">>> Remove '${PORTAGE_BUILDDIR}/.setuped' to force setup."
+ 		return 0
+@@ -384,7 +384,7 @@ __has_phase_defined_up_to() {
+ 
+ __dyn_prepare() {
+ 
+-	if [[ -e ${PORTAGE_BUILDDIR}/.prepared ]] ; then
++	if [[ -e ${PORTAGE_BUILDDIR}/.prepared ]] && ! has force ${FEATURES} ; then
+ 		__vecho ">>> It appears that '${PF}' is already prepared; skipping."
+ 		__vecho ">>> Remove '${PORTAGE_BUILDDIR}/.prepared' to force prepare."
+ 		return 0
+@@ -420,7 +420,7 @@ __dyn_prepare() {
+ }
+ 
+ __dyn_configure() {
+-	if [[ -e ${PORTAGE_BUILDDIR}/.configured ]] ; then
++	if [[ -e ${PORTAGE_BUILDDIR}/.configured ]] && ! has force ${FEATURES} ; then
+ 		__vecho ">>> It appears that '${PF}' is already configured; skipping."
+ 		__vecho ">>> Remove '${PORTAGE_BUILDDIR}/.configured' to force configuration."
+ 		return 0
+@@ -452,7 +452,7 @@ __dyn_configure() {
+ }
+ 
+ __dyn_compile() {
+-	if [[ -e ${PORTAGE_BUILDDIR}/.compiled ]] ; then
++	if [[ -e ${PORTAGE_BUILDDIR}/.compiled ]] && ! has force ${FEATURES} ; then
+ 		__vecho ">>> It appears that '${PF}' is already compiled; skipping."
+ 		__vecho ">>> Remove '${PORTAGE_BUILDDIR}/.compiled' to force compilation."
+ 		return 0
+@@ -484,7 +484,7 @@ __dyn_compile() {
+ }
+ 
+ __dyn_test() {
+-	if [[ -e ${PORTAGE_BUILDDIR}/.tested ]] ; then
++	if [[ -e ${PORTAGE_BUILDDIR}/.tested ]] && ! has force ${FEATURES} ; then
+ 		__vecho ">>> It appears that ${PN} has already been tested; skipping."
+ 		__vecho ">>> Remove '${PORTAGE_BUILDDIR}/.tested' to force test."
+ 		return
+@@ -535,7 +535,7 @@ __dyn_install() {
+ 
+ 	if has noauto ${FEATURES} ; then
+ 		rm -f "${PORTAGE_BUILDDIR}/.installed"
+-	elif [[ -e ${PORTAGE_BUILDDIR}/.installed ]] ; then
++	elif [[ -e ${PORTAGE_BUILDDIR}/.installed ]] && ! has force ${FEATURES} ; then
+ 		__vecho ">>> It appears that '${PF}' is already installed; skipping."
+ 		__vecho ">>> Remove '${PORTAGE_BUILDDIR}/.installed' to force install."
+ 		return 0
+diff --git a/lib/portage/const.py b/lib/portage/const.py
+index 10a208ceb..9bf6e8338 100644
+--- a/lib/portage/const.py
++++ b/lib/portage/const.py
+@@ -155,6 +155,7 @@ SUPPORTED_FEATURES = frozenset(
+         "fail-clean",
+         "fakeroot",
+         "fixlafiles",
++        "force",
+         "force-mirror",
+         "getbinpkg",
+         "gpg-keepalive",
+diff --git a/lib/portage/package/ebuild/doebuild.py b/lib/portage/package/ebuild/doebuild.py
+index 8b65a7862..0247dbe2b 100644
+--- a/lib/portage/package/ebuild/doebuild.py
++++ b/lib/portage/package/ebuild/doebuild.py
+@@ -2163,7 +2163,8 @@ def spawnebuild(
+     if mydo == "pretend" and not eapi_has_pkg_pretend(eapi):
+         return os.EX_OK
+ 
+-    if not (mydo == "install" and "noauto" in mysettings.features):
++    if (not (mydo == "install" and "noauto" in mysettings.features) and "force" not in
++            mysettings.features):
+         check_file = os.path.join(
+             mysettings["PORTAGE_BUILDDIR"], f".{mydo.rstrip('e')}ed"
+         )

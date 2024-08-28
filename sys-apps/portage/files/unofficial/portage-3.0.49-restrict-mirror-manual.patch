@@ -1,0 +1,35 @@
+diff --git a/man/make.conf.5 b/man/make.conf.5
+index 85ee88c..349799c 100644
+--- a/man/make.conf.5
++++ b/man/make.conf.5
+@@ -520,7 +520,8 @@ fixes (order of flags, duplicated entries, ...)
+ .TP
+ .B force\-mirror
+ Only fetch files from configured mirrors, ignoring \fBSRC_URI\fR,
+-except when \fImirror\fR is in the \fBebuild\fR(5) \fBRESTRICT\fR variable.
++except when \fImirror\fR is in the \fBebuild\fR(5) \fBRESTRICT\fR variable or
++when \fBrestrict\-mirror\fR is enabled as well.
+ .TP
+ .B getbinpkg
+ Force emerges to always try to fetch files from the \fIPORTAGE_BINHOST\fR.  See
+@@ -574,7 +575,8 @@ ${repository_location}/metadata/md5\-cache/ directory will be used directly
+ .TP
+ .B mirror
+ Fetch everything in \fBSRC_URI\fR regardless of \fBUSE\fR settings,
+-except do not fetch anything when \fImirror\fR is in \fBRESTRICT\fR.
++except do not fetch anything when \fImirror\fR is in \fBRESTRICT\fR or when
++the \fBrestrict\-mirror\fR feature is set.
+ .TP
+ .B mount\-sandbox
+ Isolate the ebuild phase functions from host mount namespace. This makes
+@@ -697,6 +699,10 @@ Output a verbose trace of python execution to stderr when a command's
+ Trigger a QA warning when a package installs files with unresolved soname
+ dependencies.
+ .TP
++.B restrict\-mirror
++Gives the same effect as \fBRESTRICT="mirror"\fR in ebuilds.  Files in \fBSRC_URI\fR
++will not be downloaded from the \fBGENTOO_MIRRORS\fR.  This takes precedence over \fBforce\-mirror\fR.
++.TP
+ .B sandbox
+ Enable sandbox\-ing when running \fBemerge\fR(1) and \fBebuild\fR(1).
+ .TP

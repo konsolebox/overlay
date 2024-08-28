@@ -1,0 +1,30 @@
+> exec sudo -Hu '#250' -g '#250' --preserve-env=DISPLAY --preserve-env=EDITOR git diff
+diff --git a/man/ebuild.1 b/man/ebuild.1
+index 09974b7..2985d18 100644
+--- a/man/ebuild.1
++++ b/man/ebuild.1
+@@ -216,6 +216,10 @@ that do not already exist in ${DISTDIR} will be automatically fetched.
+ .BR "\-\-ignore\-default\-opts"
+ Do not use the \fIEBUILD_DEFAULT_OPTS\fR environment variable.
+ .TP
++.BR "\-\-noauto"
++Enables the noauto feature which allows only the requested function to run.
++This also forces the ebuild and eclasses to be sourced again on every phase.
++.TP
+ .BR "\-\-skip\-manifest"
+ Skip all manifest checks.
+ .SH "REPORTING BUGS"
+diff --git a/man/make.conf.5 b/man/make.conf.5
+index 85ee88c..e7c1efb 100644
+--- a/man/make.conf.5
++++ b/man/make.conf.5
+@@ -610,7 +610,8 @@ Enable GLEP 42 news support. See
+ .B noauto
+ When utilizing \fBebuild\fR(1), only run the function requested. Also, forces
+ the corresponding ebuild and eclasses to be sourced again for each phase, in
+-order to account for modifications.
++order to account for modifications. Running \fBebuild\fR(1) with the
++\fB\-\-noauto\fR option also enables this feature during runtime.
+ .TP
+ .B noclean
+ Do not delete the source and temporary files after the merge process.

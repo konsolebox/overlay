@@ -113,8 +113,14 @@ pkg_pretend() {
 src_prepare() {
 	use unofficial && PATCHES+=(
 		"${FILESDIR}"/unofficial/portage-3.0.28-env-update-post-update.patch
-		"${FILESDIR}"/unofficial/portage-3.0.28-userpatches-manual.patch
 		"${FILESDIR}"/unofficial/portage-3.0.28-userpatches.patch
+		"${FILESDIR}"/unofficial/portage-3.0.28-userpatches-manual.patch
+		"${FILESDIR}"/unofficial/portage-3.0.49-ebuild-force-as-feature.patch
+		"${FILESDIR}"/unofficial/portage-3.0.49-ebuild-force-as-feature-manual.patch
+		"${FILESDIR}"/unofficial/portage-3.0.49-ebuild-noauto.patch
+		"${FILESDIR}"/unofficial/portage-3.0.49-ebuild-noauto-manual.patch
+		"${FILESDIR}"/unofficial/portage-3.0.49-restrict-mirror.patch
+		"${FILESDIR}"/unofficial/portage-3.0.49-restrict-mirror-manual.patch
 	)
 
 	default

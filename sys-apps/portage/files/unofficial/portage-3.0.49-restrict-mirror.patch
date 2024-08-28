@@ -1,0 +1,27 @@
+diff --git a/lib/portage/const.py b/lib/portage/const.py
+index 10a208c..f7a2e6e 100644
+--- a/lib/portage/const.py
++++ b/lib/portage/const.py
+@@ -188,6 +188,7 @@ SUPPORTED_FEATURES = frozenset(
+         "protect-owned",
+         "python-trace",
+         "qa-unresolved-soname-deps",
++        "restrict-mirror",
+         "sandbox",
+         "selinux",
+         "sesandbox",
+diff --git a/lib/portage/package/ebuild/fetch.py b/lib/portage/package/ebuild/fetch.py
+index 0ecad16..c38c0fb 100644
+--- a/lib/portage/package/ebuild/fetch.py
++++ b/lib/portage/package/ebuild/fetch.py
+@@ -799,7 +799,9 @@ def fetch(
+     userfetch = portage.data.secpass >= 2 and "userfetch" in features
+ 
+     # 'nomirror' is bad/negative logic. You Restrict mirroring, not no-mirroring.
+-    restrict_mirror = "mirror" in restrict or "nomirror" in restrict
++    restrict_mirror = (
++        "mirror" in restrict or "nomirror" in restrict or "restrict-mirror" in features
++    )
+     if restrict_mirror:
+         if ("mirror" in features) and ("lmirror" not in features):
+             # lmirror should allow you to bypass mirror restrictions.

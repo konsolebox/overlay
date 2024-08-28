@@ -1,0 +1,31 @@
+diff --git a/man/make.conf.5 b/man/make.conf.5
+index 85ee88c05..8b25564ad 100644
+--- a/man/make.conf.5
++++ b/man/make.conf.5
+@@ -335,8 +335,9 @@ SRC_URI digests are correct.  This feature also affects digest generation via
+ in ${DISTDIR} will be automatically assumed even when \fIassume\-digests\fR is
+ not enabled. If a file exists in ${DISTDIR} but its size does not match the
+ existing digest, the digest will be regenerated regardless of whether or
+-not \fIassume\-digests\fR is enabled. The \fBebuild\fR(1) \fBdigest\fR command
+-has a \fB\-\-force\fR option that can be used to force regeneration of digests.
++not \fIassume\-digests\fR is enabled. Running the \fBebuild\fR(1) \fBdigest\fR
++command with the \fB\-\-force\fR option or enabling the \fBforce\fR feature
++forces regeneration of digests.
+ .TP
+ .B binpkg\-docompress
+ Perform \fBdocompress\fR (controllable file compression) before creating binary
+@@ -518,6 +519,14 @@ the \fBebuild\fR(1) command.
+ Modifies .la files to not include other .la files and some other
+ fixes (order of flags, duplicated entries, ...)
+ .TP
++.B force
++When utilizing \fBebuild\fR(1)'s \fBdigest\fR or \fBmanifest\fR command, force
++regeneration of digests for all distfiles associated with the current ebuild.
++Any distfiles that do not already exist in ${DISTDIR} will be automatically
++fetched. When used with other commands, command execution will be forced even
++if the corresponding build phase has already ran. Running \fBebuild\fR(1) with
++the \fB\-\-force\fR option also enables this feature during runtime.
++.TP
+ .B force\-mirror
+ Only fetch files from configured mirrors, ignoring \fBSRC_URI\fR,
+ except when \fImirror\fR is in the \fBebuild\fR(5) \fBRESTRICT\fR variable.

@@ -1,0 +1,29 @@
+> exec sudo -Hu '#250' -g '#250' --preserve-env=DISPLAY --preserve-env=EDITOR git diff ebuild
+diff --git a/bin/ebuild b/bin/ebuild
+index 2fa4e79..898812c 100755
+--- a/bin/ebuild
++++ b/bin/ebuild
+@@ -77,8 +77,13 @@ try:
+         + "distfiles associated with the current ebuild. Any distfiles "
+         + "that do not already exist in ${DISTDIR} will be automatically fetched."
+     )
++    noauto_help = (
++        "Enables the noauto feature. This makes only the function requested to run and forces "
++        + "the ebuild and eclasses to be sourced again on every phase."
++    )
+ 
+     parser.add_argument("--force", help=force_help, action="store_true")
++    parser.add_argument("--noauto", help=noauto_help, action="store_true")
+     parser.add_argument(
+         "--color", help="enable or disable color output", choices=("y", "n")
+     )
+@@ -308,6 +313,9 @@ try:
+ 
+     tmpsettings.features.discard("fail-clean")
+ 
++    if opts.noauto:
++        tmpsettings.features.add("noauto")
++
+     if "merge" in pargs and "noauto" in tmpsettings.features:
+         print("Disabling noauto in features... merge disables it. (qmerge doesn't)")
+         tmpsettings.features.discard("noauto")
