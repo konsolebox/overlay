@@ -1,0 +1,18 @@
+diff --git a/deb2targz b/deb2targz
+index 4697c29..fc95ee6 100644
+--- a/deb2targz
++++ b/deb2targz
+@@ -47,10 +47,11 @@ FILE: foreach my $filename (@ARGV) {
+ 	($header, $data) = ($data =~ /(.*?)\n(.*)/s);
+ 	my($name, $num1, $num2, $num3, $num4, $len) = split /\s+/, $header;
+ 	#print "header='$header'\n\tname='$name', len=$len\n";
+-	if ($name eq "data.tar.gz") {
++	if ($name =~ /^data\.tar(.[^\/]*)\/*$/) {
+ 	    # Found it
++	    my $ext = $1;
+ 	    $data = substr($data, 0, $len);
+-	    $filename =~ s/\.deb$/.tar.gz/;
++	    $filename =~ s/\.deb$/.tar$ext/;
+ 	    my $fh = new IO::File(">$filename")
+ 		or die "can't write '$filename': $!";
+ 	    print $fh $data;
