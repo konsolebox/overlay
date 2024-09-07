@@ -302,6 +302,8 @@ pkg_preinst() {
 		elog "make.conf EMERGE_DEFAULT_OPTS variable. For the rationale for this"
 		elog "change, see https://bugs.gentoo.org/658648."
 	fi
+
+	use unofficial && keepdir /etc/env-update.d
 }
 
 pkg_postinst() {
