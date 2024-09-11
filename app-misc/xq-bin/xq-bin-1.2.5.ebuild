@@ -1,7 +1,7 @@
 # Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 DESCRIPTION="Command-line XML and HTML beautifier and content extractor"
 HOMEPAGE="https://github.com/sibprogrammer/xq"
 
@@ -16,6 +16,7 @@ SLOT=0
 KEYWORDS="-* ~amd64 ~arm64 ~x86"
 REQUIRED_USE="^^ ( amd64 arm64 x86 )"
 QA_PRESTRIPPED=usr/bin/xq
+RESTRICT="mirror"
 
 src_install() {
 	dodoc README.md
