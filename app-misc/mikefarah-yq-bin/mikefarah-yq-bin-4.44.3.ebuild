@@ -1,7 +1,7 @@
 # Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 DESCRIPTION="A portable command-line YAML, JSON, XML, CSV, TOML and properties processor"
 HOMEPAGE="https://github.com/mikefarah/yq"
@@ -20,6 +20,7 @@ KEYWORDS="-* ~amd64 ~arm ~arm64 ~x86"
 REQUIRED_USE="^^ ( amd64 arm arm64 x86 )"
 RDEPEND="!app-misc/yq"
 QA_PRESTRIPPED=usr/bin/yq
+RESTRICT="mirror"
 
 src_install() {
 	doman yq.1
