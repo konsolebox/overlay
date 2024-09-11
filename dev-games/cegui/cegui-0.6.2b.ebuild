@@ -1,18 +1,20 @@
 # Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 inherit autotools
 
-MY_P=CEGUI-${PV%b}
 DESCRIPTION="Crazy Eddie's GUI System"
 HOMEPAGE="http://www.cegui.org.uk/"
-SRC_URI="https://downloads.sourceforge.net/crayzedsgui/CEGUI%20Mk-2/0.6.2/CEGUI-0.6.2b.tar.gz"
+
+SRC_URI="https://downloads.sourceforge.net/crayzedsgui/CEGUI%20Mk-2/${PV%b}/CEGUI-${PV}.tar.gz"
+S=${WORKDIR}/CEGUI-${PV%b}
 
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="devil opengl"
+RESTRICT="mirror"
 
 RDEPEND="dev-libs/libpcre
 	media-libs/freetype:2
@@ -25,13 +27,11 @@ RDEPEND="dev-libs/libpcre
 DEPEND="${RDEPEND}
 	virtual/pkgconfig"
 
-S=${WORKDIR}/${MY_P}
-
 src_prepare() {
-	eapply -p0 "${FILESDIR}"/${P}-gcc43.patch
-	eapply -p1 "${FILESDIR}"/${P}-dups.patch \
-		"${FILESDIR}"/${P}-gcc46.patch \
-		"${FILESDIR}"/${P}-pointer-comparison-fix.patch
+	eapply -p0 "${FILESDIR}/${P}-gcc43.patch"
+	eapply -p1 "${FILESDIR}/${P}-dups.patch" \
+		"${FILESDIR}/${P}-gcc46.patch" \
+		"${FILESDIR}/${P}-pointer-comparison-fix.patch"
 	eapply_user
 	sed -i \
 		-e 's/ILvoid/void/g' \
