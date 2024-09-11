@@ -7,7 +7,7 @@ inherit autotools desktop
 DESCRIPTION="Secret Maryo Chronicles"
 HOMEPAGE="http://www.secretmaryo.org/"
 
-MUSIC_V=4.1
+MUSIC_V=5.0
 MUSIC_P=SMC_Music_${MUSIC_V}_high
 SRC_URI="https://downloads.sourceforge.net/project/smclone/Secret%20Maryo%20Chronicles/${PV}/${P}.tar.bz2
 	music? ( https://downloads.sourceforge.net/project/smclone/Addon%20-%20Music/${MUSIC_V}/${MUSIC_P}.zip )"
