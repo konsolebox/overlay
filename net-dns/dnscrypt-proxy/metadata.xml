@@ -15,4 +15,7 @@
 		<flag name="plugins">Enable plugin support to inspect and modify queries and responses</flag>
 		<flag name="systemd">Use systemd's socket activation instead of creating the sockets itself</flag>
 	</use>
+	<upstream>
+		<remote-id type="github">dyne/dnscrypt-proxy</remote-id>
+	</upstream>
 </pkgmetadata>
