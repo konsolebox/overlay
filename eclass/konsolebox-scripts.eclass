@@ -76,7 +76,7 @@ _konsolebox-scripts_set_globals() {
 		done
 
 		[[ -z ${valid_flags} ]] && die "No supported Ruby implementation."
-		IUSE="${IUSE+ }${valid_flags# }"
+		IUSE+=${valid_flags}
 		REQUIRED_USE="^^ ( ${valid_flags} )"
 	fi
 
