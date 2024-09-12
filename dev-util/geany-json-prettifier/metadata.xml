@@ -8,4 +8,7 @@
 	<longdescription lang="en">
 		JSON Prettifier is a plugin used to validate, format and prettify ugly, not formatted JSON files or to minify a prettified ones.
 	</longdescription>
+	<upstream>
+		<remote-id type="github">zhgzhg/Geany-JSON-Prettifier</remote-id>
+	</upstream>
 </pkgmetadata>
