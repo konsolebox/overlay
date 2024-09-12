@@ -11,5 +11,5 @@
 #
 DNSCRYPT_PROXY_MULTI_OPTIONS='--local-ip=127.0.0.1 --local-port=5300-5399
 		--resolvers-list=/usr/share/dnscrypt-proxy/dnscrypt-resolvers.csv
-		--max-instances=10 --dnscrypt-proxy-user=dnscrypt
+		--max-instances=10 --dnscrypt-proxy-user=dnscrypt-proxy
 		--syslog --dnscrypt-proxy-syslog'

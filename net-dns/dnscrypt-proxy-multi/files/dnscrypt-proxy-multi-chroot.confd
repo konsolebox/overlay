@@ -130,16 +130,16 @@
 # Specifies the group that dnscrypt-proxy-multi or dnscrypt-proxy drops
 # privilege to.
 #
-# Default is 'dnscrypt'.
+# Default is 'dnscrypt-proxy'.
 #
-#DPM_GROUP=dnscrypt
+#DPM_GROUP=dnscrypt-proxy
 
 # Specifies the user that dnscrypt-proxy-multi or dnscrypt-proxy drops
 # privilege to.
 #
-# Default is 'dnscrypt'.
+# Default is 'dnscrypt-proxy'.
 #
-#DPM_USER=dnscrypt
+#DPM_USER=dnscrypt-proxy
 
 # Specifies the directory that binds to CHROOT_DIR/CHROOT_LOG_DIR when
 # CHROOT_LOG_DIR_BIND is enabled.
