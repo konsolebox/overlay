@@ -1,0 +1,11 @@
+nounset - Inject '[[ BASH_VERSINFO -ge 5 ]] && set -u' to script
+rubyexec - Use rubyexec as a wrapper for the binaries
+rubyexec-autopick - Autopick a Ruby implementation when the selected one isn't wanted
+ruby_single_target_ruby27 - Use Ruby 2.7 as runtime
+ruby_single_target_ruby28 - Use Ruby 2.8 as runtime
+ruby_single_target_ruby29 - Use Ruby 2.9 as runtime
+ruby_single_target_ruby30 - Use Ruby 3.0 as runtime
+ruby_single_target_ruby31 - Use Ruby 3.1 as runtime
+ruby_single_target_ruby32 - Use Ruby 3.2 as runtime
+ruby_single_target_ruby33 - Use Ruby 3.3 as runtime
+ruby_single_target_ruby34 - Use Ruby 3.4 as runtime
