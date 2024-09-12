@@ -29,6 +29,6 @@ call() {
 		fi
 	done
 
-	printf '%s\n' "${m# }"
+	printf '%s\n' "${m# }" >&2
 	command "$@"
 }
