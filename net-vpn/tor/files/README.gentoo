@@ -1,8 +1,0 @@
-We created a configuration file for Tor, /etc/tor/torrc, but you can
-change it according to your needs.  Use the torrc.sample that is in that
-directory as a guide.  Also, to have privoxy work with Tor just add
-'forward-socks4a / localhost:9050 .' to /etc/privoxy/config.
-
-If you plan to run Tor in chroot mode, please install net-vpn/tor with
-chroot flag enabled, configure /etc/conf.d/tor-chroot, and then run
-'/etc/init.d/tor-chroot setup'.
