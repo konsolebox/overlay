@@ -6,11 +6,11 @@ EAPI=7
 inherit multilib-minimal pam toolchain-funcs
 
 DESCRIPTION="PAM module that manages XDG Base Directories"
-HOMEPAGE="https://ftp.sdaoden.eu/"
+HOMEPAGE="https://sdaoden.eu/code.html#s-toolbox"
 SRC_URI="https://ftp.sdaoden.eu/${P}.tar.gz"
 LICENSE="ISC"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 BDEPEND="sys-libs/pam"
 RDEPEND="${BDEPEND}"
 RESTRICT="mirror"
@@ -33,13 +33,17 @@ multilib_src_compile() {
 		-fstrict-aliasing -fstrict-overflow -fstack-protector-strong -D_FORTIFY_SOURCE=3
 		-fcf-protection=full -fPIE
 	)
+
 	DEFAULT_LDFLAGS=(
 		-Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--as-needed -Wl,--enable-new-dtags -pie
 		-fPIE -shared
 	)
 
-	emake V=1 CC="$(tc-getCC)" CFLAGS="-U_FORTIFY_SOURCE ${DEFAULT_CFLAGS[*]} ${CFLAGS-}" \
-			LDFLAGS="${DEFAULT_LDFLAGS[*]} ${LDFLAGS-}" LDLIBS="${LDLIBS}" "${PN}.so"
+	emake V=1 CC="$(tc-getCC)" \
+			CFLAGS="-U_FORTIFY_SOURCE ${DEFAULT_CFLAGS[*]} ${CFLAGS-}" \
+			LDFLAGS="${DEFAULT_LDFLAGS[*]} ${LDFLAGS-}" \
+			LDLIBS="${LDLIBS}" \
+			"${PN}.so"
 }
 
 multilib_src_install() {
