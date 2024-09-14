@@ -12,7 +12,7 @@ function main {
 	local desc_file=${DESC_FILE-/var/db/repos/gentoo/profiles/profiles.desc} profiles
 
 	# Extract new profiles
-	awk '{ $0 = "" $2 } /^default\// && ( /\/musl(\/|$)/ || /\/prefix(\/|$)/ )' "${desc_file}" | \
+	awk '{ $0 = "" $2 } /^default\// && /\/musl(\/|$)/ || /(^|\/)prefix(\/|$)/' "${desc_file}" | \
 			readarray -t profiles || die "Failed to enumerate profile names"
 	[[ ${profiles+.} ]] || die "No musl-based profile names found"
 
