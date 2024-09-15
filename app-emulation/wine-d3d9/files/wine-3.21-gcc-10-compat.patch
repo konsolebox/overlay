@@ -1,0 +1,449 @@
+diff --git a/dlls/crypt32/crypt32_private.h b/dlls/crypt32/crypt32_private.h
+index ac70fe0..838d76a 100644
+--- a/dlls/crypt32/crypt32_private.h
++++ b/dlls/crypt32/crypt32_private.h
+@@ -152,7 +152,7 @@ BOOL WINAPI CRYPT_AsnEncodePubKeyInfoNoNull(DWORD dwCertEncodingType,
+  */
+ HCRYPTPROV WINAPI I_CryptGetDefaultCryptProv(ALG_ID);
+ 
+-HINSTANCE hInstance DECLSPEC_HIDDEN;
++extern HINSTANCE hInstance DECLSPEC_HIDDEN;
+ 
+ void crypt_oid_init(void) DECLSPEC_HIDDEN;
+ void crypt_oid_free(void) DECLSPEC_HIDDEN;
+diff --git a/dlls/dsound/dsound_private.h b/dlls/dsound/dsound_private.h
+index c045b38..25e4019 100644
+--- a/dlls/dsound/dsound_private.h
++++ b/dlls/dsound/dsound_private.h
+@@ -189,9 +189,9 @@ HRESULT IDirectSoundBufferImpl_Duplicate(
+     IDirectSoundBufferImpl **ppdsb,
+     IDirectSoundBufferImpl *pdsb) DECLSPEC_HIDDEN;
+ void secondarybuffer_destroy(IDirectSoundBufferImpl *This) DECLSPEC_HIDDEN;
+-const IDirectSound3DListenerVtbl ds3dlvt DECLSPEC_HIDDEN;
+-const IDirectSound3DBufferVtbl ds3dbvt DECLSPEC_HIDDEN;
+-const IKsPropertySetVtbl iksbvt DECLSPEC_HIDDEN;
++extern const IDirectSound3DListenerVtbl ds3dlvt DECLSPEC_HIDDEN;
++extern const IDirectSound3DBufferVtbl ds3dbvt DECLSPEC_HIDDEN;
++extern const IKsPropertySetVtbl iksbvt DECLSPEC_HIDDEN;
+ 
+ HRESULT IKsPrivatePropertySetImpl_Create(REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+ 
+diff --git a/dlls/gphoto2.ds/gphoto2_i.h b/dlls/gphoto2.ds/gphoto2_i.h
+index 9ab8bbb..4171fca 100644
+--- a/dlls/gphoto2.ds/gphoto2_i.h
++++ b/dlls/gphoto2.ds/gphoto2_i.h
+@@ -100,7 +100,9 @@ struct tagActiveDS
+     struct jpeg_decompress_struct	jd;
+     struct jpeg_error_mgr		jerr;
+ #endif
+-} activeDS DECLSPEC_HIDDEN;
++};
++
++extern struct tagActiveDS activeDS DECLSPEC_HIDDEN;
+ 
+ /* Helper functions */
+ extern TW_UINT16 GPHOTO2_SaneCapability (pTW_CAPABILITY pCapability, TW_UINT16 action) DECLSPEC_HIDDEN;
+diff --git a/dlls/gphoto2.ds/gphoto2_main.c b/dlls/gphoto2.ds/gphoto2_main.c
+index 2810041..4d71c89 100644
+--- a/dlls/gphoto2.ds/gphoto2_main.c
++++ b/dlls/gphoto2.ds/gphoto2_main.c
+@@ -33,6 +33,8 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(twain);
+ 
++struct tagActiveDS activeDS;
++
+ DSMENTRYPROC GPHOTO2_dsmentry;
+ 
+ #ifdef HAVE_GPHOTO2
+diff --git a/dlls/mshtml/main.c b/dlls/mshtml/main.c
+index 2ba648f..100410d 100644
+--- a/dlls/mshtml/main.c
++++ b/dlls/mshtml/main.c
+@@ -51,6 +51,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+ HINSTANCE hInst;
+ DWORD mshtml_tls = TLS_OUT_OF_INDEXES;
+ 
++void (__cdecl *ccp_init)(ExternalCycleCollectionParticipant*,const CCObjCallback*);
++nsrefcnt (__cdecl *ccref_decr)(nsCycleCollectingAutoRefCnt*,nsISupports*,ExternalCycleCollectionParticipant*);
++nsrefcnt (__cdecl *ccref_incr)(nsCycleCollectingAutoRefCnt*,nsISupports*);
++void (__cdecl *ccref_init)(nsCycleCollectingAutoRefCnt*,nsrefcnt);
++void (__cdecl *describe_cc_node)(nsCycleCollectingAutoRefCnt*,const char*,nsCycleCollectionTraversalCallback*);
++void (__cdecl *note_cc_edge)(nsISupports*,const char*,nsCycleCollectionTraversalCallback*);
++
+ static HINSTANCE shdoclc = NULL;
+ static WCHAR *status_strings[IDS_STATUS_LAST-IDS_STATUS_FIRST+1];
+ static IMultiLanguage2 *mlang;
+diff --git a/dlls/mshtml/mshtml_private.h b/dlls/mshtml/mshtml_private.h
+index 89a56bd..4abab18 100644
+--- a/dlls/mshtml/mshtml_private.h
++++ b/dlls/mshtml/mshtml_private.h
+@@ -335,12 +335,12 @@ typedef struct {
+ 
+ DEFINE_GUID(IID_nsXPCOMCycleCollectionParticipant, 0x9674489b,0x1f6f,0x4550,0xa7,0x30, 0xcc,0xae,0xdd,0x10,0x4c,0xf9);
+ 
+-nsrefcnt (__cdecl *ccref_incr)(nsCycleCollectingAutoRefCnt*,nsISupports*) DECLSPEC_HIDDEN;
+-nsrefcnt (__cdecl *ccref_decr)(nsCycleCollectingAutoRefCnt*,nsISupports*,ExternalCycleCollectionParticipant*) DECLSPEC_HIDDEN;
+-void (__cdecl *ccref_init)(nsCycleCollectingAutoRefCnt*,nsrefcnt) DECLSPEC_HIDDEN;
+-void (__cdecl *ccp_init)(ExternalCycleCollectionParticipant*,const CCObjCallback*) DECLSPEC_HIDDEN;
+-void (__cdecl *describe_cc_node)(nsCycleCollectingAutoRefCnt*,const char*,nsCycleCollectionTraversalCallback*) DECLSPEC_HIDDEN;
+-void (__cdecl *note_cc_edge)(nsISupports*,const char*,nsCycleCollectionTraversalCallback*) DECLSPEC_HIDDEN;
++extern nsrefcnt (__cdecl *ccref_incr)(nsCycleCollectingAutoRefCnt*,nsISupports*) DECLSPEC_HIDDEN;
++extern nsrefcnt (__cdecl *ccref_decr)(nsCycleCollectingAutoRefCnt*,nsISupports*,ExternalCycleCollectionParticipant*) DECLSPEC_HIDDEN;
++extern void (__cdecl *ccref_init)(nsCycleCollectingAutoRefCnt*,nsrefcnt) DECLSPEC_HIDDEN;
++extern void (__cdecl *ccp_init)(ExternalCycleCollectionParticipant*,const CCObjCallback*) DECLSPEC_HIDDEN;
++extern void (__cdecl *describe_cc_node)(nsCycleCollectingAutoRefCnt*,const char*,nsCycleCollectionTraversalCallback*) DECLSPEC_HIDDEN;
++extern void (__cdecl *note_cc_edge)(nsISupports*,const char*,nsCycleCollectionTraversalCallback*) DECLSPEC_HIDDEN;
+ 
+ void init_dispex_with_compat_mode(DispatchEx*,IUnknown*,dispex_static_data_t*,compat_mode_t) DECLSPEC_HIDDEN;
+ void release_dispex(DispatchEx*) DECLSPEC_HIDDEN;
+diff --git a/dlls/msi/msi.c b/dlls/msi/msi.c
+index 39b9354..8b816f7 100644
+--- a/dlls/msi/msi.c
++++ b/dlls/msi/msi.c
+@@ -52,6 +52,8 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(msi);
+ 
++BOOL is_wow64;
++
+ static const WCHAR installerW[] = {'\\','I','n','s','t','a','l','l','e','r',0};
+ 
+ UINT msi_locate_product(LPCWSTR szProduct, MSIINSTALLCONTEXT *context)
+diff --git a/dlls/msi/msipriv.h b/dlls/msi/msipriv.h
+index f9263b5..368aef1 100644
+--- a/dlls/msi/msipriv.h
++++ b/dlls/msi/msipriv.h
+@@ -42,7 +42,7 @@
+ #include "winemsi.h"
+ 
+ static const BOOL is_64bit = sizeof(void *) > sizeof(int);
+-BOOL is_wow64 DECLSPEC_HIDDEN;
++extern BOOL is_wow64 DECLSPEC_HIDDEN;
+ 
+ #define MSI_DATASIZEMASK 0x00ff
+ #define MSITYPE_VALID    0x0100
+diff --git a/dlls/msi/tests/utils.h b/dlls/msi/tests/utils.h
+index f16e2d5..0880553 100644
+--- a/dlls/msi/tests/utils.h
++++ b/dlls/msi/tests/utils.h
+@@ -16,12 +16,12 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-char PROG_FILES_DIR[MAX_PATH];
+-char PROG_FILES_DIR_NATIVE[MAX_PATH];
+-char COMMON_FILES_DIR[MAX_PATH];
+-char APP_DATA_DIR[MAX_PATH];
+-char WINDOWS_DIR[MAX_PATH];
+-char CURR_DIR[MAX_PATH];
++extern char PROG_FILES_DIR[MAX_PATH];
++extern char PROG_FILES_DIR_NATIVE[MAX_PATH];
++extern char COMMON_FILES_DIR[MAX_PATH];
++extern char APP_DATA_DIR[MAX_PATH];
++extern char WINDOWS_DIR[MAX_PATH];
++extern char CURR_DIR[MAX_PATH];
+ 
+ BOOL get_system_dirs(void);
+ BOOL get_user_dirs(void);
+diff --git a/dlls/sane.ds/sane_i.h b/dlls/sane.ds/sane_i.h
+index 941e8b9..9351bdc 100644
+--- a/dlls/sane.ds/sane_i.h
++++ b/dlls/sane.ds/sane_i.h
+@@ -36,7 +36,7 @@
+ #include "twain.h"
+ 
+ #ifdef SONAME_LIBSANE
+-#define MAKE_FUNCPTR(f) typeof(f) * p##f DECLSPEC_HIDDEN;
++#define MAKE_FUNCPTR(f) extern typeof(f) * p##f DECLSPEC_HIDDEN;
+ MAKE_FUNCPTR(sane_init)
+ MAKE_FUNCPTR(sane_exit)
+ MAKE_FUNCPTR(sane_get_devices)
+@@ -84,7 +84,9 @@ struct tagActiveDS
+     TW_FIX32            defaultXResolution;
+     BOOL                YResolutionSet;
+     TW_FIX32            defaultYResolution;
+-} activeDS DECLSPEC_HIDDEN;
++};
++
++extern struct tagActiveDS activeDS DECLSPEC_HIDDEN;
+ 
+ /* Helper functions */
+ extern TW_UINT16 SANE_SaneCapability (pTW_CAPABILITY pCapability, TW_UINT16 action) DECLSPEC_HIDDEN;
+diff --git a/dlls/sane.ds/sane_main.c b/dlls/sane.ds/sane_main.c
+index 7af0a23..0cf211d 100644
+--- a/dlls/sane.ds/sane_main.c
++++ b/dlls/sane.ds/sane_main.c
+@@ -30,9 +30,27 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(twain);
+ 
++struct tagActiveDS activeDS;
++
+ DSMENTRYPROC SANE_dsmentry;
+ 
+ #ifdef SONAME_LIBSANE
++#define MAKE_FUNCPTR(f) typeof(f) * p##f;
++MAKE_FUNCPTR(sane_init)
++MAKE_FUNCPTR(sane_exit)
++MAKE_FUNCPTR(sane_get_devices)
++MAKE_FUNCPTR(sane_open)
++MAKE_FUNCPTR(sane_close)
++MAKE_FUNCPTR(sane_get_option_descriptor)
++MAKE_FUNCPTR(sane_control_option)
++MAKE_FUNCPTR(sane_get_parameters)
++MAKE_FUNCPTR(sane_start)
++MAKE_FUNCPTR(sane_read)
++MAKE_FUNCPTR(sane_cancel)
++MAKE_FUNCPTR(sane_set_io_mode)
++MAKE_FUNCPTR(sane_get_select_fd)
++MAKE_FUNCPTR(sane_strstatus)
++#undef MAKE_FUNCPTR
+ 
+ HINSTANCE SANE_instance;
+ 
+diff --git a/dlls/schedsvc/tests/atsvcapi.c b/dlls/schedsvc/tests/atsvcapi.c
+index d7d48a1..f10c9d0 100644
+--- a/dlls/schedsvc/tests/atsvcapi.c
++++ b/dlls/schedsvc/tests/atsvcapi.c
+@@ -31,7 +31,7 @@
+ #define JOB_ADD_CURRENT_DATE 0x08
+ #define JOB_NONINTERACTIVE   0x10
+ 
+-extern handle_t rpc_handle;
++extern handle_t atsvc_handle;
+ 
+ static int test_failures, test_skipped;
+ 
+@@ -69,7 +69,7 @@ START_TEST(atsvcapi)
+ 
+     hr = RpcStringBindingComposeA(NULL, ncalrpc, NULL, NULL, NULL, &binding_str);
+     ok(hr == RPC_S_OK, "RpcStringBindingCompose error %#x\n", hr);
+-    hr = RpcBindingFromStringBindingA(binding_str, &rpc_handle);
++    hr = RpcBindingFromStringBindingA(binding_str, &atsvc_handle);
+     ok(hr == RPC_S_OK, "RpcBindingFromStringBinding error %#x\n", hr);
+     hr = RpcStringFreeA(&binding_str);
+     ok(hr == RPC_S_OK, "RpcStringFree error %#x\n", hr);
+@@ -173,7 +173,7 @@ skip_tests_delete:
+ skip_tests:
+     SetUnhandledExceptionFilter(old_exception_filter);
+ 
+-    hr = RpcBindingFree(&rpc_handle);
++    hr = RpcBindingFree(&atsvc_handle);
+     ok(hr == RPC_S_OK, "RpcBindingFree error %#x\n", hr);
+ }
+ 
+diff --git a/dlls/schedsvc/tests/rpcapi.c b/dlls/schedsvc/tests/rpcapi.c
+index 4aaafb6..7eaa41a 100644
+--- a/dlls/schedsvc/tests/rpcapi.c
++++ b/dlls/schedsvc/tests/rpcapi.c
+@@ -25,7 +25,7 @@
+ 
+ #include "wine/test.h"
+ 
+-extern handle_t rpc_handle;
++extern handle_t schrpc_handle;
+ 
+ static LONG CALLBACK rpc_exception_filter(EXCEPTION_POINTERS *ptrs)
+ {
+@@ -103,7 +103,7 @@ START_TEST(rpcapi)
+ 
+     hr = RpcStringBindingComposeA(NULL, ncalrpc, NULL, NULL, NULL, &binding_str);
+     ok(hr == RPC_S_OK, "RpcStringBindingCompose error %#x\n", hr);
+-    hr = RpcBindingFromStringBindingA(binding_str, &rpc_handle);
++    hr = RpcBindingFromStringBindingA(binding_str, &schrpc_handle);
+     ok(hr == RPC_S_OK, "RpcBindingFromStringBinding error %#x\n", hr);
+     hr = RpcStringFreeA(&binding_str);
+     ok(hr == RPC_S_OK, "RpcStringFree error %#x\n", hr);
+@@ -534,7 +534,7 @@ todo_wine
+     ok(hr == S_OK, "expected S_OK, got %#x\n", hr);
+     MIDL_user_free(path);
+ 
+-    hr = RpcBindingFree(&rpc_handle);
++    hr = RpcBindingFree(&schrpc_handle);
+     ok(hr == RPC_S_OK, "RpcBindingFree error %#x\n", hr);
+ }
+ 
+diff --git a/dlls/secur32/ntlm.c b/dlls/secur32/ntlm.c
+index 3280fa1..f51b69d 100644
+--- a/dlls/secur32/ntlm.c
++++ b/dlls/secur32/ntlm.c
+@@ -1386,8 +1386,8 @@ static const SecPkgInfoA infoA = {
+     ntlm_comment_A
+ };
+ 
+-SecPkgInfoA *ntlm_package_infoA = (SecPkgInfoA *)&infoA;
+-SecPkgInfoW *ntlm_package_infoW = (SecPkgInfoW *)&infoW;
++static SecPkgInfoA *ntlm_package_infoA = (SecPkgInfoA *)&infoA;
++static SecPkgInfoW *ntlm_package_infoW = (SecPkgInfoW *)&infoW;
+ 
+ static SecPkgInfoW *build_package_infoW( const SecPkgInfoW *info )
+ {
+diff --git a/dlls/secur32/secur32_priv.h b/dlls/secur32/secur32_priv.h
+index 4566fe2..2184c7e 100644
+--- a/dlls/secur32/secur32_priv.h
++++ b/dlls/secur32/secur32_priv.h
+@@ -191,9 +191,6 @@ void SECUR32_arc4Cleanup(arc4_info *a4i) DECLSPEC_HIDDEN;
+ #define NTLMSSP_NEGOTIATE_56                        0x80000000
+ 
+ 
+-SecPkgInfoW *ntlm_package_infoW DECLSPEC_HIDDEN;
+-SecPkgInfoA *ntlm_package_infoA DECLSPEC_HIDDEN;
+-
+ /* schannel internal interface */
+ typedef struct schan_imp_session_opaque *schan_imp_session;
+ 
+diff --git a/dlls/taskschd/task.c b/dlls/taskschd/task.c
+index 1306c8c..248ebee 100644
+--- a/dlls/taskschd/task.c
++++ b/dlls/taskschd/task.c
+@@ -3844,7 +3844,7 @@ static HRESULT WINAPI TaskService_Connect(ITaskService *iface, VARIANT server, V
+     DWORD len;
+     HRESULT hr;
+     RPC_WSTR binding_str;
+-    extern handle_t rpc_handle;
++    extern handle_t schrpc_handle;
+ 
+     TRACE("%p,%s,%s,%s,%s\n", iface, debugstr_variant(&server), debugstr_variant(&user),
+           debugstr_variant(&domain), debugstr_variant(&password));
+@@ -3883,7 +3883,7 @@ static HRESULT WINAPI TaskService_Connect(ITaskService *iface, VARIANT server, V
+ 
+     hr = RpcStringBindingComposeW(NULL, ncalrpc, NULL, NULL, NULL, &binding_str);
+     if (hr != RPC_S_OK) return hr;
+-    hr = RpcBindingFromStringBindingW(binding_str, &rpc_handle);
++    hr = RpcBindingFromStringBindingW(binding_str, &schrpc_handle);
+     RpcStringFreeW(&binding_str);
+     if (hr != RPC_S_OK) return hr;
+ 
+diff --git a/dlls/twain_32/twain32_main.c b/dlls/twain_32/twain32_main.c
+index 016680b..2a555e9 100644
+--- a/dlls/twain_32/twain32_main.c
++++ b/dlls/twain_32/twain32_main.c
+@@ -31,7 +31,9 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(twain);
+ 
+-extern HINSTANCE DSM_hinstance;
++TW_UINT16 DSM_twCC;
++activeDS *activeSources;
++HINSTANCE DSM_hinstance;
+ 
+ BOOL WINAPI DllMain (HINSTANCE hinstance, DWORD reason, LPVOID reserved)
+ {
+diff --git a/dlls/twain_32/twain_i.h b/dlls/twain_32/twain_i.h
+index 4d33135..beb5334 100644
+--- a/dlls/twain_32/twain_i.h
++++ b/dlls/twain_32/twain_i.h
+@@ -49,11 +49,11 @@ typedef struct tagActiveDS
+     HWND                event_window;
+ } activeDS;
+ 
+-TW_UINT16 DSM_twCC DECLSPEC_HIDDEN;             /* current condition code of Source Manager */
++extern TW_UINT16 DSM_twCC DECLSPEC_HIDDEN;             /* current condition code of Source Manager */
+ 
+-activeDS *activeSources DECLSPEC_HIDDEN;	/* list of active data sources */
++extern activeDS *activeSources DECLSPEC_HIDDEN;	/* list of active data sources */
+ 
+-HINSTANCE DSM_hinstance DECLSPEC_HIDDEN;
++extern HINSTANCE DSM_hinstance DECLSPEC_HIDDEN;
+ 
+ /* Implementation of operation triplets (From Application to Source Manager) */
+ extern TW_UINT16 TWAIN_CloseDS
+diff --git a/dlls/wbemprox/main.c b/dlls/wbemprox/main.c
+index e6ccd5c..0fc11ca 100644
+--- a/dlls/wbemprox/main.c
++++ b/dlls/wbemprox/main.c
+@@ -37,6 +37,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
+ 
+ static HINSTANCE instance;
+ 
++struct list *table_list;
++
+ typedef HRESULT (*fnCreateInstance)( LPVOID *ppObj );
+ 
+ typedef struct
+diff --git a/dlls/wbemprox/wbemprox_private.h b/dlls/wbemprox/wbemprox_private.h
+index d52affa..b3cd58d 100644
+--- a/dlls/wbemprox/wbemprox_private.h
++++ b/dlls/wbemprox/wbemprox_private.h
+@@ -21,8 +21,8 @@
+ #include "wine/list.h"
+ #include "wine/unicode.h"
+ 
+-IClientSecurity client_security DECLSPEC_HIDDEN;
+-struct list *table_list DECLSPEC_HIDDEN;
++extern IClientSecurity client_security DECLSPEC_HIDDEN;
++extern struct list *table_list DECLSPEC_HIDDEN;
+ 
+ enum param_direction
+ {
+diff --git a/dlls/webservices/webservices_private.h b/dlls/webservices/webservices_private.h
+index b482b5b..7b4fb16 100644
+--- a/dlls/webservices/webservices_private.h
++++ b/dlls/webservices/webservices_private.h
+@@ -46,8 +46,8 @@ struct dictionary
+     ULONG              current_sequence;
+     ULONG             *sequence;
+ };
+-struct dictionary dict_builtin DECLSPEC_HIDDEN;
+-const struct dictionary dict_builtin_static DECLSPEC_HIDDEN;
++extern struct dictionary dict_builtin DECLSPEC_HIDDEN;
++extern const struct dictionary dict_builtin_static DECLSPEC_HIDDEN;
+ 
+ int find_string( const struct dictionary *, const unsigned char *, ULONG, ULONG * ) DECLSPEC_HIDDEN;
+ HRESULT insert_string( struct dictionary *, unsigned char *, ULONG, int, ULONG * ) DECLSPEC_HIDDEN;
+diff --git a/dlls/wined3d/wined3d_gl.h b/dlls/wined3d/wined3d_gl.h
+index a02073c..95b0008 100644
+--- a/dlls/wined3d/wined3d_gl.h
++++ b/dlls/wined3d/wined3d_gl.h
+@@ -28,8 +28,8 @@
+ 
+ #define GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI 0x8837  /* not in the gl spec */
+ 
+-void (WINE_GLAPI *glDisableWINE)(GLenum cap) DECLSPEC_HIDDEN;
+-void (WINE_GLAPI *glEnableWINE)(GLenum cap) DECLSPEC_HIDDEN;
++extern void (WINE_GLAPI *glDisableWINE)(GLenum cap) DECLSPEC_HIDDEN;
++extern void (WINE_GLAPI *glEnableWINE)(GLenum cap) DECLSPEC_HIDDEN;
+ 
+ /* OpenGL extensions. */
+ enum wined3d_gl_extension
+diff --git a/dlls/wined3d/wined3d_main.c b/dlls/wined3d/wined3d_main.c
+index ca83d0a..8dba657 100644
+--- a/dlls/wined3d/wined3d_main.c
++++ b/dlls/wined3d/wined3d_main.c
+@@ -31,6 +31,9 @@
+ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
+ WINE_DECLARE_DEBUG_CHANNEL(winediag);
+ 
++void (WINE_GLAPI *glDisableWINE)(GLenum cap) DECLSPEC_HIDDEN;
++void (WINE_GLAPI *glEnableWINE)(GLenum cap) DECLSPEC_HIDDEN;
++
+ struct wined3d_wndproc
+ {
+     HWND window;
+diff --git a/include/wine/atsvc.idl b/include/wine/atsvc.idl
+index e95e6cf..5e7121d 100644
+--- a/include/wine/atsvc.idl
++++ b/include/wine/atsvc.idl
+@@ -23,7 +23,7 @@ import "ocidl.idl";
+ 
+ [
+     uuid(1ff70682-0a51-30e8-076d-740be8cee98b),
+-    implicit_handle(handle_t rpc_handle),
++    implicit_handle(handle_t atsvc_handle),
+     version(1.0),
+     pointer_default(unique)
+ ]
+diff --git a/include/wine/schrpc.idl b/include/wine/schrpc.idl
+index 4af709d..944f283 100644
+--- a/include/wine/schrpc.idl
++++ b/include/wine/schrpc.idl
+@@ -26,7 +26,7 @@ import "ocidl.idl";
+ 
+ [
+     uuid(86d35949-83c9-4044-b424-db363231fd0c),
+-    implicit_handle(handle_t rpc_handle),
++    implicit_handle(handle_t schrpc_handle),
+     version(1.0),
+     pointer_default(unique)
+ ]

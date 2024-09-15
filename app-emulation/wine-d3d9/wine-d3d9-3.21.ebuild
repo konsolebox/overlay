@@ -39,7 +39,6 @@ else
 fi
 
 S="${WORKDIR}/${MY_P}"
-RESTRICT="mirror"
 
 LICENSE="LGPL-2.1"
 SLOT="${PV}"
@@ -55,9 +54,11 @@ REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	test? ( abi_x86_32 )
 	vkd3d? ( vulkan )" # osmesa-opengl #286560 # X-truetype #551124
 
+RESTRICT="mirror"
+
 # FIXME: the test suite is unsuitable for us; many tests require net access
 # or fail due to Xvfb's opengl limitations.
-RESTRICT="test"
+RESTRICT+=" test"
 
 COMMON_DEPEND="
 	X? (
@@ -103,7 +104,7 @@ COMMON_DEPEND="
 	osmesa? ( >=media-libs/mesa-13[osmesa,${MULTILIB_USEDEP}] )
 	pcap? ( net-libs/libpcap[${MULTILIB_USEDEP}] )
 	png? ( media-libs/libpng:0=[${MULTILIB_USEDEP}] )
-	pulseaudio? ( media-sound/pulseaudio[${MULTILIB_USEDEP}] )
+	pulseaudio? ( media-libs/libpulse[${MULTILIB_USEDEP}] )
 	scanner? ( media-gfx/sane-backends:=[${MULTILIB_USEDEP}] )
 	sdl? ( media-libs/libsdl2:=[haptic,joystick,${MULTILIB_USEDEP}] )
 	ssl? ( net-libs/gnutls:=[${MULTILIB_USEDEP}] )
@@ -123,7 +124,6 @@ COMMON_DEPEND="
 RDEPEND="${COMMON_DEPEND}
 	app-emulation/wine-desktop-common
 	>app-eselect/eselect-wine-0.3
-	!app-emulation/wine:0
 	dos? ( >=games-emulation/dosbox-0.74_p20160629 )
 	gecko? ( app-emulation/wine-gecko:2.47[abi_x86_32?,abi_x86_64?] )
 	mono? ( app-emulation/wine-mono:4.7.3 )
@@ -140,10 +140,10 @@ RDEPEND="${COMMON_DEPEND}
 
 # tools/make_requests requires perl
 DEPEND="${COMMON_DEPEND}
+	app-alternatives/yacc
 	sys-devel/flex
 	>=sys-kernel/linux-headers-2.6
 	virtual/pkgconfig
-	|| ( app-alternatives/yacc virtual/yacc )
 	X? ( x11-base/xorg-proto )
 	xinerama? ( x11-base/xorg-proto )"
 

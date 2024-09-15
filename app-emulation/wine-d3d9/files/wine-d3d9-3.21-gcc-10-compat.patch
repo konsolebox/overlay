@@ -1,0 +1,10 @@
+diff --git a/dlls/d3d9-nine/shader_validator.h b/dlls/d3d9-nine/shader_validator.h
+index 07a5e2d..c0b5f1e 100644
+--- a/dlls/d3d9-nine/shader_validator.h
++++ b/dlls/d3d9-nine/shader_validator.h
+@@ -26,4 +26,4 @@ typedef struct IDirect3DShaderValidator9Impl
+     LONG ref;
+ } IDirect3DShaderValidator9Impl;
+ 
+-const void *IDirect3DShaderValidator9Vtbl[6];
++extern const void *IDirect3DShaderValidator9Vtbl[6];
