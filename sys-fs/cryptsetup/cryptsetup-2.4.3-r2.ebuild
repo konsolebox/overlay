@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -7,12 +7,14 @@ inherit linux-info tmpfiles
 
 DESCRIPTION="Tool to setup encrypted devices with dm-crypt"
 HOMEPAGE="https://gitlab.com/cryptsetup/cryptsetup/blob/master/README.md"
+
 SRC_URI="https://www.kernel.org/pub/linux/utils/${PN}/v$(ver_cut 1-2)/${P/_/-}.tar.xz"
+S="${WORKDIR}/${P/_/-}"
 
 LICENSE="GPL-2+"
 SLOT="0/12" # libcryptsetup.so version
 [[ ${PV} != *_rc* ]] && \
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 CRYPTO_BACKENDS="gcrypt kernel nettle +openssl"
 # we don't support nss since it doesn't allow cryptsetup to be built statically
 # and it's missing ripemd160 support so it can't provide full backward compatibility
@@ -50,8 +52,6 @@ DEPEND="${RDEPEND}
 BDEPEND="
 	virtual/pkgconfig
 "
-
-S="${WORKDIR}/${P/_/-}"
 
 pkg_setup() {
 	local CONFIG_CHECK="~DM_CRYPT ~CRYPTO ~CRYPTO_CBC ~CRYPTO_SHA256"

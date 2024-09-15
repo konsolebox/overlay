@@ -14,7 +14,7 @@ S="${WORKDIR}"/${P/_/-}
 LICENSE="GPL-2+"
 SLOT="0/12" # libcryptsetup.so version
 if [[ ${PV} != *_rc* ]] ; then
-	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
+	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
 fi
 
 CRYPTO_BACKENDS="gcrypt kernel nettle +openssl"
@@ -72,7 +72,7 @@ pkg_setup() {
 }
 
 src_prepare() {
-	use asterisk-patch && eapply "${FILESDIR}"/cryptsetup-2.7.4-show-asterisk-on-password-input.patch
+	use asterisk-patch && eapply "${FILESDIR}"/cryptsetup-2.7.5-show-asterisk-on-password-input.patch
 	default
 	sed -i '/^LOOPDEV=/s:$: || exit 0:' tests/{compat,mode}-test || die
 }
