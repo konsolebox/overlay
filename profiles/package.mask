@@ -1,6 +1,7 @@
 # Mask devel and testing versions by default
 =app-shells/bash-99999
 =app-shells/bash-supplemental-99999
+=app-shells/hist-99999
 =app-text/trim-trailing-spaces-99999
 =sys-apps/binfind-99999
 =sys-apps/killtree-99999
@@ -9,6 +10,8 @@
 =sys-apps/rcopy-99999
 =sys-apps/tail-follow-grep-99999
 =sys-apps/xn-99999
+=sys-block/map-partitions-99999
+=sys-boot/build-initramfs-99999
 
 # Mask by default
 app-portage/repoman
@@ -24,6 +27,12 @@ dev-util/geany
 dev-ruby/rubygems
 
 # Mask by default
+media-video/pipewire
+
+# Mask by default
+media-video/wireplumber
+
+# Mask by default
 net-irc/hexchat
 
 # Mask by default
@@ -33,7 +42,4 @@ net-irc/znc
 x11-misc/notification-daemon
 
 # Mask by default
-media-video/pipewire
-
-# Mask by default
-media-video/wireplumber
+sys-boot/grub
