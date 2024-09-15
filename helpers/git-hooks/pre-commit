@@ -53,7 +53,7 @@ function call {
 		fi
 	done
 
-	printf '%s\n' "${m# }"
+	printf '> %s\n' "${m# }"
 	command "$@"
 }
 
@@ -81,6 +81,20 @@ function main {
 			die "Copyright year of '$f' is invalid: ${copyright_year}"
 	done
 
+	# Immediately check for unindexed files that belong to a package starting
+	# from where the git command was executed.
+
+	readarray -t unindexed < <(printf '%s' "${status}" | \
+			gawk 'BEGIN { p = ENVIRON["GIT_PREFIX"] } !/^. / && !/^!!/ &&
+					match($0, /^(.. )(.*)/, a) && substr(a[2], 0, length(p)) == p &&
+					a[2] ~ /^[^/-]+-[^/-]+\/[^/-]+/ { print a[1] a[2] }')
+
+	if [[ ${#unindexed[@]} -gt 0 ]]; then
+		local IFS=$'\n' __
+		printf -v __ 'Unindexed modifications found: \n\n%s\n' "${unindexed[*]/#/  }"
+		die "$__"
+	fi
+
 	# Following tests are worktree based.
 	#
 	# The first step is to get the common prefix.
@@ -98,15 +112,18 @@ function main {
 				test_dir="${*:1:2}"
 			fi
 
-			# We can't allow unindexed modifications in "${test_dir}" because tests will affect it.
+			# We can't allow unindexed modifications in "${test_dir}" because the main tests will be
+			# affected by those.
 			#
-			# The "not all files deleted yet worktree directory doesn't exist" test below might be
-			# shadowed because of this but we'll still keep it anyway for the sake of consistency.
+			# The "not all files are currently deleted but directory doesn't exist in worktree" test
+			# below might be overshadowed by this but we'll keep the test anyway for the sake of
+			# consistency.
 			#
-			# Two tests also make it more reliable.
+			# Don't exclude directories since files within it do not appear when the directory
+			# itself isn't indexed.
 
 			readarray -t unindexed < <(git status --porcelain -- "${test_dir:-.}" | \
-					gawk '!/^. / && !/^\?\?.*\/$/ && !/^!!/')
+					gawk '!/^. / && !/^!!/')
 
 			if [[ ${#unindexed[@]} -gt 0 ]]; then
 				local IFS=$'\n' __
@@ -121,7 +138,7 @@ function main {
 
 			if [[ -z ${test_dir} ]] || ! all_files_deleted "${test_dir}"; then
 				[[ -z ${test_dir} || -e ${test_dir} ]] || \
-					die "Not all files are deleted yet directory doesn't exist in worktree: ${test_dir}"
+					die "Not all files are currently deleted but directory doesn't exist in worktree: ${test_dir}"
 				[[ -z ${test_dir} || -d ${test_dir} ]] || \
 					die "Unexpectedly not a directory: ${test_dir}"
 
@@ -138,7 +155,7 @@ function main {
 						type -P repoman >/dev/null; then
 					echo Repoman:
 					echo "Set GIT_PRE_COMMIT_SKIP_REPOMAN to 'true' to disable."
-					( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && repoman ) || return 1
+					( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && call repoman ) || return 1
 					echo
 				fi
 
