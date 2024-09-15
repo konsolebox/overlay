@@ -13,7 +13,7 @@ HOMEPAGE="https://hexchat.github.io/"
 
 MY_P=${P%_*} MY_PV=${PV%_*}
 BASE_COMMIT="c7e241d1de35b05cef931e1981403d8f5c11a9d3"
-PATCH_COMMIT="2d31a3677d35ee7dae76a370de3a3685fbd95a96"
+PATCH_COMMIT="cb1c79fe78775854116de3fe1db89c186ffd01af"
 PATCH_FILENAME="${MY_P}-konsolebox-${PV#*_p}-${PATCH_COMMIT:0:8}.patch"
 SRC_URI="https://github.com/${PN}/${PN}/releases/download/v${MY_PV}/${MY_P}.tar.xz
 	https://github.com/konsolebox/hexchat/compare/${BASE_COMMIT}...${PATCH_COMMIT}.patch -> ${PATCH_FILENAME}"
