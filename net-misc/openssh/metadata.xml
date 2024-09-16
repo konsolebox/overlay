@@ -26,13 +26,10 @@
 	</longdescription>
 	<use>
 		<flag name="asterisk-patch">Apply display asterisks on no-echo input patch</flag>
-		<flag name="hpn">Enable high performance ssh</flag>
 		<flag name="ldns">Use LDNS for DNSSEC/SSHFP validation.</flag>
 		<flag name="livecd">Enable root password logins for live-cd environment.</flag>
-		<flag name="scp">Enable scp command with known security problems. See bug 733802</flag>
 		<flag name="security-key">Include builtin U2F/FIDO support</flag>
 		<flag name="ssl">Enable additional crypto algorithms via OpenSSL</flag>
-		<flag name="X509">Adds support for X.509 certificate authentication</flag>
 		<flag name="xmss">Enable XMSS post-quantum authentication algorithm</flag>
 	</use>
 	<upstream>
