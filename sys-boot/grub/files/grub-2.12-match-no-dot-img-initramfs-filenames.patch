@@ -1,0 +1,24 @@
+diff --git a/util/grub.d/10_linux.in b/util/grub.d/10_linux.in
+index cc393be7e..5edac4b9f 100644
+--- a/util/grub.d/10_linux.in
++++ b/util/grub.d/10_linux.in
+@@ -226,6 +226,7 @@ for linux in ${reverse_sorted_list}; do
+   for i in "initrd.img-${version}" "initrd-${version}.img" \
+ 	   "initrd-${alt_version}.img.old" "initrd-${version}.gz" \
+ 	   "initrd-${alt_version}.gz.old" "initrd-${version}" \
++	   "initramfs-${version}" "initramfs-${alt_version}.old" \
+ 	   "initramfs-${version}.img" "initramfs-${alt_version}.img.old" \
+ 	   "initrd.img-${alt_version}" "initrd-${alt_version}.img" \
+ 	   "initrd-${alt_version}" "initramfs-${alt_version}.img" \
+diff --git a/util/grub.d/20_linux_xen.in b/util/grub.d/20_linux_xen.in
+index 94dd8be13..a3a0c7fcf 100644
+--- a/util/grub.d/20_linux_xen.in
++++ b/util/grub.d/20_linux_xen.in
+@@ -298,6 +298,7 @@ for current_xen in ${reverse_sorted_xen_list}; do
+ 	for i in "initrd.img-${version}" "initrd-${version}.img" \
+ 	   "initrd-${alt_version}.img.old" "initrd-${version}.gz" \
+ 	   "initrd-${alt_version}.gz.old" "initrd-${version}" \
++	   "initramfs-${version}" "initramfs-${alt_version}.old" \
+ 	   "initramfs-${version}.img" "initramfs-${alt_version}.img.old" \
+ 	   "initrd.img-${alt_version}" "initrd-${alt_version}.img" \
+ 	   "initrd-${alt_version}" "initramfs-${alt_version}.img" \
