@@ -3,6 +3,8 @@
 
 EAPI=8
 
+MODULES_KERNEL_MAX=6.9.12
+
 inherit linux-mod-r1
 
 COMMIT=ee1b8bd4b447e140ec50a8d8ed5b399917d85862
