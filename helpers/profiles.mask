@@ -142,6 +142,8 @@ prefix/darwin/macos/13.0/arm64/gcc
 prefix/darwin/macos/13.0/x64/gcc
 prefix/darwin/macos/14.0/arm64/gcc
 prefix/darwin/macos/14.0/x64/gcc
+prefix/darwin/macos/15.0/arm64/gcc
+prefix/darwin/macos/15.0/x64/gcc
 prefix/linux/amd64
 prefix/linux/arm
 prefix/linux/ppc64
