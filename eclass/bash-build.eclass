@@ -123,6 +123,7 @@ _bash-build_set_globals() {
 
 	IUSE="afs bundled-readline mem-scramble +net nls pgo +readline static vanilla"
 	[[ ${_BASH_BUILD_VERIFY_SIG-} == true ]] && IUSE+=" verify-sig"
+	[[ ${PV} == 99999 ]] && IUSE+=" bash-source-fullpath-default"
 
 	if [[ ${_BASH_BUILD_INSTALL_TYPE} == system ]]; then
 		SLOT=0
@@ -303,6 +304,8 @@ bash-build_src_configure() {
 		$(use_enable readline bang-history)
 		"$@"
 	)
+
+	has bash-source-fullpath-default ${IUSE} && conf+=($(use_enable bash-source-fullpath-default))
 
 	if [[ _BASH_BUILD_PV_PARTS -lt 4 ]]; then
 		# Force pgrp synchronization
