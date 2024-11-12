@@ -38,5 +38,5 @@ src_install() {
 	meson_src_install
 	python_fix_shebang "${ED}/usr/bin/emote"
 	rm -f "${ED}/usr/share/emote/static/"{com.tomjwatson.Emote.desktop,meson.build,prepare-launch} || die
-	dosym ../../usr/share/applications/com.tomjwatson.Emote.desktop /etc/autostart/com.tomjwatson.Emote.desktop
+	dosym ../../../usr/share/applications/com.tomjwatson.Emote.desktop /etc/xdg/autostart/com.tomjwatson.Emote.desktop
 }
