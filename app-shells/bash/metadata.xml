@@ -10,6 +10,9 @@
 			Log ALL commands typed into bash; should ONLY be used in restricted environments such as
 			honeypots
 		</flag>
+		<flag name="bash-source-fullpath-default">
+			Enable the bash_source_fullpath option by default
+		</flag>
 		<flag name="bundled-readline">Use bundled readline</flag>
 		<flag name="mem-scramble">
 			Build with custom malloc/free overwriting allocated/freed memory
