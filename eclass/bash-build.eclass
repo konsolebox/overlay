@@ -205,6 +205,7 @@ _bash-build_set_globals() {
 
 	BDEPEND="pgo? ( dev-util/gperf )"
 	[[ ${_BASH_BUILD_REQUIRE_BISON-} == true ]] && BDEPEND+=" sys-devel/bison"
+	[[ ${_BASH_BUILD_VERIFY_SIG} == true ]] && BDEPEND+=" verify-sig? ( sec-keys/openpgp-keys-chetramey )"
 	[[ ${SLOT} != 0 && ${PN} != bash ]] && RDEPEND+="!app-shells/bash:${SLOT}"
 }
 
