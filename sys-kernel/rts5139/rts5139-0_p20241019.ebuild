@@ -3,11 +3,9 @@
 
 EAPI=8
 
-MODULES_KERNEL_MAX=6.9.12
-
 inherit linux-mod-r1
 
-COMMIT=ee1b8bd4b447e140ec50a8d8ed5b399917d85862
+COMMIT=2564f4c9d1db4089dd08d453465c033fc10852df
 DESCRIPTION="A temporary fix for RTS5129/RTS5139 USB MMC card reader on Linux 3.16+ kernels"
 HOMEPAGE="https://github.com/asymingt/rts5139"
 SRC_URI="https://github.com/asymingt/${PN}/archive/${COMMIT}.tar.gz -> ${P}-${COMMIT:0:8}.tar.gz"
