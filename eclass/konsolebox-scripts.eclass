@@ -26,6 +26,10 @@
 # Extension name of the script
 # @REQUIRED
 
+# @ECLASS_VARIABLE: KONSOLEBOX_SCRIPTS_PREFIX
+# @DESCRIPTION:
+# Specifies the prefix path to the file in the repository.
+
 # @ECLASS_VARIABLE: KONSOLEBOX_SCRIPTS_RUBY_SINGLE_TARGETS
 # @DESCRIPTION:
 # Ruby targets a Ruby script can be installed for
@@ -51,7 +55,9 @@ _konsolebox-scripts_set_globals() {
 		[[ -z ${EGIT_BRANCH} ]] && EGIT_BRANCH=master
 	else
 		[[ -z ${KONSOLEBOX_SCRIPTS_COMMIT-} ]] && die "Commit version not specified."
-		SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${KONSOLEBOX_SCRIPTS_COMMIT}/${PN}.${KONSOLEBOX_SCRIPTS_EXT} -> ${PN}-${PV}-${KONSOLEBOX_SCRIPTS_COMMIT:0:8}.${KONSOLEBOX_SCRIPTS_EXT}"
+		local remote_filename=${KONSOLEBOX_SCRIPTS_PREFIX-}${PN}.${KONSOLEBOX_SCRIPTS_EXT}
+		local local_filename=${PN}-${PV}-${KONSOLEBOX_SCRIPTS_COMMIT:0:8}.${KONSOLEBOX_SCRIPTS_EXT}
+		SRC_URI="https://raw.githubusercontent.com/konsolebox/scripts/${KONSOLEBOX_SCRIPTS_COMMIT}/${remote_filename} -> ${local_filename}"
 		S=${WORKDIR}
 	fi
 
@@ -100,7 +106,11 @@ konsolebox-scripts_src_unpack() {
 # @DESCRIPTION:
 # Implements src_compile
 konsolebox-scripts_src_compile() {
-	call cp -- "${PN}.${KONSOLEBOX_SCRIPTS_EXT}" "${PN}" || die
+	if [[ ${PV} == 9999* ]]; then
+		call cp -- "${KONSOLEBOX_SCRIPTS_PREFIX-}${PN}.${KONSOLEBOX_SCRIPTS_EXT}" "${PN}" || die
+	else
+		call cp -- "${PN}.${KONSOLEBOX_SCRIPTS_EXT}" "${PN}" || die
+	fi
 
 	if [[ ${KONSOLEBOX_SCRIPTS_EXT} == rb ]]; then
 		local ruby=${EPREFIX}/usr/bin/ruby use
