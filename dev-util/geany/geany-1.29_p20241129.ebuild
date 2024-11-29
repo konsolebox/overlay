@@ -17,7 +17,7 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_REPO_URI="https://github.com/konsolebox/geany.git"
 	EGIT_BRANCH=master
 else
-	COMMIT=94db8f3e0a30d3e5ba46654467baa46e195c6094
+	COMMIT=225bd3a560d96a46acd722b92a37085c5ca55018
 	LEXILLA_VERSION=5.4.1
 	LEXILLA_TAG=rel-${LEXILLA_VERSION//./-}
 	SRC_URI="
