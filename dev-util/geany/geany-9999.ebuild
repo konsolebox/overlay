@@ -17,11 +17,13 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_REPO_URI="https://github.com/konsolebox/geany.git"
 	EGIT_BRANCH=master
 else
-	COMMIT=94db8f3e0a30d3e5ba46654467baa46e195c6094
+	COMMIT=a847bbdcdc4399fae6a499cd3889262349eb3e07
+	COMMIT_SHORT=${COMMIT:0:9}
+	COMMIT_AUTHOR_DATE=${PV#*_p}
 	LEXILLA_VERSION=5.4.1
 	LEXILLA_TAG=rel-${LEXILLA_VERSION//./-}
 	SRC_URI="
-		https://github.com/konsolebox/geany/archive/${COMMIT}.tar.gz -> ${P/_p/-konsolebox-}-${COMMIT:0:8}.tar.gz
+		https://github.com/konsolebox/geany/archive/${COMMIT}.tar.gz -> ${P/_p/-konsolebox-}-${COMMIT_SHORT}.tar.gz
 		https://github.com/ScintillaOrg/lexilla/archive/refs/tags/${LEXILLA_TAG}.tar.gz ->
 				lexilla-${LEXILLA_VERSION}.tar.gz
 	"
@@ -65,16 +67,21 @@ src_prepare() {
 }
 
 src_configure() {
-	econf --docdir="${EPREFIX}/usr/share/doc/${PF}" \
+	if [[ ${PV} != 9999 ]]; then
+		set -- "GEANY_REVISION=${COMMIT_SHORT}" "GEANY_REVISION_DATE=${COMMIT_AUTHOR_DATE//-}"
+	fi
+
+	econf \
 			"$(use_enable doc html-docs)" \
 			"$(use_enable vte)" \
 			--disable-api-docs \
 			--disable-dependency-tracking \
-			--disable-pdf-docs
+			--disable-pdf-docs \
+			"$@"
 }
 
 src_install() {
-	emake DESTDIR="${D}" DOCDIR="${D}/usr/share/doc/${PF}" install
-	edo rm -f "${D}/usr/share/doc/${PF}/"{COPYING,GPL-2,ScintillaLicense.txt}
-	edo find "${D}" -name '*.la' -delete
+	emake DESTDIR="${D}" DOCDIR="${ED}/usr/share/doc/${PF}" install
+	edo rm -f "${ED}/usr/share/doc/${PF}/"{COPYING,GPL-2,ScintillaLicense.txt}
+	edo find "${ED}" -name '*.la' -delete
 }
