@@ -38,6 +38,5 @@ src_install() {
 	dodoc README.md
 	newbin vantage.sh vantage
 	newicon icon.png vantage.png
-	make_desktop_entry "${DESTTREE}/bin/vantage" "Lenovo Vantage" vantage System \
-		"Encoding=UTF-8\nTerminal=false"
+	make_desktop_entry vantage "Lenovo Vantage" vantage System "Encoding=UTF-8\nTerminal=false"
 }
