@@ -250,6 +250,9 @@ multilib_src_install_all() {
 	# https://bugs.gentoo.org/944969
 	if use systemd; then
 		dosym bluetooth.service /usr/lib/systemd/system/dbus-org.bluez.service
+
+		# Do the same for bluetooth-mesh.service
+		dosym bluetooth-mesh.service /usr/lib/systemd/system/dbus-org.bluez.mesh.service
 	fi
 
 	find "${D}" -name '*.la' -type f -delete || die
