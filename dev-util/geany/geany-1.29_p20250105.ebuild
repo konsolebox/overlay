@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -17,7 +17,7 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_REPO_URI="https://github.com/konsolebox/geany.git"
 	EGIT_BRANCH=master
 else
-	COMMIT=3aed11655d82893e4573b1a4150d33a7d73f0f97
+	COMMIT=3e5d44b8dd21e16a8ea4eea98593f67bb18e9c5e
 	COMMIT_SHORT=${COMMIT:0:9}
 	COMMIT_AUTHOR_DATE=${PV#*_p}
 	LEXILLA_VERSION=5.4.1
