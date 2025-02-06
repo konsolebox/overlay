@@ -27,6 +27,9 @@ dev-util/geany
 dev-ruby/rubygems
 
 # Mask by default
+dev-ruby/typeprof
+
+# Mask by default
 media-video/pipewire
 
 # Mask by default
