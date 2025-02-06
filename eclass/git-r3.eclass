@@ -30,6 +30,8 @@ case ${EAPI} in
 	*) die "${ECLASS}: EAPI ${EAPI:-0} not supported" ;;
 esac
 
+inherit is-var-true
+
 if [[ -z ${_GIT_R3_ECLASS} ]]; then
 _GIT_R3_ECLASS=1
 
@@ -685,7 +687,7 @@ git-r3_fetch() {
 		umask "${EVCS_UMASK}" || die "Bad options to umask: ${EVCS_UMASK}"
 	fi
 	for r in "${repos[@]}"; do
-		if [[ ! ${EVCS_OFFLINE} && :1:yes:true: != *:"${no_fetch}":* ]]; then
+		if [[ ! ${EVCS_OFFLINE} ]] && ! is_var_true no_fetch; then
 			einfo "Fetching ${r} ..."
 
 			local fetch_command=( git fetch "${r}" )
@@ -880,7 +882,7 @@ git-r3_fetch() {
 	local EGIT_CLONE_TYPE=mirror
 
 	# recursively fetch submodules
-	if [[ :1:yes:true: != *:"${no_fetch_submodules}":* ]] && \
+	if ! is_var_true no_fetch_submodules && \
 			git cat-file -e "${local_ref}":.gitmodules &>/dev/null; then
 		local submodules
 		_git-r3_set_submodules "${_GIT_SUBMODULE_PATH}" \
