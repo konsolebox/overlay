@@ -1,22 +1,24 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-inherit autotools flag-o-matic multiprocessing
+RUST_OPTIONAL="yes"
+
+inherit autotools flag-o-matic multiprocessing rust
 
 MY_P="${PN}-$(ver_cut 1-3)"
+
+DESCRIPTION="An object-oriented scripting language"
+HOMEPAGE="https://www.ruby-lang.org/"
+SRC_URI="https://cache.ruby-lang.org/pub/ruby/$(ver_cut 1-2)/${MY_P}.tar.xz"
 S=${WORKDIR}/${MY_P}
 
+LICENSE="|| ( Ruby-BSD BSD-2 )"
 SLOT=$(ver_cut 1-2)
 MY_SUFFIX=$(ver_rs 1 '' ${SLOT})
 RUBYVERSION=${SLOT}.0
 
-DESCRIPTION="An object-oriented scripting language"
-HOMEPAGE="https://www.ruby-lang.org/"
-SRC_URI="https://cache.ruby-lang.org/pub/ruby/${SLOT}/${MY_P}.tar.xz"
-
-LICENSE="|| ( Ruby-BSD BSD-2 )"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
 IUSE="berkdb debug doc examples gdbm jemalloc jit socks5 +ssl static-libs systemtap tk valgrind xemacs"
 
@@ -24,7 +26,7 @@ RDEPEND="
 	berkdb? ( sys-libs/db:= )
 	gdbm? ( sys-libs/gdbm:= )
 	jemalloc? ( dev-libs/jemalloc:= )
-	jit? ( >=virtual/rust-1.58.1 )
+	jit? ( ${RUST_DEPEND} )
 	ssl? (
 		dev-libs/openssl:0=
 	)
@@ -47,21 +49,21 @@ DEPEND="
 "
 
 BUNDLED_GEMS="
-	>=dev-ruby/debug-1.9.1[ruby_targets_ruby33(-)]
+	>=dev-ruby/debug-1.9.2[ruby_targets_ruby33(-)]
 	>=dev-ruby/irb-1.11.0[ruby_targets_ruby33(-)]
 	>=dev-ruby/matrix-0.4.2[ruby_targets_ruby33(-)]
 	>=dev-ruby/minitest-5.20.0[ruby_targets_ruby33(-)]
-	>=dev-ruby/net-ftp-0.3.3[ruby_targets_ruby33(-)]
-	>=dev-ruby/net-imap-0.4.9[ruby_targets_ruby33(-)]
+	>=dev-ruby/net-ftp-0.3.4[ruby_targets_ruby33(-)]
+	>=dev-ruby/net-imap-0.4.9.1[ruby_targets_ruby33(-)]
 	>=dev-ruby/net-pop-0.1.2[ruby_targets_ruby33(-)]
-	>=dev-ruby/net-smtp-0.4.0[ruby_targets_ruby33(-)]
+	>=dev-ruby/net-smtp-0.4.0.1[ruby_targets_ruby33(-)]
 	>=dev-ruby/power_assert-2.0.3[ruby_targets_ruby33(-)]
 	>=dev-ruby/prime-0.1.2[ruby_targets_ruby33(-)]
 	>=dev-ruby/racc-1.7.3[ruby_targets_ruby33(-)]
 	>=dev-ruby/rake-13.1.0[ruby_targets_ruby33(-)]
 	>=dev-ruby/rbs-3.4.0[ruby_targets_ruby33(-)]
-	>=dev-ruby/rexml-3.2.6[ruby_targets_ruby33(-)]
-	>=dev-ruby/rss-0.3.0[ruby_targets_ruby33(-)]
+	>=dev-ruby/rexml-3.3.9[ruby_targets_ruby33(-)]
+	>=dev-ruby/rss-0.3.1[ruby_targets_ruby33(-)]
 	>=dev-ruby/test-unit-3.6.1[ruby_targets_ruby33(-)]
 	>=dev-ruby/typeprof-0.21.9[ruby_targets_ruby33(-)]
 "
@@ -69,15 +71,20 @@ BUNDLED_GEMS="
 PDEPEND="
 	${BUNDLED_GEMS}
 	virtual/rubygems[ruby_targets_ruby33(-)]
-	>=dev-ruby/bundler-2.5.3[ruby_targets_ruby33(-)]
+	>=dev-ruby/bundler-2.5.11[ruby_targets_ruby33(-)]
 	>=dev-ruby/did_you_mean-1.6.3[ruby_targets_ruby33(-)]
-	>=dev-ruby/json-2.7.1[ruby_targets_ruby33(-)]
+	>=dev-ruby/json-2.7.2[ruby_targets_ruby33(-)]
 	>=dev-ruby/rdoc-6.6.2[ruby_targets_ruby33(-)]
 	xemacs? ( app-xemacs/ruby-modes )
 "
 
+pkg_setup() {
+	use jit && rust_pkg_setup
+}
+
 src_prepare() {
 	eapply "${FILESDIR}"/"${SLOT}"/010*.patch
+	eapply "${FILESDIR}"/"${SLOT}"/013*.patch
 	eapply "${FILESDIR}"/"${SLOT}"/902*.patch
 
 	if use elibc_musl ; then
@@ -98,7 +105,7 @@ src_prepare() {
 	# Remove tests that are known to fail or require a network connection
 	rm -f test/ruby/test_process.rb test/rubygems/test_gem{,_path_support}.rb || die
 	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb \
-		spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
+	   spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
 
 	# Remove webrick tests because setting LD_LIBRARY_PATH does not work for them.
 	rm -rf tool/test/webrick || die
@@ -117,26 +124,13 @@ src_prepare() {
 	sed -e '/test_gem_exec_gem_uninstall/aomit "Fails intermittently"' \
 		-i test/rubygems/test_gem_commands_exec_command.rb || die
 
+	# Avoid test fragile for git command output not matching on whitespace
+	sed -e '/test_pretty_print/aomit "Fragile for output differences"' \
+		-i test/rubygems/test_gem_source_git.rb || die
+
 	if use prefix ; then
 		# Fix hardcoded SHELL var in mkmf library
 		sed -i -e "s#\(SHELL = \).*#\1${EPREFIX}/bin/sh#" lib/mkmf.rb || die
-
-		if [[ ${CHOST} == *darwin* ]] ; then
-			# avoid symlink loop on Darwin (?!)
-			sed -i \
-				-e '/LIBRUBY_ALIASES=/s/lib$(RUBY_INSTALL_NAME).$(SOEXT)//' \
-				configure.ac || die
-
-			# make ar/libtool hack for Darwin work
-			sed -i \
-				-e "s/ac_cv_prog_ac_ct_AR='libtool/ac_cv_prog_AR='${CHOST}-libtool/" \
-				configure.ac || die
-
-			# disable using security framework (GCC barfs on those headers)
-			sed -i \
-				-e 's/MAC_OS_X_VERSION_MIN_REQUIRED/_DISABLED_/' \
-				random.c || die
-		fi
 	fi
 
 	eapply_user
@@ -156,11 +150,21 @@ src_configure() {
 	unset MAKEOPTS MAKEFLAGS GNUMAKEFLAGS
 	export MAKEOPTS="${makeopts_tmp}"
 
+	# Avoid a hardcoded path to mkdir to avoid issues with mixed
+	# usr-merge and normal binary packages, bug #932386.
+	export ac_cv_path_mkdir=mkdir
+
 	# -fomit-frame-pointer makes ruby segfault, see bug #150413.
 	filter-flags -fomit-frame-pointer
+	append-flags -fno-omit-frame-pointer
 	# In many places aliasing rules are broken; play it safe
 	# as it's risky with newer compilers to leave it as it is.
 	append-flags -fno-strict-aliasing
+
+	# Workaround for bug #938302
+	if use systemtap && has_version "dev-debug/systemtap[-dtrace-symlink(+)]" ; then
+		export DTRACE="${BROOT}"/usr/bin/stap-dtrace
+	fi
 
 	# Socks support via dante
 	if use socks5 ; then
@@ -189,10 +193,18 @@ src_configure() {
 		modules="${modules},tk"
 	fi
 
+	# Fix co-routine selection for x32, bug 933070
+	[[ ${CHOST} == *gnux32 ]] && myconf="${myconf} --with-coroutine=amd64"
+
 	# Provide an empty LIBPATHENV because we disable rpath but we do not
 	# need LD_LIBRARY_PATH by default since that breaks USE=multitarget
 	# #564272
-	INSTALL="${EPREFIX}/usr/bin/install -c" LIBPATHENV="" econf \
+	# except on Darwin, where we really need LIBPATHENV to set the right
+	# DYLD_ stuff during the invocation of miniruby for it to work
+	#
+	# --with-setjmp-type=setjmp for bug #949016
+	[[ ${CHOST} == *-darwin* ]] || export LIBPATHENV=""
+	INSTALL="${EPREFIX}/usr/bin/install -c" econf \
 		--program-suffix=${MY_SUFFIX} \
 		--with-soname=ruby${MY_SUFFIX} \
 		--enable-shared \
@@ -200,6 +212,7 @@ src_configure() {
 		--disable-rpath \
 		--without-baseruby \
 		--with-compress-debug-sections=no \
+		--with-setjmp-type=setjmp \
 		--enable-mkmf-verbose \
 		--with-out-ext="${modules}" \
 		$(use_with jemalloc jemalloc) \
@@ -243,10 +256,6 @@ src_install() {
 	local MINIRUBY=$(echo -e 'include Makefile\ngetminiruby:\n\t@echo $(MINIRUBY)'|make -f - getminiruby)
 
 	local -x LD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
-
-	if [[ ${CHOST} == *darwin* ]] ; then
-		local -x DYLD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${DYLD_LIBRARY_PATH+:}${DYLD_LIBRARY_PATH}"
-	fi
 
 	local -x RUBYLIB="${S}:${ED}/usr/$(get_libdir)/ruby/${RUBYVERSION}"
 	for d in $(find "${S}/ext" -type d) ; do
