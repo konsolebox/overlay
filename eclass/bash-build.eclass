@@ -284,6 +284,29 @@ bash-build_src_prepare() {
 		eapply "${_BASH_BUILD_PATCH_OPTIONS[@]}" "${_BASH_BUILD_PATCHES[@]/#/${prefix}}"
 	fi
 
+	# Do not remove generated builtins/*.c files when installsources is enabled
+	# The .def may still be the ones referenced in GDB's output and not the
+	# generateds .c files but these are still worth keeping and keeping them
+	# removes the annoyinge rsync error messages.
+	if has installsources ${FEATURES}; then
+		sed -i -e '/^[[:space:]]*\$(RM) \$\*\.c/d' builtins/Makefile.in || die
+	fi
+
+	# Exclude pushd from generated plugins since it's already a builtin.
+	# It also makes rsync generate a nonexisting pushd.def file when
+	# installsources is enabled.  For some reason the builtins/pushd.def path
+	# is not populated with the base directory in debug.sources, like
+	# bash-99999/builtins/pushd.def for example.  This behavior can be debugged
+	# in the estrip binary of sys-apps/portage.  Directly running
+	# "/usr/bin/debugedit -i -b /var/tmp/portage/app-shells/bash-99999/work \
+	# -d /usr/src/debug/app-shells/bash-99999 -l pushd.temp \
+	# /var/tmp/portage/app-shells/bash-99999/image/usr/lib64/bash/pushd",
+	# and examing the contents of "pushd.temp" with "xargs -0" for example
+	# would show an instance of builtins/pushd.def" without bash-99999.
+	if use plugins; then
+		sed -i -e '/^OTHERPROG = /s| pushd||' examples/loadables/Makefile.in || die
+	fi
+
 	eapply_user
 	[[ ${PV} == *9999* ]] && eautoreconf
 }
