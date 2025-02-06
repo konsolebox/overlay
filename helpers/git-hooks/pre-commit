@@ -170,6 +170,7 @@ function main {
 
 					echo "Pkgcheck scan:"
 					echo "Set GIT_PRE_COMMIT_SKIP_PKGCHECK_SCAN to 'true' to disable."
+					[[ -e profiles/package.mask ]] && echo "WARNING: profiles/package.mask exists"
 					( [[ -z ${test_dir} ]] || cd -- "${test_dir}" && call "${pkgcheck[@]}" ) || \
 						return 1
 					echo
