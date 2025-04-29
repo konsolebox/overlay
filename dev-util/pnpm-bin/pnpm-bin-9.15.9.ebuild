@@ -19,11 +19,10 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm64"
 REQUIRED_USE="^^ ( amd64 arm64 )"
 RESTRICT="mirror strip"
-RDEPEND="!dev-util/pnpm" # Until https://github.com/pnpm/pnpm/issues/8855 is resolved
+RDEPEND="!dev-util/pnpm"
 
 src_install() {
-	newbin "${DISTDIR}/${A}" "${PN}"
-
-	# Create a symlink because https://github.com/pnpm/pnpm/issues/8855
-	dosym "${PN}" /usr/bin/pnpm
+	# Install as pnpm because of https://github.com/pnpm/pnpm/issues/8855
+	# Adding a symlink isn't enough.  'pnpm setup' still names the copy as pnpm-bin.
+	newbin "${DISTDIR}/${A}" pnpm
 }
