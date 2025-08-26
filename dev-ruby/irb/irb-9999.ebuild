@@ -1,8 +1,8 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
-USE_RUBY="ruby31 ruby32 ruby33"
+USE_RUBY="ruby31 ruby32 ruby33 ruby34"
 
 RUBY_FAKEGEM_BINDIR="exe"
 RUBY_FAKEGEM_EXTRADOC="README.md"
@@ -10,7 +10,7 @@ RUBY_FAKEGEM_GEMSPEC="irb.gemspec"
 RUBY_FAKEGEM_RECIPE_DOC="none"
 IUSE="rubyexec test"
 
-inherit ruby-fakegem rubyexec
+inherit ruby-fakegem rubyexec-r1
 
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
@@ -31,6 +31,7 @@ SLOT="0"
 # Ensure a new enough eselect-ruby is present to avoid clobbering the
 # irb bin and man page.
 ruby_add_rdepend "
+	dev-ruby/pp
 	>=dev-ruby/rdoc-4.0.0
 	>=dev-ruby/reline-0.4.2
 	!<app-eselect/eselect-ruby-20231008
@@ -67,7 +68,7 @@ each_ruby_test() {
 
 all_ruby_install() {
 	if use rubyexec; then
-		rubyexec-install_fakegem_binaries
+		rubyexec_install_fakegem_binwrappers
 		RUBY_FAKEGEM_BINWRAP=
 	fi
 
