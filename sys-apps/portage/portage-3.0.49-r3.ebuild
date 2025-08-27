@@ -9,7 +9,7 @@ PYTHON_REQ_USE='bzip2(+),threads(+)'
 SETUPTOOLS_USE_DISTUTILS=local
 TMPFILES_OPTIONAL=1
 
-inherit distutils-r1 linux-info toolchain-funcs tmpfiles prefix
+inherit distutils-r1-eaee61e2 linux-info toolchain-funcs tmpfiles prefix
 
 DESCRIPTION="The package management and distribution system for Gentoo"
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Portage"
@@ -125,7 +125,7 @@ python_prepare_all() {
 		"${FILESDIR}"/unofficial/portage-3.0.49-restrict-mirror-manual.patch
 	)
 
-	distutils-r1_python_prepare_all
+	distutils-r1-eaee61e2_python_prepare_all
 
 	if [[ ${PV} != 9999 ]] ; then
 		sed -e "s:^VERSION = \"HEAD\"$:VERSION = \"${PV}\":" -i lib/portage/__init__.py || die
@@ -220,7 +220,7 @@ python_compile_all() {
 python_install() {
 	# Install sbin scripts to bindir for python-exec linking
 	# they will be relocated in pkg_preinst()
-	distutils-r1_python_install \
+	distutils-r1-eaee61e2_python_install \
 		--system-prefix="${EPREFIX}/usr" \
 		--bindir="$(python_get_scriptdir)" \
 		--docdir="${EPREFIX}/usr/share/doc/${PF}" \
@@ -232,7 +232,7 @@ python_install() {
 }
 
 python_install_all() {
-	distutils-r1_python_install_all
+	distutils-r1-eaee61e2_python_install_all
 
 	local targets=()
 	use doc && targets+=(
