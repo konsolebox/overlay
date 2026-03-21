@@ -64,7 +64,7 @@ _konsolebox-scripts_get_ruby_exec() {
 	_ruby_exec=
 
 	case ${target} in
-	ruby1[89]|ruby2[0-7]|ruby3[0-4])
+	ruby1[89]|ruby2[0-7]|ruby3[0-4]|ruby40)
 		_ruby_exec=$(type -P "ruby${target#ruby}") || die "Executable for ${target} not found"
 		;;
 	ree18)
