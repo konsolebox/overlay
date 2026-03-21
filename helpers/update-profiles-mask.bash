@@ -12,7 +12,8 @@ function main {
 	local desc_file=${DESC_FILE-/var/db/repos/gentoo/profiles/profiles.desc} profiles profiles2
 
 	# Extract new profiles
-	awk '{ $0 = "" $2 } /^default\// && /\/musl(\/|$)/ || /(^|\/)prefix(\/|$)/' "${desc_file}" | \
+	awk '/^\s*(#|$)/ { next } { $0 = "" $2 }
+			/^default\// && /\/musl(\/|$)/ || /(^|\/)prefix(\/|$)/' "${desc_file}" | \
 			readarray -t profiles || die "Failed to enumerate profile names"
 	[[ ${profiles+.} ]] || die "No musl-based profile names found"
 
@@ -20,7 +21,8 @@ function main {
 	readarray -tO "${#profiles[@]}" profiles < profiles.mask || die "Failed to add old profiles"
 
 	# Remove profiles no longer included in profiles.desc as they'd cause pkgcheck to fail
-	awk 'NR == FNR { a[$2] = 1; next } $0 in a' "${desc_file}" <(printf '%s\n' "${profiles[@]}") | \
+	awk '/^\s*(#|$)/ { next } NR == FNR { a[$2] = 1; next } $0 in a' "${desc_file}" \
+			<(printf '%s\n' "${profiles[@]}") | \
 			readarray -t profiles2 || die "Failed to exclude inexistent profiles"
 
 	# Save
