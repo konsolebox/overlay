@@ -1,7 +1,10 @@
 default/linux/amd64/23.0/musl
 default/linux/amd64/23.0/musl/hardened
 default/linux/amd64/23.0/musl/hardened/selinux
+default/linux/amd64/23.0/musl/hardened/systemd
 default/linux/amd64/23.0/musl/llvm
+default/linux/amd64/23.0/musl/llvm/systemd
+default/linux/amd64/23.0/musl/systemd
 default/linux/amd64/23.0/no-multilib/prefix
 default/linux/amd64/23.0/no-multilib/prefix/kernel-2.6.16+
 default/linux/amd64/23.0/no-multilib/prefix/kernel-2.6.32+
@@ -35,6 +38,7 @@ default/linux/arm64/23.0/split-usr/musl/hardened
 default/linux/arm64/23.0/split-usr/musl/hardened/selinux
 default/linux/arm64/23.0/split-usr/musl/llvm
 default/linux/m68k/23.0/musl
+default/linux/m68k/23.0/musl/systemd
 default/linux/m68k/23.0/split-usr/musl
 default/linux/mips/23.0/mipsel/n64/musl
 default/linux/mips/23.0/mipsel/o32/musl
@@ -57,11 +61,15 @@ default/linux/ppc64le/23.0/musl/hardened
 default/linux/ppc64le/23.0/split-usr/musl
 default/linux/ppc64le/23.0/split-usr/musl/hardened
 default/linux/riscv/23.0/rv32/ilp32/musl
+default/linux/riscv/23.0/rv32/ilp32/musl/systemd
 default/linux/riscv/23.0/rv32/ilp32d/musl
+default/linux/riscv/23.0/rv32/ilp32d/musl/systemd
 default/linux/riscv/23.0/rv32/split-usr/ilp32/musl
 default/linux/riscv/23.0/rv32/split-usr/ilp32d/musl
 default/linux/riscv/23.0/rv64/lp64/musl
+default/linux/riscv/23.0/rv64/lp64/musl/systemd
 default/linux/riscv/23.0/rv64/lp64d/musl
+default/linux/riscv/23.0/rv64/lp64d/musl/systemd
 default/linux/riscv/23.0/rv64/split-usr/lp64/musl
 default/linux/riscv/23.0/rv64/split-usr/lp64d/musl
 default/linux/x86/23.0/i486/musl
@@ -87,8 +95,6 @@ prefix/darwin/macos/10.14/x64
 prefix/darwin/macos/10.14/x64/gcc
 prefix/darwin/macos/10.15/x64
 prefix/darwin/macos/10.15/x64/gcc
-prefix/darwin/macos/10.5/ppc/gcc
-prefix/darwin/macos/10.5/x86/gcc
 prefix/darwin/macos/11.0/arm64
 prefix/darwin/macos/11.0/arm64/gcc
 prefix/darwin/macos/11.0/x64
@@ -103,10 +109,6 @@ prefix/darwin/macos/14.0/arm64/gcc
 prefix/darwin/macos/14.0/x64/gcc
 prefix/darwin/macos/15.0/arm64/gcc
 prefix/darwin/macos/15.0/x64/gcc
-prefix/linux/amd64
-prefix/linux/arm
-prefix/linux/ppc64
-prefix/linux/ppc64le
-prefix/linux/riscv
-prefix/linux/x86
+prefix/darwin/macos/26.0/arm64/gcc
+prefix/darwin/macos/26.0/x64/gcc
 prefix/sunos/solaris/5.11/x64
