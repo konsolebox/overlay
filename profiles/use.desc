@@ -9,3 +9,4 @@ ruby_single_target_ruby31 - Use Ruby 3.1 as runtime
 ruby_single_target_ruby32 - Use Ruby 3.2 as runtime
 ruby_single_target_ruby33 - Use Ruby 3.3 as runtime
 ruby_single_target_ruby34 - Use Ruby 3.4 as runtime
+ruby_single_target_ruby40 - Use Ruby 4.0 as runtime
