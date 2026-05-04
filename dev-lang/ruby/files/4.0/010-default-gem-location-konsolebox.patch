@@ -1,6 +1,8 @@
---- a/tool/rbinstall.rb.~1~	2020-12-25 04:33:01.000000000 +0100
-+++ b/tool/rbinstall.rb	2020-12-25 10:05:34.629096405 +0100
-@@ -897,7 +897,7 @@
+diff --git a/tool/rbinstall.rb b/tool/rbinstall.rb
+index f910fca..2f21884 100755
+--- a/tool/rbinstall.rb
++++ b/tool/rbinstall.rb
+@@ -942,7 +942,7 @@ def load_gemspec(file, base = nil)
  end
  
  def install_default_gem(dir, srcdir, bindir)
@@ -8,8 +10,8 @@
 +  gem_dir = ENV['GEM_DESTDIR']
    install_dir = with_destdir(gem_dir)
    prepare "default gems from #{dir}", gem_dir
-   makedirs(Gem.ensure_default_gem_subdirectories(install_dir, $dir_mode).map {|d| File.join(gem_dir, d)})
-@@ -1010,7 +1010,7 @@
+   RbInstall.no_write do
+@@ -991,7 +991,7 @@ def install_default_gem(dir, srcdir, bindir)
  end
  
  install?(:ext, :comm, :gem, :'bundled-gems') do

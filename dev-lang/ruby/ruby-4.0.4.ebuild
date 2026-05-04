@@ -1,25 +1,39 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
+RUST_MIN_VER="1.85.0"
 RUST_OPTIONAL="yes"
 
 inherit autotools flag-o-matic multiprocessing rust
 
 MY_P="${PN}-$(ver_cut 1-3)"
+MY_PV="${PV%.*}"
+MY_SLOT=$(ver_cut 1-2)
 
 DESCRIPTION="An object-oriented scripting language"
 HOMEPAGE="https://www.ruby-lang.org/"
-SRC_URI="https://cache.ruby-lang.org/pub/ruby/$(ver_cut 1-2)/${MY_P}.tar.xz"
-S=${WORKDIR}/${MY_P}
+if [[ ${PV} == *9999* ]]; then
+	inherit git-r3
+	EGIT_BRANCH="ruby_${MY_PV/./_}"
+	EGIT_REPO_URI="https://github.com/ruby/ruby.git"
+
+	# Self-depend is necessary because ruby from git depends on building some pre-requisite gems.
+	BDEPEND="
+		dev-lang/ruby:${MY_SLOT}
+	"
+else
+	SRC_URI="https://cache.ruby-lang.org/pub/ruby/$(ver_cut 1-2)/${MY_P}.tar.xz"
+	S=${WORKDIR}/${MY_P}
+	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~arm64-macos ~x64-macos ~x64-solaris"
+fi
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
-SLOT=$(ver_cut 1-2)
+SLOT=${MY_SLOT}
 MY_SUFFIX=$(ver_rs 1 '' ${SLOT})
 RUBYVERSION=${SLOT}.0
 
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
 IUSE="berkdb debug doc examples gdbm jemalloc jit socks5 +ssl static-libs systemtap tk valgrind xemacs"
 
 RDEPEND="
@@ -33,14 +47,14 @@ RDEPEND="
 	socks5? ( >=net-proxy/dante-1.1.13 )
 	systemtap? ( dev-debug/systemtap )
 	tk? (
-		dev-lang/tcl:0=[threads]
-		dev-lang/tk:0=[threads]
+		dev-lang/tcl:0=[threads(+)]
+		dev-lang/tk:0=[threads(+)]
 	)
 	dev-libs/libyaml
 	dev-libs/libffi:=
-	sys-libs/zlib
+	virtual/zlib:=
 	virtual/libcrypt:=
-	>=app-eselect/eselect-ruby-20241225
+	>=app-eselect/eselect-ruby-20251225
 "
 
 DEPEND="
@@ -49,46 +63,53 @@ DEPEND="
 "
 
 BUNDLED_GEMS="
-	>=dev-ruby/minitest-5.25.4[ruby_targets_ruby34(-)]
-	>=dev-ruby/power_assert-2.0.5[ruby_targets_ruby34(-)]
-	>=dev-ruby/rake-13.2.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/test-unit-3.6.7[ruby_targets_ruby34(-)]
-	>=dev-ruby/rexml-3.4.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/rss-0.3.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/net-ftp-0.3.8[ruby_targets_ruby34(-)]
-	>=dev-ruby/net-imap-0.5.4[ruby_targets_ruby34(-)]
-	>=dev-ruby/net-pop-0.1.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/net-smtp-0.5.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/matrix-0.4.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/prime-0.1.3[ruby_targets_ruby34(-)]
-	>=dev-ruby/rbs-3.8.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/typeprof-0.30.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/debug-1.10.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/racc-1.8.1[ruby_targets_ruby34(-)]
+	>=dev-ruby/minitest-6.0.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/power_assert-3.0.1[ruby_targets_ruby40(-)]
+	>=dev-ruby/rake-13.3.1[ruby_targets_ruby40(-)]
+	>=dev-ruby/test-unit-3.7.5[ruby_targets_ruby40(-)]
+	>=dev-ruby/rexml-3.4.4[ruby_targets_ruby40(-)]
+	>=dev-ruby/rss-0.3.2[ruby_targets_ruby40(-)]
+	>=dev-ruby/net-ftp-0.3.9[ruby_targets_ruby40(-)]
+	>=dev-ruby/net-imap-0.6.2[ruby_targets_ruby40(-)]
+	>=dev-ruby/net-pop-0.1.2[ruby_targets_ruby40(-)]
+	>=dev-ruby/net-smtp-0.5.1[ruby_targets_ruby40(-)]
+	>=dev-ruby/matrix-0.4.3[ruby_targets_ruby40(-)]
+	>=dev-ruby/prime-0.1.4[ruby_targets_ruby40(-)]
+	>=dev-ruby/rbs-3.10.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/typeprof-0.31.1[ruby_targets_ruby40(-)]
+	>=dev-ruby/debug-1.11.1[ruby_targets_ruby40(-)]
+	>=dev-ruby/racc-1.8.1[ruby_targets_ruby40(-)]
 
-	>=dev-ruby/mutex_m-0.3.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/getoptlong-0.2.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/base64-0.2.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/bigdecimal-3.1.8[ruby_targets_ruby34(-)]
-	>=dev-ruby/observer-0.1.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/abbrev-0.1.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/resolv-replace-0.1.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/rinda-0.2.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/drb-2.2.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/nkf-0.2.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/syslog-0.2.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/csv-3.3.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/repl_type_completor-0.1.9[ruby_targets_ruby34(-)]
+	>=dev-ruby/mutex_m-0.3.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/getoptlong-0.2.1[ruby_targets_ruby40(-)]
+	>=dev-ruby/base64-0.3.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/bigdecimal-4.0.1[ruby_targets_ruby40(-)]
+	>=dev-ruby/observer-0.1.2[ruby_targets_ruby40(-)]
+	>=dev-ruby/abbrev-0.1.2[ruby_targets_ruby40(-)]
+	>=dev-ruby/resolv-replace-0.1.1[ruby_targets_ruby40(-)]
+	>=dev-ruby/rinda-0.2.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/drb-2.2.3[ruby_targets_ruby40(-)]
+	>=dev-ruby/nkf-0.2.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/syslog-0.3.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/csv-3.3.5[ruby_targets_ruby40(-)]
+	>=dev-ruby/repl_type_completor-0.1.12[ruby_targets_ruby40(-)]
+	>=dev-ruby/ostruct-0.6.3[ruby_targets_ruby40(-)]
+	>=dev-ruby/pstore-0.2.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/benchmark-0.5.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/logger-1.7.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/reline-0.6.3[ruby_targets_ruby40(-)]
+	>=dev-ruby/readline-0.0.4[ruby_targets_ruby40(-)]
+	>=dev-ruby/fiddle-1.1.8[ruby_targets_ruby40(-)]
 "
 
 PDEPEND="
 	${BUNDLED_GEMS}
-	virtual/rubygems[ruby_targets_ruby34(-)]
-	>=dev-ruby/bundler-2.5.11[ruby_targets_ruby34(-)]
-	>=dev-ruby/did_you_mean-1.6.3[ruby_targets_ruby34(-)]
-	>=dev-ruby/irb-1.11.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/json-2.7.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/rdoc-6.6.2[ruby_targets_ruby34(-)]
+	virtual/rubygems[ruby_targets_ruby40(-)]
+	>=dev-ruby/bundler-4.0.3[ruby_targets_ruby40(-)]
+	>=dev-ruby/did_you_mean-2.0.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/irb-1.16.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/json-2.18.0[ruby_targets_ruby40(-)]
+	>=dev-ruby/rdoc-7.0.2[ruby_targets_ruby40(-)]
 	xemacs? ( app-xemacs/ruby-modes )
 "
 
@@ -105,27 +126,24 @@ src_prepare() {
 	fi
 
 	einfo "Unbundling gems..."
-	cd "$S"
+	cd "${S}" || die
 	# Remove bundled gems that we will install via PDEPEND, bug
 	# 539700.
 	rm -fr gems/* || die
 	touch gems/bundled_gems || die
 
-	# Remove all irb-related files.
-	rm -fr benchmark/irb_color.yml benchmark/irb_exec.yml doc/irb* libexec/irb lib/irb* man/irb.1 \
-		spec/ruby/core/binding/fixtures/irb* spec/ruby/core/binding/irb_spec.rb test/irb || die
+	# Doesn't play well with PORTAGE_NICENESS/PORTAGE_SCHEDULING_POLICY
+	rm -f spec/ruby/core/process/setpriority_spec.rb || die
 
 	# Remove tests that are known to fail or require a network connection
 	rm -f test/ruby/test_process.rb test/rubygems/test_gem{,_path_support}.rb || die
+	rm -f test/rubygems/test_bundled_ca.rb || die
 	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb \
 	   spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb \
 		spec/ruby/library/socket/socket/connect_spec.rb || die
 
 	# Remove webrick tests because setting LD_LIBRARY_PATH does not work for them.
 	rm -rf tool/test/webrick || die
-
-	# Avoid tests using the system ruby
-	sed -i -e '/test_\(dumb_terminal\|tty_amibuous_width\)/aomit "Uses system ruby"' test/reline/test_reline.rb || die
 
 	# Avoid testing against hard-coded blockdev devices that most likely are not available
 	sed -i -e '/def blockdev/a@blockdev = nil' test/ruby/test_file_exhaustive.rb || die
@@ -142,6 +160,21 @@ src_prepare() {
 	sed -e '/test_pretty_print/aomit "Fragile for output differences"' \
 		-i test/rubygems/test_gem_source_git.rb || die
 
+	# Avoid tests that don't expect our ruby40 executable name.
+	sed -e '/test_prelude_gems_and_loaded_features/aomit "Does not match ruby40"' \
+		-i test/ruby/test_box.rb
+
+	# Have ruby --version print out ${PV}
+	if [[ ${PV} == *9999* ]]; then
+		sed -i "s/#define RUBY_VERSION_TEENY.*/#define RUBY_VERSION_TEENY 9999/" version.h || die
+
+		cp "${BROOT}"/usr/share/gnuconfig/config.guess "${S}"/tool/config.guess || die
+		cp "${BROOT}"/usr/share/gnuconfig/config.sub "${S}"/tool/config.sub || die
+	fi
+
+	# Avoid specs that require gems to be installed already due to our unbundling.
+	rm -rf spec/ruby/library/irb || die
+
 	if use prefix ; then
 		# Fix hardcoded SHELL var in mkmf library
 		sed -i -e "s#\(SHELL = \).*#\1${EPREFIX}/bin/sh#" lib/mkmf.rb || die
@@ -153,7 +186,7 @@ src_prepare() {
 }
 
 src_configure() {
-	local modules="win32,win32ole" myconf=
+	local modules="win32,win32ole"
 
 	# Ruby's build system does interesting things with MAKEOPTS and doesn't
 	# handle MAKEOPTS="-Oline" or similar well. Just filter it all out
@@ -174,6 +207,10 @@ src_configure() {
 	# In many places aliasing rules are broken; play it safe
 	# as it's risky with newer compilers to leave it as it is.
 	append-flags -fno-strict-aliasing
+	# Fails to link (gcc PR124865, gcc PR50676)
+	filter-flags -flto-partition=cache
+	# bug #972696
+	append-cppflags -DRB_THREAD_CURRENT_EC_NOINLINE
 
 	# Workaround for bug #938302
 	if use systemtap && has_version "dev-debug/systemtap[-dtrace-symlink(+)]" ; then
@@ -189,7 +226,7 @@ src_configure() {
 	fi
 
 	# Increase GC_MALLOC_LIMIT if set (default is 8000000)
-	if [ -n "${RUBY_GC_MALLOC_LIMIT}" ] ; then
+	if [[ -n "${RUBY_GC_MALLOC_LIMIT}" ]] ; then
 		append-flags "-DGC_MALLOC_LIMIT=${RUBY_GC_MALLOC_LIMIT}"
 	fi
 
@@ -207,41 +244,47 @@ src_configure() {
 		modules="${modules},tk"
 	fi
 
-	# Fix co-routine selection for x32, bug 933070
-	[[ ${CHOST} == *gnux32 ]] && myconf="${myconf} --with-coroutine=amd64"
-
 	# Provide an empty LIBPATHENV because we disable rpath but we do not
 	# need LD_LIBRARY_PATH by default since that breaks USE=multitarget
 	# #564272
 	# except on Darwin, where we really need LIBPATHENV to set the right
 	# DYLD_ stuff during the invocation of miniruby for it to work
-	#
-	# --with-setjmp-type=setjmp for bug #949016
 	[[ ${CHOST} == *-darwin* ]] || export LIBPATHENV=""
-	INSTALL="${EPREFIX}/usr/bin/install -c" econf \
-		--program-suffix=${MY_SUFFIX} \
-		--with-soname=ruby${MY_SUFFIX} \
-		--enable-shared \
-		--enable-pthread \
-		--disable-rpath \
-		--without-baseruby \
-		--with-compress-debug-sections=no \
-		--with-setjmp-type=setjmp \
-		--enable-mkmf-verbose \
-		--with-out-ext="${modules}" \
-		$(use_with jemalloc jemalloc) \
-		$(use_enable jit jit-support) \
-		$(use_enable jit yjit) \
-		$(use_enable socks5 socks) \
-		$(use_enable systemtap dtrace) \
-		$(use_enable doc install-doc) \
-		$(use_enable static-libs static) \
-		$(use_enable static-libs install-static-library) \
-		$(use_with static-libs static-linked-ext) \
-		$(use_enable debug) \
-		${myconf} \
-		$(use_with valgrind) \
+
+	local myeconfargs=(
+		--program-suffix=${MY_SUFFIX}
+		--with-soname=ruby${MY_SUFFIX}
+		--enable-shared
+		--enable-pthread
+		--disable-rpath
+		--without-baseruby
+		--with-compress-debug-sections=no
+		# --with-setjmp-type=setjmp for bug #949016
+		--with-setjmp-type=setjmp
+		--enable-mkmf-verbose
+		--with-out-ext="${modules}"
+		$(use_with jemalloc jemalloc)
+		$(use_enable jit jit-support)
+		$(use_enable jit yjit)
+		$(use_enable jit zjit)
+		$(use_enable socks5 socks)
+		$(use_enable systemtap dtrace)
+		$(use_enable doc install-doc)
+		$(use_enable static-libs static)
+		$(use_enable static-libs install-static-library)
+		$(use_with static-libs static-linked-ext)
+		$(use_enable debug)
+		$(use_with valgrind)
 		--enable-option-checking=no
+	)
+
+	# Fix co-routine selection for x32, bug 933070
+	[[ ${CHOST} == *gnux32 ]] && myeconfargs+=( --with-coroutine=amd64 )
+
+	# Live ebuilds require a Ruby version to build with.
+	[[ ${PV} == *9999* ]] && myeconfargs+=( --with-baseruby="${BROOT}"/usr/bin/ruby$(ver_rs 1 "" "${MY_PV}") )
+
+	INSTALL="${EPREFIX}/usr/bin/install -c" econf "${myeconfargs[@]}"
 
 	# Makefile is broken because it lacks -ldl
 	rm -rf ext/-test-/popen_deadlock || die
@@ -267,13 +310,12 @@ src_install() {
 	# Ruby is involved in the install process, we don't want interference here.
 	unset RUBYOPT
 
-	local MINIRUBY=$(echo -e 'include Makefile\ngetminiruby:\n\t@echo $(MINIRUBY)'|make -f - getminiruby)
-
+	local MINIRUBY=$(echo -e 'include Makefile\ngetminiruby:\n\t@echo $(MINIRUBY)' | make -f - getminiruby)
 	local -x LD_LIBRARY_PATH="${S}:${ED}/usr/$(get_libdir)${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
-
 	local -x RUBYLIB="${S}:${ED}/usr/$(get_libdir)/ruby/${RUBYVERSION}"
+	local d
 	for d in $(find "${S}/ext" -type d) ; do
-		RUBYLIB="${RUBYLIB}:$d"
+		RUBYLIB="${RUBYLIB}:${d}"
 	done
 
 	# Create directory for the default gems
@@ -296,7 +338,7 @@ src_install() {
 		dodoc -r sample
 	fi
 
-	dodoc ChangeLog NEWS.md README*
+	dodoc NEWS.md README*
 	dodoc -r doc
 }
 
