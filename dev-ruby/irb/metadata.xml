@@ -13,7 +13,4 @@
 	<upstream>
 		<remote-id type="github">ruby/irb</remote-id>
 	</upstream>
-	<use>
-		<flag name="rubyexec">Use rubyexec as a wrapper for the binaries</flag>
-	</use>
 </pkgmetadata>

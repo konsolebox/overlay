@@ -1,8 +1,8 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
-USE_RUBY="ruby31 ruby32 ruby33 ruby34"
+USE_RUBY="ruby32 ruby33 ruby34 ruby40"
 
 RUBY_FAKEGEM_BINDIR="exe"
 RUBY_FAKEGEM_EXTRADOC="README.md"
@@ -28,13 +28,18 @@ HOMEPAGE="https://github.com/ruby/irb"
 LICENSE="BSD-2"
 SLOT="0"
 
+RDEPEND="rubyexec? ( >=dev-ruby/rubyexec-0_p20260508 )"
+
 # Ensure a new enough eselect-ruby is present to avoid clobbering the
 # irb bin and man page.
+RDEPEND+="
+	!<app-eselect/eselect-ruby-20231008
+"
+
 ruby_add_rdepend "
-	dev-ruby/pp
+	>=dev-ruby/pp-0.6.0
 	>=dev-ruby/rdoc-4.0.0
 	>=dev-ruby/reline-0.4.2
-	!<app-eselect/eselect-ruby-20231008
 "
 
 ruby_add_bdepend "
@@ -43,7 +48,8 @@ ruby_add_bdepend "
 		dev-ruby/debug
 		dev-ruby/test-unit
 		dev-ruby/test-unit-ruby-core
-	)"
+	)
+"
 
 all_ruby_prepare() {
 	sed -e 's:_relative ":"./:' \
@@ -59,6 +65,10 @@ all_ruby_prepare() {
 
 	# Skip tests confused by our test path
 	sed -e '/test_backtrace_filtering/aomit "Fails due to unexpected paths"' \
+		-i test/irb/test_irb.rb || die
+
+	# Skip a Ruby::Box test (still experimental)
+	sed -e '/test_context_mode_ruby_box/aomit "Ruby::Box is experimental"' \
 		-i test/irb/test_irb.rb || die
 }
 
