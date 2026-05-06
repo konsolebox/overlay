@@ -1,20 +1,20 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-USE_RUBY="ruby31 ruby32 ruby33 ruby34"
+USE_RUBY="ruby32 ruby33 ruby34 ruby40"
 
 inherit ruby-ng prefix
 
 DESCRIPTION="Centralized Ruby extension management system"
 HOMEPAGE="https://rubygems.org/"
+
+SRC_URI="https://github.com/ruby/rubygems/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="|| ( Ruby MIT )"
 
-SRC_URI="https://github.com/rubygems/rubygems/archive/v${PV}.tar.gz -> ${P}.tar.gz"
-
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
 SLOT="0"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~arm64-macos ~x64-macos ~x64-solaris"
 IUSE="konsolebox server test"
 RESTRICT="!test? ( test )"
 
@@ -39,7 +39,7 @@ all_ruby_prepare() {
 	mkdir -p lib/rubygems/defaults || die
 
 	if use konsolebox; then
-		cp "${FILESDIR}/gentoo-defaults-konsolebox-r4.rb" lib/rubygems/defaults/operating_system.rb || die
+		cp "${FILESDIR}/gentoo-defaults-konsolebox-r5.rb" lib/rubygems/defaults/operating_system.rb || die
 	else
 		cp "${FILESDIR}/gentoo-defaults-5.rb" lib/rubygems/defaults/operating_system.rb || die
 		eprefixify lib/rubygems/defaults/operating_system.rb
@@ -68,7 +68,7 @@ all_ruby_prepare() {
 	# RUBYLIB to ensure that we consistently use the new code for
 	# rubygems and the bundled bundler.
 	if use test; then
-		RUBYLIB=lib rake update_manifest || die
+		ruby -I lib -S rake update_manifest || die
 	fi
 }
 
@@ -83,7 +83,7 @@ each_ruby_test() {
 
 	if [[ "${EUID}" -ne "0" ]]; then
 		RUBYLIB="$(pwd)/lib${RUBYLIB+:${RUBYLIB}}" ${RUBY} --disable-gems -I.:lib:test:bundler/lib \
-			-e 'require "rubygems"; gem "minitest", "~>5.0"; Dir["test/**/test_*.rb"].each { require _1 }' || die "tests failed"
+			-e 'require "rubygems"; Dir["test/**/test_*.rb"].each { require _1 }' || die "tests failed"
 	else
 		ewarn "The userpriv feature must be enabled to run tests, bug 408951."
 		eerror "Testsuite will not be run."
@@ -100,7 +100,7 @@ each_ruby_install() {
 	popd &>/dev/null
 
 	local sld=$(ruby_rbconfig_value 'sitelibdir')
-	insinto "${sld#${EPREFIX}}"  # bug #320813
+	insinto "${sld#"${EPREFIX}"}"  # bug #320813
 	newins "${FILESDIR}/auto_gem.rb.ruby19" auto_gem.rb
 
 	newbin exe/gem $(basename ${RUBY} | sed -e 's:ruby:gem:')
