@@ -8,8 +8,4 @@
 	<upstream>
 		<remote-id type="github">defunkt/gist</remote-id>
 	</upstream>
-	<use>
-		<flag name="rubyexec">Use rubyexec as a wrapper for the binaries</flag>
-		<flag name="rubyexec-autopick">Autopick implementation when selected is not wanted</flag>
-	</use>
 </pkgmetadata>
