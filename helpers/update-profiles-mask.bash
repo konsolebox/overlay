@@ -13,7 +13,7 @@ function main {
 
 	# Extract new profiles
 	awk '/^\s*(#|$)/ { next } { $0 = "" $2 }
-			/^default\// && /\/musl(\/|$)/ || /(^|\/)prefix(\/|$)/' "${desc_file}" | \
+			/^default\// && /\/musl(\/|$)/ || /(^|\/)prefix(\/|$)/ || $3 == "exp"' "${desc_file}" | \
 			readarray -t profiles || die "Failed to enumerate profile names"
 	[[ ${profiles+.} ]] || die "No musl-based profile names found"
 
