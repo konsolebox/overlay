@@ -16,8 +16,11 @@ shopt -s no_empty_cmd_completion 2>/dev/null &&
 # option also requires for bash to have been built with readline support.
 shopt -s histappend
 
-# Initialise PROMPT_COMMAND as an array, which is permitted as of bash 5.1.
-PROMPT_COMMAND=()
+# Initialise PROMPT_COMMAND as an array, unless bash is acting as a login shell.
+# In the latter case, the profile.d drop-in will already have initialised it.
+if [[ BASH_VERSINFO -ge 6 || BASH_VERSINFO -eq 5 && BASH_VERSINFO[1] -ge 1 ]]; then
+	shopt -q login_shell || PROMPT_COMMAND=()
+fi
 
 # Don't let the user influence the order of sourcing for bash 5.3 or greater.
 unset -v GLOBSORT

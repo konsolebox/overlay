@@ -10,26 +10,22 @@ genfun_set_win_title() {
 	# refers to the value of Ps within the OSC Ps ; Pt BEL sequence.
 	export SHELL_SETS_TITLE=0
 
-	# Assigns the basename of the current working directory, having
-	# sanitised it with @Q parameter expansion. Useful for paths containing
-	# newlines and such. As a special case, names consisting entirely of
-	# graphemes shall not undergo the expansion, for reasons of cleanliness.
-	genfun_sanitise_cwd() {
-		_cwd=${PWD##*/}
-		if [[ ! ${_cwd} ]]; then
-			_cwd=${PWD}
-		elif [[ ${_cwd} == *[![:graph:]]* ]]; then
-			_cwd=${_cwd@Q}
-		fi
-	}
-
 	# Sets the window title with the Set Text Parameters control sequence.
 	# For screen, the sequence defines the hardstatus (%h) and for tmux, the
 	# pane_title (#T). For graphical terminal emulators, it is normal for
 	# the title bar to be affected.
 	genfun_set_win_title() {
-		genfun_sanitise_cwd
-		printf '\033]0;%s@%s - %s\007' "${USER}" "${HOSTNAME%%.*}" "${_cwd}"
+		local prompt
+
+		if [[ ${PROMPT_DIRTRIM} ]]; then
+			# Respect the value of PROMPT_DIRTRIM. If set as 0, the
+			# current working directory shall be shown in full.
+			prompt='\u@\h \w'
+		else
+			# Show the basename of the current working directory.
+			prompt='\u@\h \W'
+		fi
+		printf '\033]0;%s\007' "${prompt@P}"
 	}
 
 	genfun_set_win_title
@@ -42,7 +38,7 @@ unset -v SHELL_SETS_TITLE
 # evidence that the sequence is supported and that the UTF-8 character encoding
 # is handled correctly. Quite rightly, this precludes many vintage terminals.
 case ${TERM} in
-	alacritty|foot*|tmux*)
+	alacritty*|contour|foot*|tmux*|xterm-ghostty)
 		# The terminal emulator also supports XTWINOPS. If the PTY was
 		# created by sshd(8) then push the current window title to the
 		# stack and arrange for it to be popped upon exiting. Xterm also
