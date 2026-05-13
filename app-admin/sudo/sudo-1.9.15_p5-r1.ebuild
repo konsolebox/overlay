@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -48,7 +48,7 @@ SLOT="0"
 IUSE="gcrypt ldap nls offensive pam sasl +secure-path alt-secure-path-order selinux +sendmail skey ssl sssd"
 
 DEPEND="
-	sys-libs/zlib:=
+	virtual/zlib:=
 	virtual/libcrypt:=
 	gcrypt? ( dev-libs/libgcrypt:= )
 	ldap? (
@@ -63,7 +63,7 @@ DEPEND="
 	selinux? ( sys-libs/libselinux )
 	skey? ( >=sys-auth/skey-1.1.5-r1 )
 	ssl? ( dev-libs/openssl:= )
-	sssd? ( sys-auth/sssd[sudo] )
+	sssd? ( sys-auth/sssd[sudo(+)] )
 "
 RDEPEND="
 	${DEPEND}
@@ -100,7 +100,7 @@ set_secure_path() {
 	[[ ${SECURE_PATH} != */usr/bin* ]] && SECURE_PATH=$(unset PATH; . "${EPREFIX}"/etc/profile.env;
 			echo "${PATH}")
 
-	local IFS=: __
+	local IFS=: path
 
 	if use alt-secure-path-order; then
 		set -- ${SECURE_PATH} /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin /opt/bin
@@ -110,12 +110,12 @@ set_secure_path() {
 
 	SECURE_PATH=
 
-	for __; do
-		case $__ in
+	for path; do
+		case ${path} in
 		''|*/gcc-bin/*|*/gnat-gcc-bin/*|*/gnat-gcc/*) # bug #136027
 			;;
 		*)
-			[[ :${SECURE_PATH}: != *:"$__":* ]] && SECURE_PATH+=:$__
+			[[ :${SECURE_PATH}: != *:"${path}":* ]] && SECURE_PATH+=:${path}
 			;;
 		esac
 	done
