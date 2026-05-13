@@ -1,7 +1,7 @@
 # Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-[[ ${EAPI} == 7 ]] || die "EAPI needs to be 7."
+[[ ${EAPI} == 8 ]] || die "EAPI needs to be 8."
 
 inherit flag-o-matic toolchain-funcs multilib prefix
 
@@ -13,7 +13,7 @@ inherit flag-o-matic toolchain-funcs multilib prefix
 # @AUTHOR:
 # konsolebox <konsolebox@gmail.com>
 # Authors of app-shells/bash::gentoo
-# @SUPPORTED_EAPIS: 7
+# @SUPPORTED_EAPIS: 8
 # @BLURB: Eclass for building bash
 # @DESCRIPTION:
 # This eclass contains unified code for building bash.
@@ -26,7 +26,7 @@ inherit flag-o-matic toolchain-funcs multilib prefix
 # @ECLASS_VARIABLE: _BASH_BUILD_ETC_VERSION
 # @DESCRIPTION:
 # Indicates the collective vesion of the bash-related files installed in /etc
-# This defaults to 0.
+# This defaults to 0, however, only a single version may be supported at a time.
 
 # @ECLASS_VARIABLE: _BASH_BUILD_INSTALL_TYPE
 # @DESCRIPTION:
@@ -134,7 +134,7 @@ _bash-build_get_patches() {
 # @INTERNAL
 _bash-build_set_globals() {
 	DESCRIPTION="The standard GNU Bourne again shell"
-	HOMEPAGE="http://tiswww.case.edu/php/chet/bash/bashtop.html"
+	HOMEPAGE="https://tiswww.case.edu/php/chet/bash/bashtop.html"
 
 	if [[ ${PV%%.*} -ge 4 ]]; then
 		LICENSE="GPL-3"
@@ -223,7 +223,7 @@ _bash-build_set_globals() {
 	local static_readline_dep= non_static_readline_dep=
 
 	if [[ ${may_use_system_readline} == true ]]; then
-		[[ -z ${_BASH_BUILD_READLINE_VER-} ]] && die "Readline version needs to be provided."
+		[[ ${_BASH_BUILD_READLINE_VER-} ]] || die "Readline version needs to be provided."
 		non_static_readline_dep="readline? ( !bundled-readline? ( >=sys-libs/readline-${_BASH_BUILD_READLINE_VER}:0= ) )"
 		static_readline_dep="readline? ( !bundled-readline? ( >=sys-libs/readline-${_BASH_BUILD_READLINE_VER}[static-libs(+)] ) )"
 	else
@@ -252,6 +252,15 @@ _bash-build_set_globals() {
 	[[ ${_BASH_BUILD_REQUIRE_BISON-} == true ]] && BDEPEND+=" sys-devel/bison"
 	[[ ${_BASH_BUILD_VERIFY_SIG} == true ]] && BDEPEND+=" verify-sig? ( sec-keys/openpgp-keys-chetramey )"
 	[[ ${SLOT} != 0 && ${PN} != bash ]] && RDEPEND+="!app-shells/bash:${SLOT}"
+
+	# EAPI 8 tries to append it but it doesn't exist here
+	QA_CONFIGURE_OPTIONS="--disable-static"
+
+	# This is fixed in autoconf 2.71, used in Bash 5.2.  The check fails
+	# regardless of GCC version.  #916480
+	if [[ _BASH_BUILD_PV_PARTS -lt 5 || _BASH_BUILD_PV_PARTS -eq 5 && _BASH_BUILD_PV_PARTS[1] -lt 2 ]]; then
+		QA_CONFIG_IMPL_DECL_SKIP+=(makedev)
+	fi
 }
 
 # @FUNCTION: bash-build_pkg_setup
@@ -366,10 +375,16 @@ bash-build_src_prepare() {
 # Implements src_configure
 bash-build_src_configure() {
 	local conf=(
+		--disable-profiling
+
+		# Force linking with system curses ... the bundled termcap lib
+		# sucks bad compared to ncurses.  For the most part, ncurses
+		# is here because readline needs it.  But bash itself calls
+		# ncurses in one or two small places :(.
 		--with-curses
+
 		$(use_with afs)
 		$(use_enable net net-redirections)
-		--disable-profiling
 		$(use_enable mem-scramble)
 		$(use_with mem-scramble bash-malloc)
 		$(use_enable readline)
@@ -430,9 +445,21 @@ bash-build_src_configure() {
 	# Upstream only test with Bison and require GNUisms like YYEOF and
 	# YYERRCODE. The former at least may be in POSIX soon:
 	# https://www.austingroupbugs.net/view.php?id=1269.
+	#
 	# configure warns on use of non-Bison but doesn't abort. The result
 	# may misbehave at runtime.
-	unset YACC
+	#
+	# Chet also advises against use of byacc:
+	# https://lists.gnu.org/archive/html/bug-bash/2025-08/msg00115.html
+	unset -v YACC
+
+	# Bash 5.3 drops unprototyped functions, earlier versions are
+	# incompatible with C23.
+	append-cflags $(test-flags-CC -std=gnu17)
+
+	if tc-is-cross-compiler; then
+		export CFLAGS_FOR_BUILD="${BUILD_CFLAGS} -std=gnu17"
+	fi
 
 	econf "${conf[@]}"
 }
@@ -492,33 +519,37 @@ bash-build_src_install() {
 		mv "${ED%/}"/usr/bin/bash "${ED%/}"/bin/ || die
 		dosym bash /bin/rbash
 
-		insinto /etc/bash
-		doins "${FILESDIR}"/bash_logout
+		if [[ ${_BASH_BUILD_ETC_VERSION-0} == 2 ]]; then
+			insinto /etc/bash
+			doins "${FILESDIR}"/bash_logout
 
-		if [[ ${_BASH_BUILD_ETC_VERSION-0} == 1 ]]; then
-			_bash-build_prefixed_newins "${FILESDIR}"/bashrc-r1 bashrc /etc
+			_bash-build_prefixed_newins "${FILESDIR}"/bashrc-r2-konsolebox bashrc /etc
 
 			insinto /etc/bash/bashrc.d
-			_bash-build_prefixed_newins "${FILESDIR}"/bashrc.d/10-gentoo-color.bash \
+			_bash-build_prefixed_newins "${FILESDIR}"/bashrc.d/10-gentoo-color-r2-konsolebox.bash \
 					10-gentoo-color.bash /etc
-			newins "${FILESDIR}"/bashrc.d/10-gentoo-title-r1.bash 10-gentoo-title.bash
-			[[ ${EPREFIX} ]] || doins "${FILESDIR}"/bashrc.d/15-gentoo-bashrc-check.bash
+			newins "${FILESDIR}"/bashrc.d/10-gentoo-title-r3.bash 10-gentoo-title.bash
+
+			local f d
+			insinto /etc/skel
+
+			for f in bash{_logout,_profile,rc}; do
+				newins "${FILESDIR}/skel/dot-${f}" ".${f}"
+			done
+
+			insinto /etc/profile.d
+			newins "${FILESDIR}/profile.d/00-prompt-command-konsolebox.sh" 00-prompt-command.sh
 		else
-			_bash-build_prefixed_newins "${FILESDIR}"/bashrc bashrc /etc
-			keepdir /etc/bash/bashrc.d
+			die "Unsupported value of _BASH_BUILD_ETC_VERSION: ${_BASH_BUILD_ETC_VERSION-0}"
 		fi
 
-		local f d
-		insinto /etc/skel
-
-		for f in bash{_logout,_profile,rc}; do
-			newins "${FILESDIR}/dot-${f}" ".${f}"
-		done
-
-		local sed_args=(-e "s:#${USERLAND}#@::" -e '/#@/d')
-		use readline || sed_args+=(-e '/^shopt -s histappend/s:^:#:'
-				-e 's:use_color=true:use_color=false:') #432338
-		sed -i "${sed_args[@]}" "${ED%/}"/etc/skel/.bashrc "${ED%/}"/etc/bash/bashrc || die
+		if false; then
+			# 8771b2ce786bcfe249cd03dc1d994f13266ce5c7 removed this.
+			local sed_args=(-e "s:#${USERLAND}#@::" -e '/#@/d')
+			use readline || sed_args+=(-e '/^shopt -s histappend/s:^:#:'
+					-e 's:use_color=true:use_color=false:') #432338
+			sed -i "${sed_args[@]}" "${ED%/}"/etc/skel/.bashrc "${ED%/}"/etc/bash/bashrc || die
+		fi
 
 		if use plugins; then
 			exeinto "/usr/$(get_libdir)/bash"
