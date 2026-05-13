@@ -1,18 +1,17 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
+EAPI=8
 
 inherit cmake git-r3 multilib-minimal
 
 DESCRIPTION="Extremely fast non-cryptographic hash algorithm"
 HOMEPAGE="http://www.xxhash.com/"
-LICENSE="BSD-2 GPL-2+"
-
 EGIT_REPO_URI="https://github.com/Cyan4973/xxHash.git"
 EGIT_BRANCH="dev"
+S=${WORKDIR}/xxhash-${PV}/build/cmake
+LICENSE="BSD-2 GPL-2+"
 SLOT=0
-S=${WORKDIR}/xxhash-${PV}/cmake_unofficial
 
 multilib_src_configure() {
 	cmake_src_configure
