@@ -4,9 +4,11 @@
 EAPI=8
 
 _BASH_BUILD_INSTALL_TYPE=supplemental
+_BASH_BUILD_ALLOW_BASH_SOURCE_FULLPATH_DEFAULT=true
 _BASH_BUILD_PATCHES=(
 	bash-5.0-syslog-history-extern.patch
-	bash-5.1_p16-configure-clang16.patch
+	bash-5.3_p9-general-workaround-aliasing-violation-in-REVERSE_LIS.patch
+	bash-5.3_p9-pid-reuse.patch
 )
 _BASH_BUILD_PATCH_OPTIONS=(-p0)
 _BASH_BUILD_VERIFY_SIG=true

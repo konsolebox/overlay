@@ -1,3 +1,7 @@
+[Compared to bash-5.2_p26-memory-leaks.patch, this drops a hunk for
+builtins/evalstring.c as the open_redir_file issue is fixed in patch 31
+upstream for bash-5.2]
+
 https://lists.gnu.org/archive/html/bug-bash/2024-01/msg00036.html
 https://lists.gnu.org/archive/html/bug-bash/2024-01/txtm8yNNPR9RQ.txt
 
@@ -25,8 +29,6 @@ LeakSanitizer enabled. So far seems to provide very accurate results.
 * builtins/evalstring.c
 - parse_and_execute: make sure to dispose of the parsed command
   resulting from a failed function import attempt
-- open_redir_file: if we did not get a pointer to pass back the expanded
-  filename, make sure to free the name
 
 * examples/loadables/stat.c
 - loadstat: bind_assoc_variable does not free its VALUE argument so make
@@ -91,14 +93,6 @@ index df3dd68e..20c6a4a7 100644
  		      reset_parser ();
  		      break;
  		    }
-@@ -762,6 +764,8 @@ open_redir_file (r, fnp)
- 
-   if (fnp)
-     *fnp = fn;
-+  else
-+    free (fn);
-   return fd;
- }
  
 diff --git a/examples/loadables/stat.c b/examples/loadables/stat.c
 index 1e60e7b6..ed5c9764 100644
