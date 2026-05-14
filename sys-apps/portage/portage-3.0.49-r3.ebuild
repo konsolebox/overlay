@@ -1,10 +1,10 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
 DISTUTILS_EXT=1
-PYTHON_COMPAT=( pypy3 python3_{10..12} )
+PYTHON_COMPAT=( pypy3 python3_{12..14} )
 PYTHON_REQ_USE='bzip2(+),threads(+)'
 SETUPTOOLS_USE_DISTUTILS=local
 TMPFILES_OPTIONAL=1

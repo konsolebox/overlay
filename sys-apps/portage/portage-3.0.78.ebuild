@@ -1,9 +1,9 @@
 # Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
+EAPI=8
 
-PYTHON_COMPAT=( pypy3 python3_{12..14} )
+PYTHON_COMPAT=( python3_{12..14} )
 PYTHON_REQ_USE='bzip2(+),threads(+)'
 TMPFILES_OPTIONAL=1
 
@@ -29,21 +29,10 @@ IUSE="apidoc build doc gentoo-dev +ipc +native-extensions +rsync-verify selinux 
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 RESTRICT="!test? ( test )"
 
-# setuptools is still needed as a workaround for Python 3.12+ for now.
-# https://github.com/mesonbuild/meson/issues/7702
-#
-# >=meson-1.2.1-r1 for bug #912051
 BDEPEND="
 	${PYTHON_DEPS}
 	>=app-arch/tar-1.27
-	>=dev-build/meson-1.2.1-r1
-	|| (
-		>=dev-build/meson-1.3.0-r1
-		<dev-build/meson-1.3.0
-	)
-	$(python_gen_cond_dep '
-		dev-python/setuptools[${PYTHON_USEDEP}]
-	' python3_12)
+	>=dev-build/meson-1.3.0-r1
 	>=sys-apps/sed-4.0.5
 	sys-devel/patch
 	!build? ( $(python_gen_impl_dep 'ssl(+)') )
@@ -64,7 +53,7 @@ BDEPEND="
 # For whirlpool hash, require python[ssl] (bug #425046).
 RDEPEND="
 	${PYTHON_DEPS}
-	acct-user/portage
+	>=acct-user/portage-0-r4
 	>=app-arch/tar-1.27
 	app-arch/zstd
 	>=app-misc/pax-utils-0.1.17
@@ -74,25 +63,24 @@ RDEPEND="
 	!build? (
 		>=app-admin/eselect-1.2
 		app-portage/getuto
-		>=app-shells/bash-5.0:0
-		>=sec-keys/openpgp-keys-gentoo-release-20250329
+		>=app-shells/bash-5.3:0
+		dev-util/debugedit
+		>=sec-keys/openpgp-keys-gentoo-release-20240703
 		>=sys-apps/sed-4.0.5
 		rsync-verify? (
-			>=app-crypt/gnupg-2.2.4-r2[ssl(-)]
+			app-alternatives/gpg[ssl(-)]
 			>=app-portage/gemato-14.5[${PYTHON_USEDEP}]
 		)
 	)
-	elibc_glibc? ( >=sys-apps/sandbox-2.2 )
-	elibc_musl? ( >=sys-apps/sandbox-2.2 )
-	kernel_linux? ( sys-apps/util-linux )
+	kernel_linux? (
+		sys-apps/util-linux
+		elibc_glibc? ( >=sys-apps/sandbox-2.2 )
+		elibc_musl? ( >=sys-apps/sandbox-2.2 )
+	)
 	selinux? ( >=sys-libs/libselinux-2.0.94[python,${PYTHON_USEDEP}] )
 	xattr? ( kernel_linux? (
 		>=sys-apps/install-xattr-0.3
 	) )
-	!<app-admin/logrotate-3.8.0
-	!<app-portage/gentoolkit-0.4.6
-	!<app-portage/repoman-2.3.10
-	!~app-portage/repoman-3.0.0
 "
 # coreutils-6.4 rdep is for date format in emerge-webrsync #164532
 # NOTE: FEATURES=installsources requires debugedit and rsync
@@ -151,7 +139,7 @@ my_src_configure() {
 		$(meson_use xattr)
 	)
 
-	if use native-extensions && [[ "${EPYTHON}" != "pypy3" ]] ; then
+	if use native-extensions && [[ "${EPYTHON}" != pypy3* ]] ; then
 		emesonargs+=( -Dnative-extensions=true )
 	else
 		emesonargs+=( -Dnative-extensions=false )
@@ -208,18 +196,22 @@ pkg_preinst() {
 			-u PORTDIR \
 			-u PORTDIR_OVERLAY \
 			PYTHONPATH="${D}${sitedir}${PYTHONPATH:+:${PYTHONPATH}}" \
+			ED="${ED}" \
 			"${PYTHON}" -m portage._compat_upgrade.default_locations || die
 
 		env -u BINPKG_COMPRESS -u PORTAGE_REPOSITORIES \
 			PYTHONPATH="${D}${sitedir}${PYTHONPATH:+:${PYTHONPATH}}" \
+			ED="${ED}" \
 			"${PYTHON}" -m portage._compat_upgrade.binpkg_compression || die
 
 		env -u FEATURES -u PORTAGE_REPOSITORIES \
 			PYTHONPATH="${D}${sitedir}${PYTHONPATH:+:${PYTHONPATH}}" \
+			ED="${ED}" \
 			"${PYTHON}" -m portage._compat_upgrade.binpkg_multi_instance || die
 
 		env -u BINPKG_FORMAT \
 			PYTHONPATH="${D}${sitedir}${PYTHONPATH:+:${PYTHONPATH}}" \
+			ED="${ED}" \
 			"${PYTHON}" -m portage._compat_upgrade.binpkg_format || die
 	fi
 
@@ -241,8 +233,6 @@ pkg_preinst() {
 		elog "make.conf EMERGE_DEFAULT_OPTS variable. For the rationale for this"
 		elog "change, see https://bugs.gentoo.org/658648."
 	fi
-
-	use unofficial && keepdir /etc/env-update.d
 }
 
 pkg_postinst() {
