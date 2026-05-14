@@ -1,0 +1,44 @@
+diff --git a/common/homedir.c b/common/homedir.c
+index 835f0ea..2d22c8e 100644
+--- a/common/homedir.c
++++ b/common/homedir.c
+@@ -1324,11 +1324,15 @@ _gnupg_socketdir_internal (int skip_checks, unsigned *r_info)
+ #ifdef USE_RUN_GNUPG_USER_SOCKET
+     "/run/gnupg",
+ #endif
++#ifdef USE_RUN_USER_SOCKET
+     "/run",
++#endif
+ #ifdef USE_RUN_GNUPG_USER_SOCKET
+     "/var/run/gnupg",
+ #endif
++#ifdef USE_RUN_USER_SOCKET
+     "/var/run",
++#endif
+     NULL
+   };
+   int i;
+diff --git a/configure.ac b/configure.ac
+index dfdb40c..42e5403 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1804,6 +1804,19 @@ if test x"$use_run_gnupg_user_socket" = x"yes"; then
+             [If defined try /run/gnupg/user before /run/user])
+ fi
+ 
++#
++# Much like run-gnupg-user-socket but controls whether /run/user
++# or /var/run/user diretories should be accessed instead.
++#
++AC_ARG_ENABLE(run-user-socket,
++    AS_HELP_STRING([--disable-run-user-socket],
++                   [don't try looking up /run/user for sockets]),
++    use_run_user_socket=$enableval,
++    use_run_user_socket="yes")
++if test x"$use_run_user_socket" = x"yes"; then
++  AC_DEFINE(USE_RUN_USER_SOCKET, 1,
++           [If undefined, disable looking up /run/user])
++fi
+ 
+ #
+ # Decide what to build
