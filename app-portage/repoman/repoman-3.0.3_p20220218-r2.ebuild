@@ -1,9 +1,9 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
-PYTHON_COMPAT=( python3_{8..13} )
+PYTHON_COMPAT=( python3_{12..14} )
 PYTHON_REQ_USE='bzip2(+)'
 
 inherit distutils-r1-eaee61e2
@@ -35,6 +35,7 @@ DEPEND="${RDEPEND}"
 
 python_prepare_all() {
 	eapply -p2 "${FILESDIR}/${P}-shlex-split.patch"
+	eapply -p2 "${FILESDIR}/${P}-shell-quote-fix.patch"
 	distutils-r1-eaee61e2_python_prepare_all
 }
 
