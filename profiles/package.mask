@@ -43,6 +43,3 @@ net-wireless/bluez
 
 # Mask by default
 x11-misc/notification-daemon
-
-# Mask by default
-sys-boot/grub
