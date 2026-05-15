@@ -14,6 +14,9 @@
 =sys-boot/build-initramfs-99999
 
 # Mask by default
+acct-user/pipewire
+
+# Mask by default
 app-crypt/gnupg
 
 # Mask by default
