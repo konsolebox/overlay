@@ -33,14 +33,15 @@ RDEPEND="
 	socks5? ( >=net-proxy/dante-1.1.13 )
 	systemtap? ( dev-debug/systemtap )
 	tk? (
-		dev-lang/tcl:0=
-		dev-lang/tk:0=
+		dev-lang/tcl:0=[threads(+)]
+		dev-lang/tk:0=[threads(+)]
 	)
 	dev-libs/libyaml
 	dev-libs/libffi:=
+	sys-libs/readline:0=
 	virtual/zlib:=
 	virtual/libcrypt:=
-	>=app-eselect/eselect-ruby-20241225
+	>=app-eselect/eselect-ruby-20231008
 "
 
 DEPEND="
@@ -49,46 +50,31 @@ DEPEND="
 "
 
 BUNDLED_GEMS="
-	>=dev-ruby/minitest-5.25.4[ruby_targets_ruby34(-)]
-	>=dev-ruby/power_assert-2.0.5[ruby_targets_ruby34(-)]
-	>=dev-ruby/rake-13.2.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/test-unit-3.6.7[ruby_targets_ruby34(-)]
-	>=dev-ruby/rexml-3.4.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/rss-0.3.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/net-ftp-0.3.8[ruby_targets_ruby34(-)]
-	>=dev-ruby/net-imap-0.5.4[ruby_targets_ruby34(-)]
-	>=dev-ruby/net-pop-0.1.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/net-smtp-0.5.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/matrix-0.4.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/prime-0.1.3[ruby_targets_ruby34(-)]
-	>=dev-ruby/rbs-3.8.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/typeprof-0.30.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/debug-1.10.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/racc-1.8.1[ruby_targets_ruby34(-)]
-
-	>=dev-ruby/mutex_m-0.3.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/getoptlong-0.2.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/base64-0.2.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/bigdecimal-3.1.8[ruby_targets_ruby34(-)]
-	>=dev-ruby/observer-0.1.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/abbrev-0.1.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/resolv-replace-0.1.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/rinda-0.2.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/drb-2.2.1[ruby_targets_ruby34(-)]
-	>=dev-ruby/nkf-0.2.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/syslog-0.2.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/csv-3.3.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/repl_type_completor-0.1.9[ruby_targets_ruby34(-)]
+	>=dev-ruby/debug-1.7.1[ruby_targets_ruby32(-)]
+	>=dev-ruby/irb-1.6.2[ruby_targets_ruby32(-)]
+	>=dev-ruby/matrix-0.4.2[ruby_targets_ruby32(-)]
+	>=dev-ruby/minitest-5.16.3[ruby_targets_ruby32(-)]
+	>=dev-ruby/net-ftp-0.2.1[ruby_targets_ruby32(-)]
+	>=dev-ruby/net-imap-0.3.4.1[ruby_targets_ruby32(-)]
+	>=dev-ruby/net-pop-0.1.2[ruby_targets_ruby32(-)]
+	>=dev-ruby/net-smtp-0.3.4[ruby_targets_ruby32(-)]
+	>=dev-ruby/power_assert-2.0.3[ruby_targets_ruby32(-)]
+	>=dev-ruby/prime-0.1.2[ruby_targets_ruby32(-)]
+	>=dev-ruby/rake-13.0.6-r2[ruby_targets_ruby32(-)]
+	>=dev-ruby/rbs-2.8.2[ruby_targets_ruby32(-)]
+	>=dev-ruby/rexml-3.4.4[ruby_targets_ruby32(-)]
+	>=dev-ruby/rss-0.3.1[ruby_targets_ruby32(-)]
+	>=dev-ruby/test-unit-3.5.7[ruby_targets_ruby32(-)]
+	>=dev-ruby/typeprof-0.21.3[ruby_targets_ruby32(-)]
 "
 
 PDEPEND="
 	${BUNDLED_GEMS}
-	virtual/rubygems[ruby_targets_ruby34(-)]
-	>=dev-ruby/bundler-2.5.11[ruby_targets_ruby34(-)]
-	>=dev-ruby/did_you_mean-1.6.3[ruby_targets_ruby34(-)]
-	>=dev-ruby/irb-1.11.0[ruby_targets_ruby34(-)]
-	>=dev-ruby/json-2.7.2[ruby_targets_ruby34(-)]
-	>=dev-ruby/rdoc-6.6.2[ruby_targets_ruby34(-)]
+	virtual/rubygems[ruby_targets_ruby32(-)]
+	>=dev-ruby/bundler-2.3.3[ruby_targets_ruby32(-)]
+	>=dev-ruby/did_you_mean-1.6.1[ruby_targets_ruby32(-)]
+	>=dev-ruby/json-2.6.1[ruby_targets_ruby32(-)]
+	>=dev-ruby/rdoc-6.3.3[ruby_targets_ruby32(-)]
 	xemacs? ( app-xemacs/ruby-modes )
 "
 
@@ -98,6 +84,10 @@ pkg_setup() {
 
 src_prepare() {
 	eapply "${FILESDIR}"/"${SLOT}"/010*.patch
+	eapply "${FILESDIR}"/"${SLOT}"/011*.patch
+	eapply "${FILESDIR}"/"${SLOT}"/013*.patch
+	eapply "${FILESDIR}"/"${SLOT}"/017*.patch
+	eapply "${FILESDIR}"/"${SLOT}"/021*.patch
 	eapply "${FILESDIR}"/"${SLOT}"/902*.patch
 
 	if use elibc_musl ; then
@@ -110,17 +100,19 @@ src_prepare() {
 	# 539700.
 	rm -fr gems/* || die
 	touch gems/bundled_gems || die
+	# Don't install CLI tools since they will clash with the gem
+	rm -f bin/{racc,racc2y,y2racc} || die
+	sed -i -e '/executables/ s:^:#:' lib/racc/racc.gemspec || die
 
-	# Avoid the irb default gemspec since we will install the normal gem
-	# instead. This avoids a file collision with dev-ruby/irb.
-	rm lib/irb/irb.gemspec || die
+	# Remove all irb-related files.
+	rm -fr benchmark/irb_color.yml benchmark/irb_exec.yml doc/irb* libexec/irb lib/irb* man/irb.1 \
+			spec/ruby/core/binding/fixtures/irb* spec/ruby/core/binding/irb_spec.rb test/irb || die
 
 	# Remove tests that are known to fail or require a network connection
 	rm -f test/ruby/test_process.rb test/rubygems/test_gem{,_path_support}.rb || die
 	rm -f test/rubygems/test_bundled_ca.rb || die
-	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb test/fiber/test_address_resolve.rb \
-	   spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb \
-		spec/ruby/library/socket/socket/connect_spec.rb || die
+	rm -f test/rinda/test_rinda.rb test/socket/test_tcp.rb \
+	   test/fiber/test_address_resolve.rb spec/ruby/library/socket/tcpsocket/{initialize,open}_spec.rb|| die
 
 	# Doesn't play well with PORTAGE_NICENESS/PORTAGE_SCHEDULING_POLICY
 	rm -f spec/ruby/core/process/setpriority_spec.rb || die
@@ -128,23 +120,26 @@ src_prepare() {
 	# Remove webrick tests because setting LD_LIBRARY_PATH does not work for them.
 	rm -rf tool/test/webrick || die
 
-	# Avoid tests using the system ruby
-	sed -i -e '/test_\(dumb_terminal\|tty_amibuous_width\)/aomit "Uses system ruby"' test/reline/test_reline.rb || die
+	# Avoid test using the system ruby
+	sed -i -e '/test_dumb_terminal/aomit "Uses system ruby"' test/reline/test_reline.rb || die
 
-	# Avoid testing against hard-coded blockdev devices that most likely are not available
-	sed -i -e '/def blockdev/a@blockdev = nil' test/ruby/test_file_exhaustive.rb || die
+	# Avoid testing against hard-coded blockdev devices and user names
+	# that most likely are not available
+	sed -e '/def blockdev/a@blockdev = nil' \
+		-e '/test_expand_path_for_existent_username/aomit "Checks USER"' \
+		-i test/ruby/test_file_exhaustive.rb || die
 
 	# Avoid tests that require gem downloads
-	sed -e '/^check/ s/\(test-syntax-suggest\|\$(PREPARE_SYNTAX_SUGGEST)\)//g' \
-		-i common.mk || die
+	sed -i -e '/^test-syntax-suggest/ s/\$(TEST_RUNNABLE)/no/' common.mk || die
+	sed -i -e '/^check:/ s/\$(TEST_RUNNABLE)-\$(PREPARE_SYNTAX_SUGGEST) test-syntax-suggest//' common.mk || die
 
 	# Avoid test that fails intermittently
 	sed -e '/test_gem_exec_gem_uninstall/aomit "Fails intermittently"' \
 		-i test/rubygems/test_gem_commands_exec_command.rb || die
 
-	# Avoid test fragile for git command output not matching on whitespace
-	sed -e '/test_pretty_print/aomit "Fragile for output differences"' \
-		-i test/rubygems/test_gem_source_git.rb || die
+	# Avoid test that can easily timeout
+	sed -e '/test_getch_timeout/aomit "Times out easily"' \
+		-i test/io/console/test_io_console.rb || die
 
 	if use prefix ; then
 		# Fix hardcoded SHELL var in mkmf library
@@ -193,7 +188,7 @@ src_configure() {
 	fi
 
 	# Increase GC_MALLOC_LIMIT if set (default is 8000000)
-	if [ -n "${RUBY_GC_MALLOC_LIMIT}" ] ; then
+	if [[ -n "${RUBY_GC_MALLOC_LIMIT}" ]] ; then
 		append-flags "-DGC_MALLOC_LIMIT=${RUBY_GC_MALLOC_LIMIT}"
 	fi
 
@@ -216,18 +211,18 @@ src_configure() {
 	# #564272
 	# except on Darwin, where we really need LIBPATHENV to set the right
 	# DYLD_ stuff during the invocation of miniruby for it to work
-	#
-	# --with-setjmp-type=setjmp for bug #949016
 	[[ ${CHOST} == *-darwin* ]] || export LIBPATHENV=""
 
 	local myeconfargs=(
 		--program-suffix=${MY_SUFFIX}
 		--with-soname=ruby${MY_SUFFIX}
+		--with-readline-dir="${EPREFIX}"/usr
 		--enable-shared
 		--enable-pthread
 		--disable-rpath
 		--without-baseruby
 		--with-compress-debug-sections=no
+		# --with-setjmp-type=setjmp for bug #949016
 		--with-setjmp-type=setjmp
 		--enable-mkmf-verbose
 		--with-out-ext="${modules}"
@@ -260,6 +255,7 @@ src_compile() {
 }
 
 src_test() {
+	local -x USER=$(whoami)
 	local -x LD_LIBRARY_PATH="${S}${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}"
 	emake V=1 check
 }
