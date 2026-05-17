@@ -9,7 +9,11 @@ function die {
 }
 
 function main {
-	local desc_file=${DESC_FILE-/var/db/repos/gentoo/profiles/profiles.desc} profiles profiles2
+	local desc_file=${DESC_FILE-/var/db/repos/gentoo/profiles/profiles.desc} helpers_dir profiles \
+			profiles2
+
+	helpers_dir=$(realpath -m -- "${BASH_SOURCE}/../..") || \
+		die "Unable to locate helpers directory."
 
 	# Extract new profiles
 	awk '/^\s*(#|$)/ { next } { $0 = "" $2 }
@@ -18,7 +22,8 @@ function main {
 	[[ ${profiles+.} ]] || die "No musl-based profile names found"
 
 	# Add old profiles
-	readarray -tO "${#profiles[@]}" profiles < profiles.mask || die "Failed to add old profiles"
+	readarray -tO "${#profiles[@]}" profiles < "${helpers_dir}/profiles.mask" || \
+		die "Failed to add old profiles"
 
 	# Remove profiles no longer included in profiles.desc as they'd cause pkgcheck to fail
 	awk '/^\s*(#|$)/ { next } NR == FNR { a[$2] = 1; next } $0 in a' "${desc_file}" \
@@ -26,7 +31,7 @@ function main {
 			readarray -t profiles2 || die "Failed to exclude inexistent profiles"
 
 	# Save
-	printf '%s\n' "${profiles2[@]}" | sort -u > profiles.mask || \
+	printf '%s\n' "${profiles2[@]}" | sort -u > "${helpers_dir}/profiles.mask" || \
 		die "Failed to save profiles"
 }
 
