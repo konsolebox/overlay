@@ -10,7 +10,7 @@
 # @PROVIDES: ruby-fakegem
 # @BLURB: Adds compatibility fixes for old ruby-fakegem.eclass
 
-inherit use-ruby-mask ruby-utils-compat ruby-fakegem
+inherit use-ruby-array use-ruby-mask ruby-utils-compat ruby-fakegem
 
 # @FUNCTION: ruby_fakegem_extensions_installed
 # @DESCRIPTION:
