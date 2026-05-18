@@ -3,7 +3,10 @@
 =app-shells/bash-supplemental-99999
 =app-shells/hist-99999
 =app-text/trim-trailing-spaces-99999
+=dev-vcs/git-amend-date-using-reference-99999
+=dev-vcs/git-checkout-last-version-99999
 =dev-vcs/git-diff-blame-99999
+=dev-vcs/git-move-99999
 =sys-apps/binfind-99999
 =sys-apps/hyphenate-99999
 =sys-apps/killtree-99999
