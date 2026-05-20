@@ -71,7 +71,7 @@ DOCS=(
 PATCHES=(
 	"${FILESDIR}/${PN}-2.1.20-gpgscm-Use-shorter-socket-path-lengts-to-improve-tes.patch"
 	"${FILESDIR}/0002-Fix-stub-functions-to-avoid-LTO-linking-bugs-followup.patch"
-	"${FILESDIR}/${PN}-2.5.19-allow-disabling-run-user-sockt.patch"
+	"${FILESDIR}/${PN}-2.5.19-allow-disabling-run-user-socket.patch"
 )
 
 src_prepare() {
@@ -157,6 +157,7 @@ my_src_configure() {
 	# bug #663142
 	myconf+=($(use_enable run-gnupg-user-socket))
 
+	# bug #624308
 	myconf+=($(use_enable run-user-socket))
 
 	# glib fails and picks up clang's internal stdint.h causing weird errors
