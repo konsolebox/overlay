@@ -13,7 +13,7 @@ if [[ ${PV} == *9999* ]]; then
 	EGIT_REPO_URI="https://github.com/konsolebox/${PN}.git"
 	EGIT_BRANCH=master
 else
-	COMMIT=9524ecefa7b180327cc9e699d25e2f9c59b0ea77
+	COMMIT=c403f0a88900b3edb9caa1d1017565180c5e666b
 	SRC_URI="https://github.com/konsolebox/${PN}/archive/${COMMIT}.tar.gz -> ${P}-${COMMIT:0:8}.tar.gz"
 	S="${WORKDIR}/${PN}-${COMMIT}"
 	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
