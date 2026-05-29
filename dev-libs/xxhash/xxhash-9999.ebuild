@@ -24,8 +24,8 @@ multilib_src_install() {
 multilib_src_install_all() {
 	local bin
 
-	for bin in xxh{32,64,128}sum; do
-		ln -sf /usr/bin/xxhsum "${ED}/usr/bin/$bin" || die
-		ln -sf /usr/share/man/man1/xxhsum.1.bz2 "${ED}/usr/share/man/man1/$bin.1.bz2" || die
+	for bin in xxh{32,64,128,3}sum; do
+		ln -sf xxhsum "${ED}/usr/bin/${bin}" || die
+		ln -sf xxhsum.1.bz2 "${ED}/usr/share/man/man1/${bin}.1.bz2" || die
 	done
 }
